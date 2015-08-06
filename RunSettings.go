@@ -17,7 +17,8 @@ var SUPPORTED_LANGUAGES = []string {
   "go",
   "cs",
   "java",
-  "lua",
+  "python",
+  "sql",
 }
 
 func ParseRunSettings()(*RunSettings, error) {

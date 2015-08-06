@@ -3,7 +3,7 @@ presilo
 
 Generates (and updates) code for data models from a [JSON schema](http://json-schema.org/). Works for Go, C#, Java, Python, Lua, SQL, and Ruby.
 
-Presilo is Esperanto for "printing press".
+Presilo is Esperanto for "printing press", because presilo makes it trivial to "reprint" the same content in different languages.
 
 Why do I want this?
 ====
@@ -59,7 +59,7 @@ This will generate a file called "Person.go". The name of the file is taken from
         age int
     }
 
-    func NewPerson(firstName string, lastName string) *schema {
+    func NewPerson(firstName string, lastName string) *Person {
 
         var ret *schema
 
@@ -73,7 +73,7 @@ This will generate a file called "Person.go". The name of the file is taken from
     func (this *Person) SetAge(value int) error {
 
         if(value < 0) {
-            return errors.New("'age' must be greater than zero")
+            return errors.New("'age' must be greater than 0")
         }
 
         this.age = value
