@@ -1,15 +1,14 @@
 package main
 
 import (
-  "presilo"
+  . "presilo"
   "os"
   "fmt"
 )
 
 func main() {
 
-  var schema *Schema
-  var schemaContents map[string]interface{}
+  var schema TypeSchema
   var settings *RunSettings
   var err error
 
@@ -19,15 +18,9 @@ func main() {
     return
   }
 
-  schemaContents, err = parseSchemaContents(settings.InputPath)
+  schema, err = ParseSchemaFile(settings.InputPath)
   if(err != nil) {
     exitWith("Unable to parse schema file: %s\n", err)
-    return
-  }
-
-  schema, err = parseSchema(schemaContents)
-  if(err != nil) {
-    exitWith("Unable to parse schema file as schema: %s\n", err)
     return
   }
 
