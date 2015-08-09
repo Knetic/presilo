@@ -100,7 +100,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
 Recurses the properties of the given [root],
 adding all sub-schemas to the given [schemas].
 */
-func RecurseSchemas(schema TypeSchema, schemas []TypeSchema) []TypeSchema {
+func RecurseObjectSchemas(schema TypeSchema, schemas []TypeSchema) []TypeSchema {
 
   if(schema.GetSchemaType() == SCHEMATYPE_OBJECT) {
     return recurseObjectSchema(schema.(*ObjectSchema), schemas)
@@ -115,11 +115,8 @@ func recurseObjectSchema(schema *ObjectSchema, schemas []TypeSchema) []TypeSchem
   for _, property := range schema.Properties {
 
     if(property.GetSchemaType() == SCHEMATYPE_OBJECT) {
-      schemas = RecurseSchemas(property.(*ObjectSchema), schemas)
-      continue
+      schemas = recurseObjectSchema(property.(*ObjectSchema), schemas)
     }
-
-    schemas = append(schemas, property)
   }
 
   return schemas

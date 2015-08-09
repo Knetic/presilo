@@ -67,7 +67,7 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
   var schemaPath string
   var err error
 
-  schemas = RecurseSchemas(schema, schemas)
+  schemas = RecurseObjectSchemas(schema, schemas)
 
   for _, schema := range schemas {
 
