@@ -10,7 +10,7 @@ import (
   "encoding/json"
 )
 
-func ParseSchemaFile(path string) (TypeSchema, error) {
+func ParseSchemaFile(path string) ([]TypeSchema, error) {
 
     var contentsBytes []byte
     var contents map[string]*json.RawMessage
@@ -34,8 +34,10 @@ func ParseSchemaFile(path string) (TypeSchema, error) {
     return Parse(contentsBytes, contents)
 }
 
-func Parse(contentsBytes []byte, contents map[string]*json.RawMessage) (TypeSchema, error) {
+func Parse(contentsBytes []byte, contents map[string]*json.RawMessage) ([]TypeSchema, error) {
 
+  var ret []TypeSchema
+  var schema TypeSchema
   var schemaTypeRaw *json.RawMessage
   var schemaTypeBytes []byte
   var schemaType string
@@ -60,9 +62,17 @@ func Parse(contentsBytes []byte, contents map[string]*json.RawMessage) (TypeSche
 
   switch(schemaType) {
 
-    case "integer": return NewIntegerSchema(contentsBytes)
+  case "integer":
+    schema, err = NewIntegerSchema(contentsBytes)
+    if(err != nil) {
+      return nil, err
+    }
+
+    ret = append(ret, schema)
+  default:
+    errorMsg := fmt.Sprintf("Unrecognized schema type: '%s'", schemaType)
+    return nil, errors.New(errorMsg)
   }
 
-  errorMsg := fmt.Sprintf("Unrecognized schema type: '%s'", schemaType)
-  return nil, errors.New(errorMsg)
+  return ret, nil
 }

@@ -1,3 +1,4 @@
 pkg/
 /.output/
 /.temp/
+/.results/

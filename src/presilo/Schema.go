@@ -3,6 +3,7 @@ package presilo
 type TypeSchema interface {
 
   GetSchemaType() SchemaType
+  GetTitle() string
 }
 
 /*
@@ -17,4 +18,8 @@ type Schema struct {
 
 func (this Schema) GetSchemaType() SchemaType {
   return this.typeCode
+}
+
+func (this Schema) GetTitle() string {
+  return this.Title
 }
