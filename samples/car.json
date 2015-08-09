@@ -1,0 +1,40 @@
+{
+    "title": "Car",
+    "type": "object",
+    "properties":
+    {
+        "seats":
+        {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+        },
+        "wheels":
+        {
+            "type": "array",
+            "items":
+            {
+                "oneOf":
+                [
+                    {
+                        "type": "object",
+                        "title": "Tire",
+                        "properties":
+                        {
+                            "weight":
+                            {
+                                "type": "float",
+                                "minimum": 0
+                            },
+                            "material":
+                            {
+                                "type": "string",
+                                "enum": ["rubber", "unobtanium"]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

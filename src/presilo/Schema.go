@@ -4,6 +4,7 @@ type TypeSchema interface {
 
   GetSchemaType() SchemaType
   GetTitle() string
+  SetTitle(string)
 }
 
 /*
@@ -16,10 +17,14 @@ type Schema struct {
   typeCode SchemaType
 }
 
-func (this Schema) GetSchemaType() SchemaType {
+func (this *Schema) GetSchemaType() SchemaType {
   return this.typeCode
 }
 
-func (this Schema) GetTitle() string {
+func (this *Schema) GetTitle() string {
   return this.Title
+}
+
+func (this *Schema) SetTitle(title string) {
+  this.Title = title
 }

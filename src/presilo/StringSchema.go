@@ -7,24 +7,22 @@ import (
 /*
   A schema which describes an integer.
 */
-type IntegerSchema struct {
+type StringSchema struct {
 
   Schema
-  Minimum *int `json:"minimum"`
-  Maximum *int `json:"maximum"`
 }
 
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewIntegerSchema(contents []byte) (*IntegerSchema, error) {
+func NewStringSchema(contents []byte) (*StringSchema, error) {
 
-  var ret *IntegerSchema
+  var ret *StringSchema
   var err error
 
-  ret = new(IntegerSchema)
-
-  ret.typeCode = SCHEMATYPE_INTEGER
+  ret = new(StringSchema)
+  ret.typeCode = SCHEMATYPE_STRING
+  
   err = json.Unmarshal(contents, &ret)
   if(err != nil) {
     return ret, err

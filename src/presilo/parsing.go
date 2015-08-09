@@ -10,10 +10,10 @@ import (
   "encoding/json"
 )
 
-func ParseSchemaFile(path string) ([]TypeSchema, error) {
+func ParseSchemaFile(path string) (TypeSchema, error) {
 
     var contentsBytes []byte
-    var contents map[string]*json.RawMessage
+    var name string
     var err error
 
     path, err = filepath.Abs(path)
@@ -21,28 +21,31 @@ func ParseSchemaFile(path string) ([]TypeSchema, error) {
       return nil, err
     }
 
+    name = filepath.Base(path)
+
     contentsBytes, err = ioutil.ReadFile(path)
     if(err != nil) {
       return nil, err
     }
 
-    err = json.Unmarshal(contentsBytes, &contents)
-    if(err != nil) {
-      return nil, err
-    }
-
-    return Parse(contentsBytes, contents)
+    return ParseSchema(contentsBytes, name)
 }
 
-func Parse(contentsBytes []byte, contents map[string]*json.RawMessage) ([]TypeSchema, error) {
+func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) {
 
-  var ret []TypeSchema
   var schema TypeSchema
+  var objectSchema *ObjectSchema
   var schemaTypeRaw *json.RawMessage
+  var contents map[string]*json.RawMessage
   var schemaTypeBytes []byte
   var schemaType string
   var present bool
   var err error
+
+  err = json.Unmarshal(contentsBytes, &contents)
+  if(err != nil) {
+    return nil, err
+  }
 
   schemaTypeRaw, present = contents["type"]
   if(!present) {
@@ -68,11 +71,56 @@ func Parse(contentsBytes []byte, contents map[string]*json.RawMessage) ([]TypeSc
       return nil, err
     }
 
-    ret = append(ret, schema)
+  case "string":
+      schema, err = NewStringSchema(contentsBytes)
+      if(err != nil) {
+        return nil, err
+      }
+
+  case "object":
+    objectSchema, err = NewObjectSchema(contentsBytes)
+    if(err != nil) {
+      return nil, err
+    }
+
+    schema = objectSchema
   default:
     errorMsg := fmt.Sprintf("Unrecognized schema type: '%s'", schemaType)
     return nil, errors.New(errorMsg)
   }
 
-  return ret, nil
+  if(len(schema.GetTitle()) == 0) {
+    schema.SetTitle(defaultTitle)
+  }
+
+  return schema, nil
+}
+
+/*
+Recurses the properties of the given [root],
+adding all sub-schemas to the given [schemas].
+*/
+func RecurseSchemas(schema TypeSchema, schemas []TypeSchema) []TypeSchema {
+
+  if(schema.GetSchemaType() == SCHEMATYPE_OBJECT) {
+    return recurseObjectSchema(schema.(*ObjectSchema), schemas)
+  }
+  return []TypeSchema{schema}
+}
+
+func recurseObjectSchema(schema *ObjectSchema, schemas []TypeSchema) []TypeSchema {
+
+  schemas = append(schemas, schema)
+
+  for _, property := range schema.Properties {
+
+    if(property.GetSchemaType() == SCHEMATYPE_OBJECT) {
+      schemas = RecurseSchemas(property.(*ObjectSchema), schemas)
+      continue
+    }
+
+    schemas = append(schemas, property)
+  }
+
+  return schemas
 }

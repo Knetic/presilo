@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-  var schemas []TypeSchema
+  var schema TypeSchema
   var settings *RunSettings
   var err error
 
@@ -26,13 +26,13 @@ func main() {
     return
   }
 
-  schemas, err = ParseSchemaFile(settings.InputPath)
+  schema, err = ParseSchemaFile(settings.InputPath)
   if(err != nil) {
     exitWith("Unable to parse schema file: %s\n", err)
     return
   }
 
-  err = generateCode(schemas, settings.Module, settings.OutputPath, settings.Language)
+  err = generateCode(schema, settings.Module, settings.OutputPath, settings.Language)
   if(err != nil) {
     exitWith("Unable to generate code: %s\n", err)
     return
@@ -60,11 +60,14 @@ func prepareOutputPath(targetPath string) (string, error) {
   return targetPath, nil
 }
 
-func generateCode(schemas []TypeSchema, module string, targetPath string, language string) error {
+func generateCode(schema TypeSchema, module string, targetPath string, language string) error {
 
+  var schemas []TypeSchema
   var written string
   var schemaPath string
   var err error
+
+  schemas = RecurseSchemas(schema, schemas)
 
   for _, schema := range schemas {
 
