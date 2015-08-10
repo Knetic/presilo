@@ -87,8 +87,8 @@ func generateGoFunctions(schema *ObjectSchema) string {
       ret.WriteString(body)
 
       // setter
-      signature = fmt.Sprintf("func (this *%s) Set%s(value %s) {\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
-      body = fmt.Sprintf("\tthis.%s = value\n}\n\n", casedJavaName)
+      signature = fmt.Sprintf("func (this *%s) Set%s(value %s) (error) {\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
+      body = fmt.Sprintf("\n\tthis.%s = value\n\treturn nil\n}\n\n", casedJavaName)
 
       switch subschema.GetSchemaType() {
         case SCHEMATYPE_STRING: constraintChecks = generateGoStringSetter(subschema.(*StringSchema))
@@ -155,17 +155,17 @@ func generateGoIntegerSetter(schema *IntegerSchema) string {
 
   if(schema.Minimum != nil) {
 
-    constraint = fmt.Sprintf("\tif(value < %d) {\n", schema.Minimum)
-    constraint += fmt.Sprintf("\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
-    constraint += fmt.Sprintf("\t}\n")
+    constraint = fmt.Sprintf("\tif(value < %d) {", schema.Minimum)
+    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
+    constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
   }
 
   if(schema.Maximum != nil) {
 
-    constraint = fmt.Sprintf("\tif(value < %d) {\n", schema.Minimum)
-    constraint += fmt.Sprintf("\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
-    constraint += fmt.Sprintf("\t}\n")
+    constraint = fmt.Sprintf("\tif(value < %d) {", schema.Minimum)
+    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
+    constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
   }
 
