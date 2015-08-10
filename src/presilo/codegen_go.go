@@ -39,6 +39,10 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
     var subschema TypeSchema
     var propertyName string
 
+    // description first
+    description := fmt.Sprintf("/*\n%s\n*/\n", schema.GetDescription())
+    ret.WriteString(description)
+
     ret.WriteString("type ")
     ret.WriteString(schema.GetTitle())
     ret.WriteString(" struct {\n")

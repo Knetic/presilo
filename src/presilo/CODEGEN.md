@@ -41,3 +41,9 @@ In languages with built-in serialization/deserialization capabilities, both XML 
 added to the generated type. If the language has a standard json/xml hash library, the appropriate
 hash-to-object method will be created instead. If the language only has deserialization _libraries_, then no
 assumptions will be made, and no code generated.
+
+Doc comments
+====
+
+The "description" field is directly used to generate doc comments in the most universal fashion for the
+target language.

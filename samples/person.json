@@ -1,6 +1,7 @@
 {
   "type": "object",
   "title": "Person",
+  "description": "Represents an individual which may have a first/last name, as well as an age.\nThis type does not presume that the Person is awesome or not.",
   "properties":
   {
     "firstName":
