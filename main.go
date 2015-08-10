@@ -76,7 +76,7 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
     // I'm ok with that redundancy.
     switch(language) {
 
-    case "go": written = GenerateGo(schema, module)
+    case "go": written = GenerateGo(schema.(*ObjectSchema), module)
     }
 
     schemaPath = fmt.Sprintf("%s%s%s.%s", targetPath, string(os.PathSeparator), schema.GetTitle(), language)
