@@ -155,16 +155,16 @@ func generateGoIntegerSetter(schema *IntegerSchema) string {
 
   if(schema.Minimum != nil) {
 
-    constraint = fmt.Sprintf("\tif(value < %d) {", schema.Minimum)
-    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
+    constraint = fmt.Sprintf("\tif(value < %d) {", *schema.Minimum)
+    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", *schema.Minimum)
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
   }
 
   if(schema.Maximum != nil) {
 
-    constraint = fmt.Sprintf("\tif(value < %d) {", schema.Minimum)
-    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
+    constraint = fmt.Sprintf("\tif(value < %d) {", *schema.Minimum)
+    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", *schema.Minimum)
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
   }
