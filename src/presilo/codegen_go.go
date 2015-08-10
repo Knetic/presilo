@@ -38,36 +38,22 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
     var ret bytes.Buffer
     var subschema TypeSchema
     var propertyName string
-    var isRequired bool
 
     ret.WriteString("type ")
     ret.WriteString(schema.GetTitle())
     ret.WriteString(" struct {\n")
 
     // write all required fields as unexported fields.
-    for _, propertyName = range schema.RequiredProperties {
+    for _, propertyName = range schema.ConstrainedProperties {
 
       subschema = schema.Properties[propertyName]
-
       ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToJavaCase))
     }
 
     // write all non-required fields as exported fields.
-    for propertyName, subschema = range schema.Properties {
+    for _, propertyName = range schema.UnconstrainedProperties {
 
-      isRequired = false
-
-      for _, requiredName := range schema.RequiredProperties {
-        if(requiredName == propertyName) {
-          isRequired = true
-          break
-        }
-      }
-
-      if(isRequired) {
-        continue
-      }
-
+      subschema = schema.Properties[propertyName]
       ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToCamelCase))
     }
 
@@ -79,10 +65,10 @@ func generateGoFunctions(schema *ObjectSchema) string {
 
     var ret bytes.Buffer
     var subschema TypeSchema
-    var signature, body string
+    var signature, body, constraintChecks string
     var propertyName, casedJavaName, casedCamelName string
 
-    for _, propertyName = range schema.RequiredProperties {
+    for _, propertyName = range schema.ConstrainedProperties {
 
       casedJavaName = ToJavaCase(propertyName)
       casedCamelName = ToCamelCase(propertyName)
@@ -97,11 +83,16 @@ func generateGoFunctions(schema *ObjectSchema) string {
       ret.WriteString(body)
 
       // setter
-      // TODO: check constraints!
       signature = fmt.Sprintf("func (this *%s) Set%s(value %s) {\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
       body = fmt.Sprintf("\tthis.%s = value\n}\n\n", casedJavaName)
 
+      switch subschema.GetSchemaType() {
+        case SCHEMATYPE_STRING: constraintChecks = generateGoStringSetter(subschema.(*StringSchema))
+        case SCHEMATYPE_INTEGER: constraintChecks = generateGoIntegerSetter(subschema.(*IntegerSchema))
+      }
+
       ret.WriteString(signature)
+      ret.WriteString(constraintChecks)
       ret.WriteString(body)
     }
 
@@ -118,7 +109,7 @@ func generateGoConstructor(schema *ObjectSchema) string {
   for _, propertyName := range schema.RequiredProperties {
 
     subschema = schema.Properties[propertyName]
-    propertyName = ToJavaCase(propertyName)
+    propertyName = getAppropriateGoCase(schema, propertyName)
 
     ret.WriteString(propertyName)
     ret.WriteString(" ")
@@ -149,9 +140,10 @@ func generateGoConstructor(schema *ObjectSchema) string {
   return ret.String()
 }
 
-func generateGoIntegerFunctions(schema *IntegerSchema) string {
+func generateGoIntegerSetter(schema *IntegerSchema) string {
 
   var ret bytes.Buffer
+  var constraint string
 
   if(!schema.HasConstraints()) {
     return ""
@@ -159,12 +151,24 @@ func generateGoIntegerFunctions(schema *IntegerSchema) string {
 
   if(schema.Minimum != nil) {
 
+    constraint = fmt.Sprintf("\tif(value < %d) {\n", schema.Minimum)
+    constraint += fmt.Sprintf("\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
+    constraint += fmt.Sprintf("\t}\n")
+    ret.WriteString(constraint)
+  }
+
+  if(schema.Maximum != nil) {
+
+    constraint = fmt.Sprintf("\tif(value < %d) {\n", schema.Minimum)
+    constraint += fmt.Sprintf("\t\treturn errors.New(\"Minimum value of '%d' not met\")", schema.Minimum)
+    constraint += fmt.Sprintf("\t}\n")
+    ret.WriteString(constraint)
   }
 
   return ret.String()
 }
 
-func generateGoStringFunctions(schema *StringSchema) string {
+func generateGoStringSetter(schema *StringSchema) string {
 
   var ret bytes.Buffer
 
@@ -200,4 +204,14 @@ func generateVariableDeclaration(subschema TypeSchema, propertyName string, casi
   ret.WriteString("\n")
 
   return ret.String()
+}
+
+func getAppropriateGoCase(schema *ObjectSchema, propertyName string) string {
+
+  for _, constrainedName := range schema.ConstrainedProperties {
+    if(constrainedName == propertyName) {
+      return ToJavaCase(propertyName)
+    }
+  }
+  return ToCamelCase(propertyName)
 }

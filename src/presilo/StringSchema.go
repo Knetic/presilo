@@ -33,3 +33,7 @@ func NewStringSchema(contents []byte) (*StringSchema, error) {
 
   return ret, nil
 }
+
+func (this *StringSchema) HasConstraints() bool {
+  return false
+}

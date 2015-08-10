@@ -20,6 +20,9 @@ type ObjectSchema struct {
   // TODO: AdditionalProperties *bool `json:"additionalProperties"`
   // NOT SUPPORTED: patternProperties
   RawProperties map[string]*json.RawMessage `json:"properties"`
+
+  ConstrainedProperties []string
+  UnconstrainedProperties []string
 }
 
 /*
@@ -32,6 +35,7 @@ func NewObjectSchema(contents []byte) (*ObjectSchema, error) {
   var sub TypeSchema
   var subschemaBytes []byte
   var err error
+  var constrained bool
 
   ret = new(ObjectSchema)
   ret.typeCode = SCHEMATYPE_OBJECT
@@ -62,6 +66,24 @@ func NewObjectSchema(contents []byte) (*ObjectSchema, error) {
     }
 
     ret.Properties[propertyName] = sub
+  }
+
+  // for convenience, populate "ConstrainedProperties" to all required properties,
+  // along with any other properties which have constraints
+  for propertyName, subschema := range ret.Properties {
+
+    constrained = false
+
+    switch subschema.GetSchemaType() {
+      case SCHEMATYPE_INTEGER: constrained = subschema.(*IntegerSchema).HasConstraints()
+      case SCHEMATYPE_STRING: constrained = subschema.(*StringSchema).HasConstraints()
+    }
+
+    if(constrained) {
+      ret.ConstrainedProperties = append(ret.ConstrainedProperties, propertyName)
+    } else {
+      ret.UnconstrainedProperties = append(ret.UnconstrainedProperties, propertyName)
+    }
   }
   return ret, nil
 }
