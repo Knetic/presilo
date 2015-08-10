@@ -90,7 +90,7 @@ func generateGoFunctions(schema *ObjectSchema) string {
       subschema = schema.Properties[propertyName]
 
       // getter
-      signature = fmt.Sprintf("func (this *%s)Get%s()(%s){\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
+      signature = fmt.Sprintf("func (this *%s) Get%s() (%s) {\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
       body = fmt.Sprintf("\treturn this.%s\n}\n\n", casedJavaName)
 
       ret.WriteString(signature)
@@ -98,7 +98,7 @@ func generateGoFunctions(schema *ObjectSchema) string {
 
       // setter
       // TODO: check constraints!
-      signature = fmt.Sprintf("func (this *%s)Set%s(value %s){\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
+      signature = fmt.Sprintf("func (this *%s) Set%s(value %s) {\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
       body = fmt.Sprintf("\tthis.%s = value\n}\n\n", casedJavaName)
 
       ret.WriteString(signature)
