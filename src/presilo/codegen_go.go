@@ -49,7 +49,7 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
 
       subschema = schema.Properties[propertyName]
 
-      ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToCamelCase))
+      ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToJavaCase))
     }
 
     // write all non-required fields as exported fields.
@@ -68,7 +68,7 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
         continue
       }
 
-      ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToJavaCase))
+      ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToCamelCase))
     }
 
     ret.WriteString("}\n")
@@ -78,6 +78,24 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
 func generateGoFunctions(schema *ObjectSchema) string {
 
     var ret bytes.Buffer
+    var subschema TypeSchema
+    var signature, body string
+    var propertyName, casedJavaName, casedCamelName string
+
+    for _, propertyName = range schema.RequiredProperties {
+
+      casedJavaName = ToJavaCase(propertyName)
+      casedCamelName = ToCamelCase(propertyName)
+
+      subschema = schema.Properties[propertyName]
+
+      signature = fmt.Sprintf("func (this *%s)Get%s()(%s){\n", schema.GetTitle(), casedCamelName, generateGoTypeForSchema(subschema))
+      body = fmt.Sprintf("\treturn this.%s\n}\n\n", casedJavaName)
+
+      ret.WriteString(signature)
+      ret.WriteString(body)
+    }
+
     return ret.String()
 }
 
