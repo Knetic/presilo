@@ -32,3 +32,7 @@ func NewIntegerSchema(contents []byte) (*IntegerSchema, error) {
 
   return ret, nil
 }
+
+func (this *IntegerSchema) HasConstraints() bool {
+  return this.Minimum != nil || this.Maximum != nil
+}
