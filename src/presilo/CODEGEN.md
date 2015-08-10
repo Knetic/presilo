@@ -28,7 +28,8 @@ Getter/Setters
 If a property has constraints, getter/setter methods will be generated for that property, and it will
 be considered "protected" by the class. The setters will implement the field constraints.
 
-If there are no constraints, no getter/setters will be generated, and consumers will be able to modify the field directly.
+If there are no constraints, no getter/setters will be generated, and consumers will be able to modify the
+ field directly.
 
 However, there is a user-defined setting called "-g" which means "generate getter/setter for all fields",
 which if present, should be honored.
@@ -37,4 +38,6 @@ Serialization
 ====
 
 In languages with built-in serialization/deserialization capabilities, both XML and JSON directives will be
-added to the generated type. If the language has a standard json/xml hash library, the appropriate hash-to-object method will be created instead. If the language only has deserialization _libraries_, then no assumptions will be made, and no code generated.
+added to the generated type. If the language has a standard json/xml hash library, the appropriate
+hash-to-object method will be created instead. If the language only has deserialization _libraries_, then no
+assumptions will be made, and no code generated.

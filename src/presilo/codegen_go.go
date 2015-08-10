@@ -36,12 +36,39 @@ func generateGoImports(schema *ObjectSchema) string {
 func generateGoTypeDeclaration(schema *ObjectSchema) string {
 
     var ret bytes.Buffer
+    var subschema TypeSchema
+    var propertyName string
+    var isRequired bool
 
     ret.WriteString("type ")
     ret.WriteString(schema.GetTitle())
     ret.WriteString(" struct {\n")
 
-    for propertyName, subschema := range schema.Properties {
+    // write all required fields as unexported fields.
+    for _, propertyName = range schema.RequiredProperties {
+
+      subschema = schema.Properties[propertyName]
+
+      ret.WriteString("\tvar " + ToJavaCase(propertyName) + " ")
+      ret.WriteString(generateGoTypeForSchema(subschema))
+      ret.WriteString("\n")
+    }
+
+    // write all non-required fields as exported fields.
+    for propertyName, subschema = range schema.Properties {
+
+      isRequired = false
+
+      for _, requiredName := range schema.RequiredProperties {
+        if(requiredName == propertyName) {
+          isRequired = true
+          break
+        }
+      }
+
+      if(isRequired) {
+        continue
+      }
 
       ret.WriteString("\tvar " + ToCamelCase(propertyName) + " ")
       ret.WriteString(generateGoTypeForSchema(subschema))
@@ -68,7 +95,7 @@ func generateGoConstructor(schema *ObjectSchema) string {
   for _, propertyName := range schema.RequiredProperties {
 
     subschema = schema.Properties[propertyName]
-    propertyName = ToCamelCase(propertyName)
+    propertyName = ToJavaCase(propertyName)
 
     ret.WriteString(propertyName)
     ret.WriteString(" ")
