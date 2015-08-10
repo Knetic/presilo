@@ -10,6 +10,9 @@ import (
 type StringSchema struct {
 
   Schema
+  // TODO: MaxLength *int `json:"maxLength"`
+  // TODO: MinLength *int `json:"minLength"`
+  // TODO: Pattern *string `json:"pattern"`
 }
 
 /*
@@ -22,7 +25,7 @@ func NewStringSchema(contents []byte) (*StringSchema, error) {
 
   ret = new(StringSchema)
   ret.typeCode = SCHEMATYPE_STRING
-  
+
   err = json.Unmarshal(contents, &ret)
   if(err != nil) {
     return ret, err

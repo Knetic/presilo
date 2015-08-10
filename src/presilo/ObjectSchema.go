@@ -14,6 +14,11 @@ type ObjectSchema struct {
   Schema
   Properties map[string]TypeSchema
   RequiredProperties []string `json:"required"`
+
+  // TODO: MaxProperties *int `json:"maxProperties"`
+  // TODO: MinProperties *int `json:"minProperties"`
+  // TODO: AdditionalProperties *bool `json:"additionalProperties"`
+  // NOT SUPPORTED: patternProperties
   RawProperties map[string]*json.RawMessage `json:"properties"`
 }
 
