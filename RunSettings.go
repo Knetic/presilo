@@ -19,6 +19,7 @@ var SUPPORTED_LANGUAGES = []string {
   "cs",
   "java",
   "py",
+  "js",
   "sql",
 }
 
