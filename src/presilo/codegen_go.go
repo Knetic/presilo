@@ -60,12 +60,14 @@ func generateGoFunctions(schema *ObjectSchema) string {
 
 func generateGoConstructor(schema *ObjectSchema) string {
 
+  var subschema TypeSchema
   var ret bytes.Buffer
   var parameters, parameterNames []string
   var title, signature, parameterDefinition string
 
-  for propertyName, subschema := range schema.Properties {
+  for _, propertyName := range schema.RequiredProperties {
 
+    subschema = schema.Properties[propertyName]
     propertyName = ToCamelCase(propertyName)
 
     ret.WriteString(propertyName)
