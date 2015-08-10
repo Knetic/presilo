@@ -10,6 +10,13 @@ import (
   "encoding/json"
 )
 
+// TODO: Need parse context, which can tie together external schema files as well as schema-local definitions.
+/*
+  Contains parsing context, such as the currently-defined schemas by ID, and schema-local definitions.
+*/
+type SchemaParseContext struct {
+}
+
 func ParseSchemaFile(path string) (TypeSchema, error) {
 
     var contentsBytes []byte
@@ -47,6 +54,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
     return nil, err
   }
 
+  // TODO: see if '$ref' is defined, and if so, use that definition.
   schemaTypeRaw, present = contents["type"]
   if(!present) {
     return nil, errors.New("Type was not specified")
