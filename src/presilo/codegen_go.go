@@ -49,9 +49,7 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
 
       subschema = schema.Properties[propertyName]
 
-      ret.WriteString("\tvar " + ToJavaCase(propertyName) + " ")
-      ret.WriteString(generateGoTypeForSchema(subschema))
-      ret.WriteString("\n")
+      ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToCamelCase))
     }
 
     // write all non-required fields as exported fields.
@@ -70,9 +68,7 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
         continue
       }
 
-      ret.WriteString("\tvar " + ToCamelCase(propertyName) + " ")
-      ret.WriteString(generateGoTypeForSchema(subschema))
-      ret.WriteString("\n")
+      ret.WriteString(generateVariableDeclaration(subschema, propertyName, ToJavaCase))
     }
 
     ret.WriteString("}\n")
@@ -160,4 +156,21 @@ func generateGoTypeForSchema(schema TypeSchema) string {
   }
 
   return "interface{}"
+}
+
+func generateVariableDeclaration(subschema TypeSchema, propertyName string, casing func(string)(string)) (string) {
+
+  var structTag string
+  var ret bytes.Buffer
+
+  structTag = fmt.Sprintf(" `json:\"%s\";`", ToJavaCase(propertyName))
+
+  // TODO: this means unexported fields will have json deserialization struct tags,
+  // which won't work.
+  ret.WriteString("\tvar " + casing(propertyName) + " ")
+  ret.WriteString(generateGoTypeForSchema(subschema))
+  ret.WriteString(structTag)
+  ret.WriteString("\n")
+
+  return ret.String()
 }
