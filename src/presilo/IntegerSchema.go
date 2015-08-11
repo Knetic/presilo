@@ -14,7 +14,7 @@ type IntegerSchema struct {
   Maximum *int `json:"maximum"`
   ExclusiveMaximum *bool `json:"exclusiveMaximum"`
   ExclusiveMinimum *bool `json:"exclusiveMinimum"`
-  // TODO: MultipleOf *int `json:"multipleOf"`
+  MultipleOf *int `json:"multipleOf"`
 }
 
 /*
@@ -37,5 +37,5 @@ func NewIntegerSchema(contents []byte) (*IntegerSchema, error) {
 }
 
 func (this *IntegerSchema) HasConstraints() bool {
-  return this.Minimum != nil || this.Maximum != nil
+  return this.Minimum != nil || this.Maximum != nil || this.MultipleOf != nil
 }

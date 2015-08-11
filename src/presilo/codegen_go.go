@@ -181,6 +181,14 @@ func generateGoIntegerSetter(schema *IntegerSchema) string {
     ret.WriteString(constraint)
   }
 
+  if(schema.MultipleOf != nil) {
+
+    constraint = fmt.Sprintf("\tif(value % %d != 0) {", *schema.MultipleOf)
+    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Value is not a multiple of '%d'\")", *schema.MultipleOf)
+    constraint += fmt.Sprintf("\n\t}\n")
+    ret.WriteString(constraint)
+  }
+
   return ret.String()
 }
 
