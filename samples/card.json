@@ -1,0 +1,46 @@
+{
+  "title": "Card",
+  "description": "A playing card, containing both suit and name",
+  "type": "object",
+  "properties":
+  {
+    "name":
+    {
+      "$ref": "#/definitions/cardName"
+    },
+    "suit":
+    {
+      "$ref": "#/definitions/cardSuit"
+    }
+  },
+  "required": ["name", "suit"],
+
+  "definitions":
+  {
+    "cardName":
+    {
+      "type": "string",
+      "enum":
+      [
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten",
+        "jack",
+        "queen",
+        "king",
+        "ace"
+      ]
+    },
+    "cardSuit":
+    {
+      "type": "string",
+      "enum": ["hearts", "diamonds", "clubs", "spades"]
+    }
+  }
+}
