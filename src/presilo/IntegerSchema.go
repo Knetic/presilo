@@ -20,7 +20,7 @@ type IntegerSchema struct {
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewIntegerSchema(contents []byte) (*IntegerSchema, error) {
+func NewIntegerSchema(contents []byte, context *SchemaParseContext) (*IntegerSchema, error) {
 
   var ret *IntegerSchema
   var err error

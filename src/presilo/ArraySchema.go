@@ -26,7 +26,7 @@ type ArraySchema struct {
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewArraySchema(contents []byte) (*ArraySchema, error) {
+func NewArraySchema(contents []byte, context *SchemaParseContext) (*ArraySchema, error) {
 
   var ret *ArraySchema
   var err error
@@ -43,7 +43,7 @@ func NewArraySchema(contents []byte) (*ArraySchema, error) {
     return nil, errors.New("Array specified, but no item type given.")
   }
 
-  ret.Items, err = ParseSchema(*ret.RawItems, "")
+  ret.Items, err = ParseSchema(*ret.RawItems, "", context)
   return ret, err
 }
 

@@ -16,11 +16,13 @@ type RunSettings struct {
 
 var SUPPORTED_LANGUAGES = []string {
   "go",
-  "cs",
+  /*
   "java",
+  "cs",
   "py",
   "js",
   "sql",
+  */
 }
 
 func ParseRunSettings()(*RunSettings, error) {

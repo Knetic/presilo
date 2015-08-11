@@ -29,7 +29,7 @@ type ObjectSchema struct {
   Creates a new object schema from a byte slice that can be interpreted as json.
   Object schemas may contain multiple schemas.
 */
-func NewObjectSchema(contents []byte) (*ObjectSchema, error) {
+func NewObjectSchema(contents []byte, context *SchemaParseContext) (*ObjectSchema, error) {
 
   var ret *ObjectSchema
   var sub TypeSchema
@@ -60,7 +60,7 @@ func NewObjectSchema(contents []byte) (*ObjectSchema, error) {
       return ret, err
     }
 
-    sub, err = ParseSchema(subschemaBytes, propertyName)
+    sub, err = ParseSchema(subschemaBytes, propertyName, context)
     if(err != nil) {
       return ret, err
     }

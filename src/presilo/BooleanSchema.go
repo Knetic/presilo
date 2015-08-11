@@ -15,7 +15,7 @@ type BooleanSchema struct {
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewBooleanSchema(contents []byte) (*BooleanSchema, error) {
+func NewBooleanSchema(contents []byte, context *SchemaParseContext) (*BooleanSchema, error) {
 
   var ret *BooleanSchema
   var err error

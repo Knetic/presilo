@@ -18,7 +18,7 @@ type StringSchema struct {
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewStringSchema(contents []byte) (*StringSchema, error) {
+func NewStringSchema(contents []byte, context *SchemaParseContext) (*StringSchema, error) {
 
   var ret *StringSchema
   var err error

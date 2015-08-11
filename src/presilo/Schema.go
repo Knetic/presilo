@@ -6,6 +6,7 @@ type TypeSchema interface {
   GetTitle() string
   GetDescription() string
   SetTitle(string)
+  GetID() string
 }
 
 /*
@@ -33,4 +34,8 @@ func (this *Schema) GetDescription() string {
 
 func (this *Schema) SetTitle(title string) {
   this.Title = title
+}
+
+func (this *Schema) GetID() string {
+  return this.ID
 }

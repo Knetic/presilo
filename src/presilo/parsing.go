@@ -10,15 +10,9 @@ import (
   "encoding/json"
 )
 
-// TODO: Need parse context, which can tie together external schema files as well as schema-local definitions.
-/*
-  Contains parsing context, such as the currently-defined schemas by ID, and schema-local definitions.
-*/
-type SchemaParseContext struct {
-}
-
 func ParseSchemaFile(path string) (TypeSchema, error) {
 
+    var context *SchemaParseContext
     var contentsBytes []byte
     var name string
     var err error
@@ -35,15 +29,17 @@ func ParseSchemaFile(path string) (TypeSchema, error) {
       return nil, err
     }
 
-    return ParseSchema(contentsBytes, name)
+    context = NewSchemaParseContext()
+    return ParseSchema(contentsBytes, name, context)
 }
 
-func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) {
+func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParseContext) (TypeSchema, error) {
 
   var schema TypeSchema
-  var schemaTypeRaw *json.RawMessage
+  var schemaTypeRaw, schemaRefRaw *json.RawMessage
   var contents map[string]*json.RawMessage
-  var schemaTypeBytes []byte
+  var schemaTypeBytes, schemaRefBytes []byte
+  var schemaRef string
   var schemaType string
   var present bool
   var err error
@@ -53,7 +49,27 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
     return nil, err
   }
 
-  // TODO: see if '$ref' is defined, and if so, use that definition.
+  // if this is a reference schema, simply return that exact schema, and do no other processing.
+  schemaRefRaw, present = contents["$ref"]
+  if(present) {
+
+    schemaRefBytes, err = schemaRefRaw.MarshalJSON()
+    if(err != nil) {
+      return nil, err
+    }
+
+    schemaRef = string(schemaRefBytes)
+
+    schema, present = context.SchemaDefinitions[schemaRef]
+    if(!present) {
+
+      errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved", schemaRef)
+      return nil, errors.New(errorMsg)
+    }
+
+    return schema, nil
+  }
+
   schemaTypeRaw, present = contents["type"]
   if(!present) {
     return nil, errors.New("Type was not specified")
@@ -73,19 +89,19 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
   switch(schemaType) {
 
   case "integer":
-    schema, err = NewIntegerSchema(contentsBytes)
+    schema, err = NewIntegerSchema(contentsBytes, context)
 
   case "number":
-    schema, err = NewNumberSchema(contentsBytes)
+    schema, err = NewNumberSchema(contentsBytes, context)
 
   case "string":
-      schema, err = NewStringSchema(contentsBytes)
+      schema, err = NewStringSchema(contentsBytes, context)
 
   case "array":
-    schema, err = NewArraySchema(contentsBytes)
+    schema, err = NewArraySchema(contentsBytes, context)
 
   case "object":
-    schema, err = NewObjectSchema(contentsBytes)
+    schema, err = NewObjectSchema(contentsBytes, context)
 
   default:
     errorMsg := fmt.Sprintf("Unrecognized schema type: '%s'", schemaType)
@@ -100,6 +116,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
     schema.SetTitle(defaultTitle)
   }
 
+  context.SchemaDefinitions[schema.GetID()] = schema
   return schema, nil
 }
 
