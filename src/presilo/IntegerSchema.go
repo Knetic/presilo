@@ -12,8 +12,8 @@ type IntegerSchema struct {
   Schema
   Minimum *int `json:"minimum"`
   Maximum *int `json:"maximum"`
-  // TODO: ExclusiveMaximum *bool `json:"exclusiveMaximum"`
-  // TODO: ExclusiveMinimum *bool `json:"exclusiveMinimum"`
+  ExclusiveMaximum *bool `json:"exclusiveMaximum"`
+  ExclusiveMinimum *bool `json:"exclusiveMinimum"`
   // TODO: MultipleOf *int `json:"multipleOf"`
 }
 

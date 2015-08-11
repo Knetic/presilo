@@ -147,7 +147,7 @@ func generateGoConstructor(schema *ObjectSchema) string {
 func generateGoIntegerSetter(schema *IntegerSchema) string {
 
   var ret bytes.Buffer
-  var constraint string
+  var constraint, comparator string
 
   if(!schema.HasConstraints()) {
     return ""
@@ -155,7 +155,13 @@ func generateGoIntegerSetter(schema *IntegerSchema) string {
 
   if(schema.Minimum != nil) {
 
-    constraint = fmt.Sprintf("\tif(value < %d) {", *schema.Minimum)
+    if(schema.ExclusiveMinimum == nil || !*schema.ExclusiveMinimum) {
+      comparator = "<"
+    } else {
+      comparator = "<="
+    }
+
+    constraint = fmt.Sprintf("\tif(value %s %d) {", comparator, *schema.Minimum)
     constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", *schema.Minimum)
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
@@ -163,7 +169,13 @@ func generateGoIntegerSetter(schema *IntegerSchema) string {
 
   if(schema.Maximum != nil) {
 
-    constraint = fmt.Sprintf("\tif(value < %d) {", *schema.Minimum)
+    if(schema.ExclusiveMaximum == nil || !*schema.ExclusiveMaximum) {
+      comparator = "<"
+    } else {
+      comparator = "<="
+    }
+
+    constraint = fmt.Sprintf("\tif(value %s %d) {", comparator, *schema.Minimum)
     constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", *schema.Minimum)
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
