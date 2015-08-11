@@ -17,6 +17,13 @@
       "description": "Age in years",
       "type": "integer",
       "minimum": 0
+    },
+    "height":
+    {
+      "description": "Age in meters",
+      "type": "number",
+      "minimum": 0,
+      "multipleOf": 2
     }
   },
   "required": ["firstName", "lastName"]

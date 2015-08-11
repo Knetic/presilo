@@ -39,3 +39,39 @@ func NewIntegerSchema(contents []byte) (*IntegerSchema, error) {
 func (this *IntegerSchema) HasConstraints() bool {
   return this.Minimum != nil || this.Maximum != nil || this.MultipleOf != nil
 }
+
+func (this *IntegerSchema) HasMinimum() bool {
+  return this.Minimum != nil
+}
+
+func (this *IntegerSchema) HasMaximum() bool {
+  return this.Maximum != nil
+}
+
+func (this *IntegerSchema) HasMultiple() bool {
+  return this.MultipleOf != nil
+}
+
+func (this *IntegerSchema) GetMinimum() interface{} {
+  return *this.Minimum
+}
+
+func (this *IntegerSchema) GetMaximum() interface{} {
+  return *this.Maximum
+}
+
+func (this *IntegerSchema) GetMultiple() interface{} {
+  return *this.MultipleOf
+}
+
+func (this *IntegerSchema) IsExclusiveMaximum() bool {
+  return this.ExclusiveMaximum != nil
+}
+
+func (this *IntegerSchema) IsExclusiveMinimum() bool {
+  return this.ExclusiveMinimum != nil
+}
+
+func (this *IntegerSchema) GetConstraintFormat() string {
+  return "%d"
+}

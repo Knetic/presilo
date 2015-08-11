@@ -92,7 +92,8 @@ func generateGoFunctions(schema *ObjectSchema) string {
 
       switch subschema.GetSchemaType() {
         case SCHEMATYPE_STRING: constraintChecks = generateGoStringSetter(subschema.(*StringSchema))
-        case SCHEMATYPE_INTEGER: constraintChecks = generateGoIntegerSetter(subschema.(*IntegerSchema))
+        case SCHEMATYPE_NUMBER: constraintChecks = generateGoNumericSetter(subschema.(*NumberSchema))
+        case SCHEMATYPE_INTEGER: constraintChecks = generateGoNumericSetter(subschema.(*IntegerSchema))
       }
 
       ret.WriteString(signature)
@@ -144,47 +145,68 @@ func generateGoConstructor(schema *ObjectSchema) string {
   return ret.String()
 }
 
-func generateGoIntegerSetter(schema *IntegerSchema) string {
+func generateGoNumericSetter(schema NumericSchemaType) string {
 
   var ret bytes.Buffer
+  var minimum, maximum, multiple interface{}
+  var formatString, constraintTemplate string
   var constraint, comparator string
 
   if(!schema.HasConstraints()) {
     return ""
   }
 
-  if(schema.Minimum != nil) {
+  formatString = schema.GetConstraintFormat()
 
-    if(schema.ExclusiveMinimum == nil || !*schema.ExclusiveMinimum) {
-      comparator = "<"
-    } else {
+  if(schema.HasMinimum()) {
+
+    if(schema.IsExclusiveMinimum()) {
       comparator = "<="
+    } else {
+      comparator = "<"
     }
 
-    constraint = fmt.Sprintf("\tif(value %s %d) {", comparator, *schema.Minimum)
-    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", *schema.Minimum)
+    minimum = schema.GetMinimum()
+
+    constraintTemplate = "\tif(value %s "+formatString+") {"
+    constraint = fmt.Sprintf(constraintTemplate, comparator, minimum)
+
+    constraintTemplate = "\n\t\treturn errors.New(\"Minimum value of '"+formatString+"' not met\")"
+    constraint += fmt.Sprintf(constraintTemplate, minimum)
+
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
   }
 
-  if(schema.Maximum != nil) {
+  if(schema.HasMaximum()) {
 
-    if(schema.ExclusiveMaximum == nil || !*schema.ExclusiveMaximum) {
-      comparator = "<"
-    } else {
+    if(schema.IsExclusiveMaximum()) {
       comparator = "<="
+    } else {
+      comparator = "<"
     }
 
-    constraint = fmt.Sprintf("\tif(value %s %d) {", comparator, *schema.Minimum)
-    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Minimum value of '%d' not met\")", *schema.Minimum)
+    maximum = schema.GetMaximum()
+
+    constraintTemplate = "\tif(value %s "+formatString+") {"
+    constraint = fmt.Sprintf(constraintTemplate, comparator, maximum)
+
+    constraintTemplate = "\n\t\treturn errors.New(\"Minimum value of '"+formatString+"' not met\")"
+    constraint += fmt.Sprintf(constraintTemplate, maximum)
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
   }
 
-  if(schema.MultipleOf != nil) {
+  if(schema.HasMultiple()) {
 
-    constraint = fmt.Sprintf("\tif(value % %d != 0) {", *schema.MultipleOf)
-    constraint += fmt.Sprintf("\n\t\treturn errors.New(\"Value is not a multiple of '%d'\")", *schema.MultipleOf)
+    multiple = schema.GetMultiple()
+
+    constraintTemplate = "\tif(value %% "+formatString+" != 0) {"
+    constraint = fmt.Sprintf(constraintTemplate, multiple)
+
+    constraintTemplate = "\n\t\treturn errors.New(\"Value is not a multiple of '"+formatString+"'\")"
+    constraint += fmt.Sprintf(constraintTemplate, multiple)
+
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
   }
@@ -206,6 +228,8 @@ func generateGoTypeForSchema(schema TypeSchema) string {
     return "string"
   case SCHEMATYPE_INTEGER:
     return "int"
+  case SCHEMATYPE_NUMBER:
+    return "float64"
   case SCHEMATYPE_OBJECT:
     return "*" + ToCamelCase(schema.GetTitle())
   }

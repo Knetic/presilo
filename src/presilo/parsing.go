@@ -78,6 +78,11 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
     if(err != nil) {
       return nil, err
     }
+  case "number":
+    schema, err = NewNumberSchema(contentsBytes)
+    if(err != nil) {
+      return nil, err
+    }
 
   case "string":
       schema, err = NewStringSchema(contentsBytes)

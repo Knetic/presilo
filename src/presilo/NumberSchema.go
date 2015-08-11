@@ -12,9 +12,9 @@ type NumberSchema struct {
   Schema
   Minimum *float64 `json:"minimum"`
   Maximum *float64 `json:"maximum"`
-  // TODO: ExclusiveMinimum *bool `json:"exclusiveMinimum"`
-  // TODO: ExclusiveMaximum *bool `json:"exclusiveMaximum"`
-  // TODO: MultipleOf *float64 `json:"multipleOf"`
+  ExclusiveMinimum *bool `json:"exclusiveMinimum"`
+  ExclusiveMaximum *bool `json:"exclusiveMaximum"`
+  MultipleOf *float64 `json:"multipleOf"`
 }
 
 /*
@@ -37,5 +37,41 @@ func NewNumberSchema(contents []byte) (*NumberSchema, error) {
 }
 
 func (this *NumberSchema) HasConstraints() bool {
-  return false
+  return this.Minimum != nil || this.Maximum != nil || this.MultipleOf != nil
+}
+
+func (this *NumberSchema) HasMinimum() bool {
+  return this.Minimum != nil
+}
+
+func (this *NumberSchema) HasMaximum() bool {
+  return this.Maximum != nil
+}
+
+func (this *NumberSchema) HasMultiple() bool {
+  return this.MultipleOf != nil
+}
+
+func (this *NumberSchema) GetMinimum() interface{} {
+  return *this.Minimum
+}
+
+func (this *NumberSchema) GetMaximum() interface{} {
+  return *this.Maximum
+}
+
+func (this *NumberSchema) GetMultiple() interface{} {
+  return *this.MultipleOf
+}
+
+func (this *NumberSchema) IsExclusiveMaximum() bool {
+  return this.ExclusiveMaximum != nil
+}
+
+func (this *NumberSchema) IsExclusiveMinimum() bool {
+  return this.ExclusiveMinimum != nil
+}
+
+func (this *NumberSchema) GetConstraintFormat() string {
+  return "%f"
 }
