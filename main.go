@@ -5,6 +5,7 @@ import (
   "os"
   "path/filepath"
   "fmt"
+  "errors"
   "io/ioutil"
 )
 
@@ -62,24 +63,33 @@ func prepareOutputPath(targetPath string) (string, error) {
 
 func generateCode(schema TypeSchema, module string, targetPath string, language string) error {
 
-  var schemas []TypeSchema
+  var schemas []*ObjectSchema
+  var objectSchema *ObjectSchema
+  var generator func(*ObjectSchema, string)(string)
   var written string
   var schemaPath string
   var err error
 
+  if(schema.GetSchemaType() != SCHEMATYPE_OBJECT) {
+    errorMsg := fmt.Sprintf("Could not generate code for '%s', it was not an object.", schema.GetTitle())
+    return errors.New(errorMsg)
+  }
+
+  objectSchema = schema.(*ObjectSchema)
   schemas = RecurseObjectSchemas(schema, schemas)
 
-  for _, schema := range schemas {
+  // figure out which code generator to use
+  switch(language) {
 
-    // i know, this does a switch on the language each iteration,
-    // even though language doesn't change.
-    // I'm ok with that redundancy.
-    switch(language) {
+  case "go": generator = GenerateGo
+  }
 
-    case "go": written = GenerateGo(schema.(*ObjectSchema), module)
-    }
+  // write schemas
+  for _, objectSchema = range schemas {
 
-    schemaPath = fmt.Sprintf("%s%s%s.%s", targetPath, string(os.PathSeparator), schema.GetTitle(), language)
+    written = generator(objectSchema, module)
+
+    schemaPath = fmt.Sprintf("%s%s%s.%s", targetPath, string(os.PathSeparator), objectSchema.GetTitle(), language)
     err = ioutil.WriteFile(schemaPath, []byte(written), os.ModePerm)
 
     if(err != nil) {

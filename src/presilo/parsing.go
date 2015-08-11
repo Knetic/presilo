@@ -41,7 +41,6 @@ func ParseSchemaFile(path string) (TypeSchema, error) {
 func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) {
 
   var schema TypeSchema
-  var objectSchema *ObjectSchema
   var schemaTypeRaw *json.RawMessage
   var contents map[string]*json.RawMessage
   var schemaTypeBytes []byte
@@ -75,37 +74,26 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
 
   case "integer":
     schema, err = NewIntegerSchema(contentsBytes)
-    if(err != nil) {
-      return nil, err
-    }
+
   case "number":
     schema, err = NewNumberSchema(contentsBytes)
-    if(err != nil) {
-      return nil, err
-    }
 
   case "string":
       schema, err = NewStringSchema(contentsBytes)
-      if(err != nil) {
-        return nil, err
-      }
 
   case "array":
     schema, err = NewArraySchema(contentsBytes)
-    if(err != nil) {
-      return nil, err
-    }
 
   case "object":
-    objectSchema, err = NewObjectSchema(contentsBytes)
-    if(err != nil) {
-      return nil, err
-    }
+    schema, err = NewObjectSchema(contentsBytes)
 
-    schema = objectSchema
   default:
     errorMsg := fmt.Sprintf("Unrecognized schema type: '%s'", schemaType)
     return nil, errors.New(errorMsg)
+  }
+
+  if(err != nil) {
+    return nil, err
   }
 
   if(len(schema.GetTitle()) == 0) {
@@ -116,10 +104,10 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
 }
 
 /*
-Recurses the properties of the given [root],
-adding all sub-schemas to the given [schemas].
+  Recurses the properties of the given [root],
+  adding all sub-schemas to the given [schemas].
 */
-func RecurseObjectSchemas(schema TypeSchema, schemas []TypeSchema) []TypeSchema {
+func RecurseObjectSchemas(schema TypeSchema, schemas []*ObjectSchema) []*ObjectSchema {
 
   if(schema.GetSchemaType() == SCHEMATYPE_OBJECT) {
     return recurseObjectSchema(schema.(*ObjectSchema), schemas)
@@ -127,18 +115,16 @@ func RecurseObjectSchemas(schema TypeSchema, schemas []TypeSchema) []TypeSchema 
   if(schema.GetSchemaType() == SCHEMATYPE_ARRAY) {
     return RecurseObjectSchemas(schema.(*ArraySchema).Items, schemas)
   }
-  return []TypeSchema{schema}
+
+  return schemas
 }
 
-func recurseObjectSchema(schema *ObjectSchema, schemas []TypeSchema) []TypeSchema {
+func recurseObjectSchema(schema *ObjectSchema, schemas []*ObjectSchema) []*ObjectSchema {
 
   schemas = append(schemas, schema)
 
   for _, property := range schema.Properties {
-
-    if(property.GetSchemaType() == SCHEMATYPE_OBJECT) {
-      schemas = recurseObjectSchema(property.(*ObjectSchema), schemas)
-    }
+    schemas = RecurseObjectSchemas(property, schemas)
   }
 
   return schemas
