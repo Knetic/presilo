@@ -78,6 +78,7 @@ func NewObjectSchema(contents []byte) (*ObjectSchema, error) {
       case SCHEMATYPE_INTEGER: constrained = subschema.(*IntegerSchema).HasConstraints()
       case SCHEMATYPE_NUMBER: constrained = subschema.(*NumberSchema).HasConstraints()
       case SCHEMATYPE_STRING: constrained = subschema.(*StringSchema).HasConstraints()
+      case SCHEMATYPE_ARRAY: constrained = subschema.(*ArraySchema).HasConstraints()
     }
 
     if(constrained) {

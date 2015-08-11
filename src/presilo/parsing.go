@@ -90,6 +90,12 @@ func ParseSchema(contentsBytes []byte, defaultTitle string) (TypeSchema, error) 
         return nil, err
       }
 
+  case "array":
+    schema, err = NewArraySchema(contentsBytes)
+    if(err != nil) {
+      return nil, err
+    }
+
   case "object":
     objectSchema, err = NewObjectSchema(contentsBytes)
     if(err != nil) {
@@ -117,6 +123,9 @@ func RecurseObjectSchemas(schema TypeSchema, schemas []TypeSchema) []TypeSchema 
 
   if(schema.GetSchemaType() == SCHEMATYPE_OBJECT) {
     return recurseObjectSchema(schema.(*ObjectSchema), schemas)
+  }
+  if(schema.GetSchemaType() == SCHEMATYPE_ARRAY) {
+    return RecurseObjectSchemas(schema.(*ArraySchema).Items, schemas)
   }
   return []TypeSchema{schema}
 }

@@ -12,6 +12,8 @@ type ArraySchema struct {
 
   Schema
 
+  // TODO: item schema should be able to have more than one type in it.
+  // mixed types should be automatically set as subclasses of a common ancestor, in languages that support it
   Items TypeSchema
 
   MaxItems *int `json:"maxItems"`
@@ -46,5 +48,5 @@ func NewArraySchema(contents []byte) (*ArraySchema, error) {
 }
 
 func (this *ArraySchema) HasConstraints() bool {
-  return false
+  return this.MaxItems != nil || this.MinItems != nil || this.UniqueItems != nil
 }

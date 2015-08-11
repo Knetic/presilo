@@ -94,6 +94,7 @@ func generateGoFunctions(schema *ObjectSchema) string {
         case SCHEMATYPE_STRING: constraintChecks = generateGoStringSetter(subschema.(*StringSchema))
         case SCHEMATYPE_NUMBER: constraintChecks = generateGoNumericSetter(subschema.(*NumberSchema))
         case SCHEMATYPE_INTEGER: constraintChecks = generateGoNumericSetter(subschema.(*IntegerSchema))
+        case SCHEMATYPE_ARRAY: constraintChecks = generateGoArraySetter(subschema.(*ArraySchema))
       }
 
       ret.WriteString(signature)
@@ -123,7 +124,6 @@ func generateGoConstructor(schema *ObjectSchema) string {
     parameterNames = append(parameterNames, propertyName)
     parameters = append(parameters, ret.String())
     ret.Reset()
-
   }
 
   // signature
@@ -181,9 +181,9 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
   if(schema.HasMaximum()) {
 
     if(schema.IsExclusiveMaximum()) {
-      comparator = "<="
+      comparator = ">="
     } else {
-      comparator = "<"
+      comparator = ">"
     }
 
     maximum = schema.GetMaximum()
@@ -191,7 +191,7 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
     constraintTemplate = "\tif(value %s "+formatString+") {"
     constraint = fmt.Sprintf(constraintTemplate, comparator, maximum)
 
-    constraintTemplate = "\n\t\treturn errors.New(\"Minimum value of '"+formatString+"' not met\")"
+    constraintTemplate = "\n\t\treturn errors.New(\"Maximum value of '"+formatString+"' not met\")"
     constraint += fmt.Sprintf(constraintTemplate, maximum)
     constraint += fmt.Sprintf("\n\t}\n")
     ret.WriteString(constraint)
@@ -221,6 +221,42 @@ func generateGoStringSetter(schema *StringSchema) string {
   return ret.String()
 }
 
+func generateGoArraySetter(schema *ArraySchema) string {
+
+  var ret bytes.Buffer
+  var constraintTemplate string
+
+  if(!schema.HasConstraints()) {
+    return ""
+  }
+
+  ret.WriteString("\tlength := len(value)\n\n")
+
+  if(schema.MinItems != nil) {
+
+    constraintTemplate = fmt.Sprintf("\tif(length < %d) {\n", *schema.MinItems)
+    ret.WriteString(constraintTemplate)
+
+    constraintTemplate = fmt.Sprintf("\t\treturn errors.New(\"Minimum number of elements '%d' not present\")\n", *schema.MinItems)
+    ret.WriteString(constraintTemplate)
+
+    ret.WriteString("\t}\n\n")
+  }
+
+  if(schema.MaxItems != nil) {
+
+    constraintTemplate = fmt.Sprintf("\tif(length > %d) {\n", *schema.MaxItems)
+    ret.WriteString(constraintTemplate)
+
+    constraintTemplate = fmt.Sprintf("\t\treturn errors.New(\"Maximum number of elements '%d' not present\")\n", *schema.MaxItems)
+    ret.WriteString(constraintTemplate)
+
+    ret.WriteString("\t}\n\n")
+  }
+
+  return ret.String()
+}
+
 func generateGoTypeForSchema(schema TypeSchema) string {
 
   switch schema.GetSchemaType() {
@@ -232,6 +268,8 @@ func generateGoTypeForSchema(schema TypeSchema) string {
     return "float64"
   case SCHEMATYPE_OBJECT:
     return "*" + ToCamelCase(schema.GetTitle())
+  case SCHEMATYPE_ARRAY:
+    return "[]" + ToCamelCase(schema.(*ArraySchema).Items.GetTitle())
   }
 
   return "interface{}"
