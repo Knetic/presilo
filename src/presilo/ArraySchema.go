@@ -2,6 +2,7 @@ package presilo
 
 import (
   "encoding/json"
+  "errors"
 )
 
 /*
@@ -11,11 +12,13 @@ type ArraySchema struct {
 
   Schema
 
-  // TODO: Items []TypeSchema
+  Items TypeSchema
 
-  // TODO: MaxItems *int `json:"maxItems"`
-  // TODO: MinItems *int `json:"minItems"`
-  // TODO: UniqueItems *bool `json:"uniqueItems"`
+  MaxItems *int `json:"maxItems"`
+  MinItems *int `json:"minItems"`
+  UniqueItems *bool `json:"uniqueItems"`
+
+  RawItems *json.RawMessage `json:"items"`
 }
 
 /*
@@ -34,7 +37,12 @@ func NewArraySchema(contents []byte) (*ArraySchema, error) {
     return ret, err
   }
 
-  return ret, nil
+  if(ret.RawItems == nil) {
+    return nil, errors.New("Array specified, but no item type given.")
+  }
+
+  ret.Items, err = ParseSchema(*ret.RawItems, "")
+  return ret, err
 }
 
 func (this *ArraySchema) HasConstraints() bool {
