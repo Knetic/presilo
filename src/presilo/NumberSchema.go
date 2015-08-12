@@ -14,6 +14,7 @@ type NumberSchema struct {
 	ExclusiveMinimum *bool    `json:"exclusiveMinimum"`
 	ExclusiveMaximum *bool    `json:"exclusiveMaximum"`
 	MultipleOf       *float64 `json:"multipleOf"`
+	Enum						*[]float64 `json:"enum"`
 }
 
 /*
@@ -36,7 +37,10 @@ func NewNumberSchema(contents []byte, context *SchemaParseContext) (*NumberSchem
 }
 
 func (this *NumberSchema) HasConstraints() bool {
-	return this.Minimum != nil || this.Maximum != nil || this.MultipleOf != nil
+	return this.Minimum != nil ||
+				this.Maximum != nil ||
+				this.MultipleOf != nil ||
+				this.Enum != nil
 }
 
 func (this *NumberSchema) HasMinimum() bool {
@@ -51,6 +55,10 @@ func (this *NumberSchema) HasMultiple() bool {
 	return this.MultipleOf != nil
 }
 
+func (this *NumberSchema) HasEnum() bool {
+	return this.Enum != nil
+}
+
 func (this *NumberSchema) GetMinimum() interface{} {
 	return *this.Minimum
 }
@@ -61,6 +69,22 @@ func (this *NumberSchema) GetMaximum() interface{} {
 
 func (this *NumberSchema) GetMultiple() interface{} {
 	return *this.MultipleOf
+}
+
+func (this *NumberSchema) GetEnum() []interface{} {
+
+	var ret []interface{}
+	var enumValues []float64
+	var length int
+
+	length = len(*this.Enum)
+	ret = make([]interface{}, length)
+	enumValues = *this.Enum
+
+	for i := 0; i < length; i++ {
+		ret[i] = enumValues[i]
+	}
+	return ret
 }
 
 func (this *NumberSchema) IsExclusiveMaximum() bool {

@@ -12,6 +12,7 @@ type StringSchema struct {
 	// TODO: MaxLength *int `json:"maxLength"`
 	// TODO: MinLength *int `json:"minLength"`
 	// TODO: Pattern *string `json:"pattern"`
+	Enum *[]string `json:"enum"`
 }
 
 /*
@@ -34,5 +35,21 @@ func NewStringSchema(contents []byte, context *SchemaParseContext) (*StringSchem
 }
 
 func (this *StringSchema) HasConstraints() bool {
-	return false
+	return this.Enum != nil
+}
+
+func (this *StringSchema) GetEnum() []interface{} {
+
+	var ret []interface{}
+	var enumValues []string
+	var length int
+
+	length = len(*this.Enum)
+	ret = make([]interface{}, length)
+	enumValues = *this.Enum
+
+	for i := 0; i < length; i++ {
+		ret[i] = enumValues[i]
+	}
+	return ret
 }

@@ -142,6 +142,8 @@ func generateGoConstructor(schema *ObjectSchema) string {
 
 	for _, propertyName := range parameterNames {
 
+		// TODO: Only set these fields if not constrained
+		// If constrained, use setter.
 		parameterDefinition = fmt.Sprintf("\tret.%s = %s\n", propertyName, propertyName)
 		ret.WriteString(parameterDefinition)
 	}
@@ -162,6 +164,10 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
 	}
 
 	formatString = schema.GetConstraintFormat()
+
+	if(schema.HasEnum()) {
+		ret.WriteString(generateGoEnumForSchema(schema, schema.GetEnum(), "", ""))
+	}
 
 	if schema.HasMinimum() {
 
@@ -223,6 +229,10 @@ func generateGoStringSetter(schema *StringSchema) string {
 
 	var ret bytes.Buffer
 
+	if(schema.Enum != nil) {
+		ret.WriteString(generateGoEnumForSchema(schema, schema.GetEnum(), "\"", "\""))
+	}
+
 	return ret.String()
 }
 
@@ -262,21 +272,48 @@ func generateGoArraySetter(schema *ArraySchema) string {
 	return ret.String()
 }
 
-func generateGoTypeForSchema(schema TypeSchema) string {
+func generateGoEnumForSchema(schema interface{}, enumValues []interface{}, prefix string, postfix string) string {
 
-	switch schema.GetSchemaType() {
-  case SCHEMATYPE_BOOLEAN:
-    return "bool"
-	case SCHEMATYPE_STRING:
-		return "string"
-	case SCHEMATYPE_INTEGER:
-		return "int"
-	case SCHEMATYPE_NUMBER:
-		return "float64"
-	case SCHEMATYPE_OBJECT:
-		return "*" + ToCamelCase(schema.GetTitle())
-	case SCHEMATYPE_ARRAY:
-		return "[]" + ToCamelCase(schema.(*ArraySchema).Items.GetTitle())
+	var ret bytes.Buffer
+	var constraint string
+	var length int
+
+	length = len(enumValues)
+
+	if(length <= 0) {
+		return ""
+	}
+
+	// write array of valid values
+	constraint = fmt.Sprintf("\tvalidValues := []%s{%s%v%s", generateGoTypeForSchema(schema), prefix, enumValues[0], postfix)
+	ret.WriteString(constraint)
+
+	for _, enumValue := range enumValues[1:length] {
+
+		constraint = fmt.Sprintf(",%s%v%s", prefix, enumValue, postfix)
+		ret.WriteString(constraint)
+	}
+	ret.WriteString("}\n")
+
+	// compare
+	ret.WriteString("\tisValid := false\n")
+	ret.WriteString("\tfor _, validValue := range validValues {\n")
+	ret.WriteString("\t\tif(validValue == value){\n\t\t\tisValid = true")
+	ret.WriteString("\n\t\t\tbreak\n\t\t}\n\t}")
+	ret.WriteString("\n\tif(!isValid){return errors.New(\"Given value was not found in list of acceptable values\")}")
+
+	return ret.String()
+}
+
+func generateGoTypeForSchema(schema interface{}) string {
+
+	switch schema.(type) {
+	case *BooleanSchema: return "bool"
+	case *StringSchema: return "string"
+	case *IntegerSchema: return "int"
+	case *NumberSchema: return "float64"
+	case *ObjectSchema: return "*" + ToCamelCase(schema.(TypeSchema).GetTitle())
+	case *ArraySchema: return "[]" + ToCamelCase(schema.(*ArraySchema).Items.GetTitle())
 	}
 
 	return "interface{}"
@@ -291,7 +328,7 @@ func generateVariableDeclaration(subschema TypeSchema, propertyName string, casi
 
 	// TODO: this means unexported fields will have json deserialization struct tags,
 	// which won't work.
-	ret.WriteString("\tvar " + casing(propertyName) + " ")
+	ret.WriteString("\t" + casing(propertyName) + " ")
 	ret.WriteString(generateGoTypeForSchema(subschema))
 	ret.WriteString(structTag)
 	ret.WriteString("\n")
