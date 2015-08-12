@@ -30,6 +30,11 @@ func GenerateGo(schema *ObjectSchema, module string) string {
 func generateGoImports(schema *ObjectSchema) string {
 
 	var ret bytes.Buffer
+
+	// import errors if there are any constrained fields
+	if(len(schema.ConstrainedProperties) > 0) {
+		ret.WriteString("import \"errors\"\n")
+	}
 	return ret.String()
 }
 
