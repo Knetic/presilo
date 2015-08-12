@@ -1,41 +1,39 @@
 package presilo
 
 type TypeSchema interface {
-
-  GetSchemaType() SchemaType
-  GetTitle() string
-  GetDescription() string
-  SetTitle(string)
-  GetID() string
+	GetSchemaType() SchemaType
+	GetTitle() string
+	GetDescription() string
+	SetTitle(string)
+	GetID() string
 }
 
 /*
   Represents the schema of one field in a json document.
 */
 type Schema struct {
-
-  Title string `json:"title"`
-  ID string `json:"id"`
-  Description string `json:"description"`
-  typeCode SchemaType
+	Title       string `json:"title"`
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	typeCode    SchemaType
 }
 
 func (this *Schema) GetSchemaType() SchemaType {
-  return this.typeCode
+	return this.typeCode
 }
 
 func (this *Schema) GetTitle() string {
-  return this.Title
+	return this.Title
 }
 
 func (this *Schema) GetDescription() string {
-  return this.Description
+	return this.Description
 }
 
 func (this *Schema) SetTitle(title string) {
-  this.Title = title
+	this.Title = title
 }
 
 func (this *Schema) GetID() string {
-  return this.ID
+	return this.ID
 }

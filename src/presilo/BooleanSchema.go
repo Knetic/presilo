@@ -1,15 +1,14 @@
 package presilo
 
 import (
-  "encoding/json"
+	"encoding/json"
 )
 
 /*
   A schema which describes an integer.
 */
 type BooleanSchema struct {
-
-  Schema
+	Schema
 }
 
 /*
@@ -17,16 +16,16 @@ type BooleanSchema struct {
 */
 func NewBooleanSchema(contents []byte, context *SchemaParseContext) (*BooleanSchema, error) {
 
-  var ret *BooleanSchema
-  var err error
+	var ret *BooleanSchema
+	var err error
 
-  ret = new(BooleanSchema)
-  ret.typeCode = SCHEMATYPE_BOOLEAN
+	ret = new(BooleanSchema)
+	ret.typeCode = SCHEMATYPE_BOOLEAN
 
-  err = json.Unmarshal(contents, &ret)
-  if(err != nil) {
-    return ret, err
-  }
+	err = json.Unmarshal(contents, &ret)
+	if err != nil {
+		return ret, err
+	}
 
-  return ret, nil
+	return ret, nil
 }

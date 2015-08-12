@@ -1,18 +1,17 @@
 package presilo
 
 import (
-  "encoding/json"
+	"encoding/json"
 )
 
 /*
   A schema which describes an integer.
 */
 type StringSchema struct {
-
-  Schema
-  // TODO: MaxLength *int `json:"maxLength"`
-  // TODO: MinLength *int `json:"minLength"`
-  // TODO: Pattern *string `json:"pattern"`
+	Schema
+	// TODO: MaxLength *int `json:"maxLength"`
+	// TODO: MinLength *int `json:"minLength"`
+	// TODO: Pattern *string `json:"pattern"`
 }
 
 /*
@@ -20,20 +19,20 @@ type StringSchema struct {
 */
 func NewStringSchema(contents []byte, context *SchemaParseContext) (*StringSchema, error) {
 
-  var ret *StringSchema
-  var err error
+	var ret *StringSchema
+	var err error
 
-  ret = new(StringSchema)
-  ret.typeCode = SCHEMATYPE_STRING
+	ret = new(StringSchema)
+	ret.typeCode = SCHEMATYPE_STRING
 
-  err = json.Unmarshal(contents, &ret)
-  if(err != nil) {
-    return ret, err
-  }
+	err = json.Unmarshal(contents, &ret)
+	if err != nil {
+		return ret, err
+	}
 
-  return ret, nil
+	return ret, nil
 }
 
 func (this *StringSchema) HasConstraints() bool {
-  return false
+	return false
 }

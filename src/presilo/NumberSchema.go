@@ -1,20 +1,19 @@
 package presilo
 
 import (
-  "encoding/json"
+	"encoding/json"
 )
 
 /*
   A schema which describes a number, which may include floating point numbers.
 */
 type NumberSchema struct {
-
-  Schema
-  Minimum *float64 `json:"minimum"`
-  Maximum *float64 `json:"maximum"`
-  ExclusiveMinimum *bool `json:"exclusiveMinimum"`
-  ExclusiveMaximum *bool `json:"exclusiveMaximum"`
-  MultipleOf *float64 `json:"multipleOf"`
+	Schema
+	Minimum          *float64 `json:"minimum"`
+	Maximum          *float64 `json:"maximum"`
+	ExclusiveMinimum *bool    `json:"exclusiveMinimum"`
+	ExclusiveMaximum *bool    `json:"exclusiveMaximum"`
+	MultipleOf       *float64 `json:"multipleOf"`
 }
 
 /*
@@ -22,56 +21,56 @@ type NumberSchema struct {
 */
 func NewNumberSchema(contents []byte, context *SchemaParseContext) (*NumberSchema, error) {
 
-  var ret *NumberSchema
-  var err error
+	var ret *NumberSchema
+	var err error
 
-  ret = new(NumberSchema)
-  ret.typeCode = SCHEMATYPE_NUMBER
+	ret = new(NumberSchema)
+	ret.typeCode = SCHEMATYPE_NUMBER
 
-  err = json.Unmarshal(contents, &ret)
-  if(err != nil) {
-    return ret, err
-  }
+	err = json.Unmarshal(contents, &ret)
+	if err != nil {
+		return ret, err
+	}
 
-  return ret, nil
+	return ret, nil
 }
 
 func (this *NumberSchema) HasConstraints() bool {
-  return this.Minimum != nil || this.Maximum != nil || this.MultipleOf != nil
+	return this.Minimum != nil || this.Maximum != nil || this.MultipleOf != nil
 }
 
 func (this *NumberSchema) HasMinimum() bool {
-  return this.Minimum != nil
+	return this.Minimum != nil
 }
 
 func (this *NumberSchema) HasMaximum() bool {
-  return this.Maximum != nil
+	return this.Maximum != nil
 }
 
 func (this *NumberSchema) HasMultiple() bool {
-  return this.MultipleOf != nil
+	return this.MultipleOf != nil
 }
 
 func (this *NumberSchema) GetMinimum() interface{} {
-  return *this.Minimum
+	return *this.Minimum
 }
 
 func (this *NumberSchema) GetMaximum() interface{} {
-  return *this.Maximum
+	return *this.Maximum
 }
 
 func (this *NumberSchema) GetMultiple() interface{} {
-  return *this.MultipleOf
+	return *this.MultipleOf
 }
 
 func (this *NumberSchema) IsExclusiveMaximum() bool {
-  return this.ExclusiveMaximum != nil
+	return this.ExclusiveMaximum != nil
 }
 
 func (this *NumberSchema) IsExclusiveMinimum() bool {
-  return this.ExclusiveMinimum != nil
+	return this.ExclusiveMinimum != nil
 }
 
 func (this *NumberSchema) GetConstraintFormat() string {
-  return "%f"
+	return "%f"
 }

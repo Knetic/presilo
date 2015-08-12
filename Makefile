@@ -17,6 +17,9 @@ test:
 clean:
 	@rm -rf ./.output/
 
+format:
+	go fmt . presilo
+
 dist: build test
 
 	export GOOS=linux; \
