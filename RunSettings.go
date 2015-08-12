@@ -16,11 +16,11 @@ type RunSettings struct {
 
 var SUPPORTED_LANGUAGES = []string{
 	"go",
+	"js",
 	/*
 	  "java",
 	  "cs",
 	  "py",
-	  "js",
 	  "sql",
 	*/
 }

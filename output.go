@@ -67,6 +67,8 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 
 	case "go":
 		generator = GenerateGo
+  case "js":
+    generator = GenerateJS
 	}
 
 	writtenChannel = make(chan string)
@@ -161,7 +163,7 @@ func writeSingleFile(schemaPath string, source chan string, resultError chan err
 	for {
 		contents, ok =<- source
 		if(!ok) {
-			return
+			break
 		}
 
 		_, err = writer.Write([]byte(contents))
@@ -169,6 +171,8 @@ func writeSingleFile(schemaPath string, source chan string, resultError chan err
 			resultError <- err
 		}
 	}
+
+  writer.Flush()
 }
 
 /*
