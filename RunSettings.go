@@ -11,6 +11,7 @@ type RunSettings struct {
 	OutputPath string
 	Language   string
 	Module     string
+	splitFiles bool
 }
 
 var SUPPORTED_LANGUAGES = []string{
@@ -43,6 +44,13 @@ func ParseRunSettings() (*RunSettings, error) {
 	if !containsString(SUPPORTED_LANGUAGES, ret.Language) {
 		errorMessage := fmt.Sprintf("Language '%s' not supported. Supported languages; %v\n", ret.Language, SUPPORTED_LANGUAGES)
 		return nil, errors.New(errorMessage)
+	}
+
+	// determine if the given language is one that should split files.
+	if(ret.Language == "js") {
+		ret.splitFiles = false
+	} else {
+		ret.splitFiles = true
 	}
 
 	return ret, nil
