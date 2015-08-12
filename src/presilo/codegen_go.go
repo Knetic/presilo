@@ -58,6 +58,12 @@ func generateGoImports(schema *ObjectSchema) string {
 	return ret.String()
 }
 
+/*
+	Generates the type declaration for this schema,
+	including all member fields (properly exported if they have no constraints),
+	and struct tags.
+	Also includes the doc comments.
+*/
 func generateGoTypeDeclaration(schema *ObjectSchema) string {
 
 	var ret bytes.Buffer
@@ -90,6 +96,11 @@ func generateGoTypeDeclaration(schema *ObjectSchema) string {
 	return ret.String()
 }
 
+/*
+	Generates getters and setters for all fields in the given schema
+	which have constraints.
+	fields without constraints are assumed to be exported.
+*/
 func generateGoFunctions(schema *ObjectSchema) string {
 
 	var ret bytes.Buffer
@@ -135,6 +146,12 @@ func generateGoFunctions(schema *ObjectSchema) string {
 	return ret.String()
 }
 
+/*
+	Generates a convenience "New*" method for the given schema,
+	which accepts parameters that match the 'required' properties.
+	Any properties which are both 'required' and have constraints
+	will have their setters used, instead of setting the field directly.
+*/
 func generateGoConstructor(schema *ObjectSchema) string {
 
 	var subschema TypeSchema
@@ -177,6 +194,11 @@ func generateGoConstructor(schema *ObjectSchema) string {
 	return ret.String()
 }
 
+/*
+	Generates a 'setter' method for the given numeric schema.
+	Numeric schemas could either be NumberSchema or IntegerSchema,
+	since they share the same constraint set, this works on either.
+*/
 func generateGoNumericSetter(schema NumericSchemaType) string {
 
 	var ret bytes.Buffer
@@ -250,6 +272,10 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
 	return ret.String()
 }
 
+/*
+	Generates a 'setter' function for the given string schema.
+	Generates code which validates all schema constraints before setting.
+*/
 func generateGoStringSetter(schema *StringSchema) string {
 
 	var ret bytes.Buffer
@@ -298,6 +324,10 @@ func generateGoStringSetter(schema *StringSchema) string {
 	return ret.String()
 }
 
+/*
+	Generates 'setter' code to validate the given array schema's constraints,
+	then set the owner object's value to the one passed in.
+*/
 func generateGoArraySetter(schema *ArraySchema) string {
 
 	var ret bytes.Buffer
@@ -334,6 +364,12 @@ func generateGoArraySetter(schema *ArraySchema) string {
 	return ret.String()
 }
 
+/*
+	Convenience method to generate an enum constraint check for the given schema and
+	its provided enum values.
+	Generates an inline set of constants, each value of which is prefixed and postfixed accordingly,
+	then generates code to check against those constants.
+*/
 func generateGoEnumForSchema(schema interface{}, enumValues []interface{}, prefix string, postfix string) string {
 
 	var ret bytes.Buffer
@@ -370,6 +406,10 @@ func generateGoEnumForSchema(schema interface{}, enumValues []interface{}, prefi
 	return ret.String()
 }
 
+/*
+	Returns the Go equivalent of type for the given schema.
+	If no type is found, this returns "interface{}"
+*/
 func generateGoTypeForSchema(schema interface{}) string {
 
 	switch schema.(type) {
@@ -384,6 +424,10 @@ func generateGoTypeForSchema(schema interface{}) string {
 	return "interface{}"
 }
 
+/*
+	Generates a type variable declaration for the given schema and propertyName,
+	using the given casing function to modify the name of the property in the correct places.
+*/
 func generateVariableDeclaration(subschema TypeSchema, propertyName string, casing func(string) string) string {
 
 	var structTag string
@@ -401,6 +445,11 @@ func generateVariableDeclaration(subschema TypeSchema, propertyName string, casi
 	return ret.String()
 }
 
+/*
+	Determines and returns the appropriate case for the property of schema provided.
+	Only unconstrained fields are exported in Go generated code;
+	if the referenced field is constrained in any way, this generates an unexported field name.
+*/
 func getAppropriateGoCase(schema *ObjectSchema, propertyName string) string {
 
 	for _, constrainedName := range schema.ConstrainedProperties {
