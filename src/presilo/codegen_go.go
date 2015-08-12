@@ -30,10 +30,30 @@ func GenerateGo(schema *ObjectSchema, module string) string {
 func generateGoImports(schema *ObjectSchema) string {
 
 	var ret bytes.Buffer
+	var imports []string
 
 	// import errors if there are any constrained fields
 	if(len(schema.ConstrainedProperties) > 0) {
-		ret.WriteString("import \"errors\"\n")
+		imports = append(imports, "errors")
+	}
+
+	// if any string schema has a pattern match, import regex.
+	if(containsRegexpMatch(schema)) {
+		imports = append(imports, "regexp")
+	}
+
+	// write imports (if they exist)
+	if(len(imports) > 0) {
+
+		ret.WriteString("import (\n")
+
+		for _, packageName := range imports {
+
+			importString := fmt.Sprintf("\"%s\"\n", packageName)
+			ret.WriteString(importString)
+		}
+
+		ret.WriteString(")\n")
 	}
 	return ret.String()
 }
@@ -262,6 +282,19 @@ func generateGoStringSetter(schema *StringSchema) string {
 		ret.WriteString(constraintString)
 	}
 
+	if(schema.Pattern != nil) {
+
+		constraintString = fmt.Sprintf("\tmatched, err := regexp.Match(\"%s\", []byte(value))", sanitizeQuotedString(*schema.Pattern))
+		ret.WriteString(constraintString)
+
+		ret.WriteString("\n\tif(err != nil){return err}\n")
+		ret.WriteString("\n\tif(!matched) {")
+
+		constraintString = fmt.Sprintf("\n\t\treturn errors.New(\"Value did not match regex '%s'\")", *schema.Pattern)
+		ret.WriteString(constraintString)
+		ret.WriteString("\n\t}\n")
+	}
+
 	return ret.String()
 }
 
@@ -329,7 +362,7 @@ func generateGoEnumForSchema(schema interface{}, enumValues []interface{}, prefi
 	ret.WriteString("\tfor _, validValue := range validValues {\n")
 	ret.WriteString("\t\tif(validValue == value){\n\t\t\tisValid = true")
 	ret.WriteString("\n\t\t\tbreak\n\t\t}\n\t}")
-	
+
 	ret.WriteString("\n\tif(!isValid){")
 	ret.WriteString("\n\t\treturn errors.New(\"Given value was not found in list of acceptable values\")\n")
 	ret.WriteString("\t}\n")
@@ -376,4 +409,32 @@ func getAppropriateGoCase(schema *ObjectSchema, propertyName string) string {
 		}
 	}
 	return ToCamelCase(propertyName)
+}
+
+// TODO: Move this somewhere more universal? Other languages need stuff like this too
+/*
+	Returns true if any string property of the given schema contains a pattern match
+*/
+func containsRegexpMatch(schema *ObjectSchema) bool {
+
+	var schemaType SchemaType
+
+	for _, property := range schema.Properties {
+
+		schemaType = property.GetSchemaType()
+
+		if(schemaType == SCHEMATYPE_STRING && property.(*StringSchema).Pattern != nil) {
+			return true
+		}
+	}
+
+	return false
+}
+
+/*
+	Returns a string with double-quotes properly escaped
+*/
+func sanitizeQuotedString(target string) string {
+
+	return strings.Replace(target, "\"", "\\\"", -1)
 }

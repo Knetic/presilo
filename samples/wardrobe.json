@@ -58,7 +58,13 @@
       {
         "material": {"$ref": "#/material"},
         "size": {"$ref": "#/size"},
-        "waterproof": {"type": "boolean"}
+        "waterproof": {"type": "boolean"},
+
+        "collar":
+        {
+          "type": "string",
+          "pattern": "collar[e]+[d]+"
+        }
       },
       "required": ["material", "size", "waterproof"]
     }
