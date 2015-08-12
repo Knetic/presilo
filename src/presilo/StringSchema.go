@@ -9,8 +9,8 @@ import (
 */
 type StringSchema struct {
 	Schema
-	// TODO: MaxLength *int `json:"maxLength"`
-	// TODO: MinLength *int `json:"minLength"`
+	MaxLength *int `json:"maxLength"`
+	MinLength *int `json:"minLength"`
 	// TODO: Pattern *string `json:"pattern"`
 	Enum *[]string `json:"enum"`
 }
@@ -35,7 +35,9 @@ func NewStringSchema(contents []byte, context *SchemaParseContext) (*StringSchem
 }
 
 func (this *StringSchema) HasConstraints() bool {
-	return this.Enum != nil
+	return this.Enum != nil ||
+				this.MinLength != nil ||
+				this.MaxLength != nil
 }
 
 func (this *StringSchema) GetEnum() []interface{} {

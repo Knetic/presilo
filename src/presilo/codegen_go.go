@@ -233,9 +233,33 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
 func generateGoStringSetter(schema *StringSchema) string {
 
 	var ret bytes.Buffer
+	var constraintString string
+	var cutoff int
 
 	if(schema.Enum != nil) {
 		ret.WriteString(generateGoEnumForSchema(schema, schema.GetEnum(), "\"", "\""))
+	}
+
+	if(schema.MinLength != nil) {
+
+		cutoff = *schema.MinLength
+
+		constraintString = fmt.Sprintf("\tif(len(value) < %d) {\n", cutoff)
+		ret.WriteString(constraintString)
+
+		constraintString = fmt.Sprintf("\n\t\treturn errors.New(\"Value is shorter than minimum length of %d\")\n\t}\n", cutoff)
+		ret.WriteString(constraintString)
+	}
+
+	if(schema.MaxLength != nil) {
+
+		cutoff = *schema.MaxLength
+
+		constraintString = fmt.Sprintf("\tif(len(value) > %d) {\n", cutoff)
+		ret.WriteString(constraintString)
+
+		constraintString = fmt.Sprintf("\n\t\treturn errors.New(\"Value is longer than maximum length of %d\")\n\t}\n", cutoff)
+		ret.WriteString(constraintString)
 	}
 
 	return ret.String()
@@ -305,7 +329,10 @@ func generateGoEnumForSchema(schema interface{}, enumValues []interface{}, prefi
 	ret.WriteString("\tfor _, validValue := range validValues {\n")
 	ret.WriteString("\t\tif(validValue == value){\n\t\t\tisValid = true")
 	ret.WriteString("\n\t\t\tbreak\n\t\t}\n\t}")
-	ret.WriteString("\n\tif(!isValid){return errors.New(\"Given value was not found in list of acceptable values\")}")
+	
+	ret.WriteString("\n\tif(!isValid){")
+	ret.WriteString("\n\t\treturn errors.New(\"Given value was not found in list of acceptable values\")\n")
+	ret.WriteString("\t}\n")
 
 	return ret.String()
 }
