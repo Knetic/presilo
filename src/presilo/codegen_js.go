@@ -35,6 +35,9 @@ func generateJSConstructor(schema *ObjectSchema, module string) string {
 	}
 
   // write constructor signature
+	toWrite = fmt.Sprintf("\n/*\n%s\n*/\n", schema.Description)
+	ret.WriteString(toWrite)
+
   toWrite = fmt.Sprintf("%s.%s = function(", module, schema.Title)
   ret.WriteString(toWrite)
 
