@@ -91,6 +91,7 @@ func generateGoFunctions(schema *ObjectSchema) string {
 		body = fmt.Sprintf("\n\tthis.%s = value\n\treturn nil\n}\n\n", casedJavaName)
 
 		switch subschema.GetSchemaType() {
+    case SCHEMATYPE_BOOLEAN:
 		case SCHEMATYPE_STRING:
 			constraintChecks = generateGoStringSetter(subschema.(*StringSchema))
 		case SCHEMATYPE_NUMBER:
@@ -264,6 +265,8 @@ func generateGoArraySetter(schema *ArraySchema) string {
 func generateGoTypeForSchema(schema TypeSchema) string {
 
 	switch schema.GetSchemaType() {
+  case SCHEMATYPE_BOOLEAN:
+    return "bool"
 	case SCHEMATYPE_STRING:
 		return "string"
 	case SCHEMATYPE_INTEGER:

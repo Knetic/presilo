@@ -76,6 +76,9 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 
 	switch schemaType {
 
+	case "boolean":
+		schema, err = NewBooleanSchema(contentsBytes, context)
+		
 	case "integer":
 		schema, err = NewIntegerSchema(contentsBytes, context)
 
