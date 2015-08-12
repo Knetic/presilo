@@ -63,13 +63,14 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
     schema, present = context.SchemaDefinitions[schemaRef]
     if(!present) {
 
-      errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved", schemaRef)
+      errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved.", schemaRef)
       return nil, errors.New(errorMsg)
     }
 
     return schema, nil
   }
 
+  // figure out type
   schemaTypeRaw, present = contents["type"]
   if(!present) {
     return nil, errors.New("Type was not specified")
@@ -95,7 +96,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
     schema, err = NewNumberSchema(contentsBytes, context)
 
   case "string":
-      schema, err = NewStringSchema(contentsBytes, context)
+    schema, err = NewStringSchema(contentsBytes, context)
 
   case "array":
     schema, err = NewArraySchema(contentsBytes, context)

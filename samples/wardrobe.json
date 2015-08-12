@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "title": "Wardrobe",
+  "description": "A set of clothes that can build an outfit",
+
+  "properties":
+  {
+    "pants":
+    {
+      "type": "object",
+      "title": "Pants",
+      "properties":
+      {
+        "material":
+        {
+          "id": "#/material",
+          "type": "string",
+          "title": "Material",
+          "enum": ["denim", "linen", "wool", "cotton", "polyester"]
+        },
+        "length": {"type": "integer"},
+        "waist": {"type": "integer"}
+      },
+      "required": ["material", "length", "waist"]
+    },
+    "shirt":
+    {
+      "type": "object",
+      "title": "Shirt",
+      "properties":
+      {
+        "material": {"$ref": "#/material"},
+        "size":
+        {
+          "id": "#/size",
+          "type": "string",
+          "enum": ["x-small", "small", "medium", "large", "x-large", "xx-large"]
+        }
+      },
+      "required": ["material", "size"]
+    },
+    "socks":
+    {
+      "type": "object",
+      "title": "Sock",
+      "properties":
+      {
+        "material": {"$ref": "#/material"},
+        "size": {"$ref": "#/size"}
+      },
+      "required": ["material", "size"]
+    },
+    "coat":
+    {
+      "type": "object",
+      "title": "Coat",
+      "properties":
+      {
+        "material": {"$ref": "#/material"},
+        "size": {"$ref": "#/size"},
+        "waterproof": {"type": "boolean"}
+      },
+      "required": ["material", "size", "waterproof"]
+    }
+  },
+  "required": ["pants"]
+}
