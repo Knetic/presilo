@@ -35,7 +35,7 @@ func generateJSConstructor(schema *ObjectSchema, module string) string {
 	}
 
   // write constructor signature
-  toWrite = fmt.Sprintf("function %s.%s(", module, schema.Title)
+  toWrite = fmt.Sprintf("%s.%s = function(", module, schema.Title)
   ret.WriteString(toWrite)
 
   ret.WriteString(strings.Join(parameterNames, ","))
@@ -44,8 +44,7 @@ func generateJSConstructor(schema *ObjectSchema, module string) string {
   // body
   for _, parameterName = range parameterNames {
 
-    // TODO: use setters if the value is constrained
-    toWrite = fmt.Sprintf("\n\tthis.%s = %s", parameterName, parameterName)
+    toWrite = fmt.Sprintf("\n\tthis.set%s(%s)", ToCamelCase(parameterName), parameterName)
     ret.WriteString(toWrite)
   }
 
@@ -57,8 +56,23 @@ func generateJSConstructor(schema *ObjectSchema, module string) string {
 func generateJSFunctions(schema *ObjectSchema, module string) string {
 
   var ret bytes.Buffer
+	//var subschema TypeSchema
+	var propertyName, propertyNameCamel, propertyNameJava, schemaName, toWrite string
 
-  
+	schemaName = ToCamelCase(schema.Title)
 
+	for propertyName, _ = range schema.Properties {
+
+		propertyNameCamel = ToCamelCase(propertyName)
+		propertyNameJava = ToJavaCase(propertyName)
+
+		toWrite = fmt.Sprintf("%s.%s.prototype.set%s = function(%s)", module, schemaName, propertyNameCamel, propertyNameJava)
+		ret.WriteString(toWrite)
+
+		// TODO: type checks
+		// TODO: constraints
+		toWrite = fmt.Sprintf("\n{\n\tthis.%s = %s\n}\n", propertyNameJava, propertyNameJava)
+		ret.WriteString(toWrite)
+	}
   return ret.String()
 }
