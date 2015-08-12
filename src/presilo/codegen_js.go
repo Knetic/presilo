@@ -79,3 +79,73 @@ func generateJSFunctions(schema *ObjectSchema, module string) string {
 	}
   return ret.String()
 }
+
+/*
+	Returns checks appropriate for verifying an object's type.
+*/
+func generateJSObjectSetter(schema *ObjectSchema) string {
+
+	var ret bytes.Buffer
+
+	// TODO: type check
+	return ret.String()
+}
+
+/*
+	Returns checks appropriate for verifying a numeric value and its constraints.
+*/
+func generateJSNumericSetter(schema NumericSchemaType) string {
+
+	var ret bytes.Buffer
+
+	// TODO: type check
+	// TODO: min/max check
+	// TODO: enum check
+	// TODO: multiple check
+	return ret.String()
+}
+
+/*
+	Returns checks appropriate for verifying a string value and its constraints.
+*/
+func generateJSStringSetter(schema *StringSchema) string {
+
+	var ret bytes.Buffer
+
+	// TODO: type check
+	// TODO: length check
+	// TODO: pattern check
+	// TODO: enum check
+	return ret.String()
+}
+
+/*
+	Returns checks appropriate for verifying an array value and its constraints.
+*/
+func generateJSArraySetter(schema *ArraySchema) string {
+
+	var ret bytes.Buffer
+
+	// TODO: type check
+	// TODO: value uniformity check
+	// TODO: length checks
+	return ret.String()
+}
+
+/*
+	Generates code which throws an error if the given [parameter]'s type name is not equal to the given [typeName]
+*/
+func generateJSTypeCheck(parameter string, typeName string) string {
+
+	var ret bytes.Buffer
+	return ret.String
+}
+
+/*
+	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
+*/
+func generateJSEnumCheck(parameter string, validValues []interface{}, stringFormat string) string {
+
+	var ret bytes.Buffer
+	return ret.String
+}
