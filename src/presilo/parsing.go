@@ -35,9 +35,7 @@ func ParseSchemaFile(path string) (TypeSchema, error) {
 func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParseContext) (TypeSchema, error) {
 
 	var schema TypeSchema
-	var schemaTypeRaw, schemaRefRaw *json.RawMessage
 	var contents map[string]*json.RawMessage
-	var schemaTypeBytes, schemaRefBytes []byte
 	var schemaRef string
 	var schemaType string
 	var present bool
@@ -49,19 +47,16 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 	}
 
 	// if this is a reference schema, simply return that exact schema, and do no other processing.
-	schemaRefRaw, present = contents["$ref"]
-	if present {
+	schemaRef, err = getJsonString(contents, "$ref")
+	if(err != nil) {
+		return nil, err
+	}
 
-		schemaRefBytes, err = schemaRefRaw.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-
-		schemaRef = string(schemaRefBytes)
+	if(len(schemaRef) > 0) {
 
 		schema, present = context.SchemaDefinitions[schemaRef]
-		if !present {
 
+		if !present {
 			errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved.", schemaRef)
 			return nil, errors.New(errorMsg)
 		}
@@ -70,21 +65,14 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 	}
 
 	// figure out type
-	schemaTypeRaw, present = contents["type"]
-	if !present {
-		return nil, errors.New("Type was not specified")
-	}
-	if schemaTypeRaw == nil {
-		return nil, errors.New("Schema could not be parsed, type was not specified")
-	}
-
-	schemaTypeBytes, err = schemaTypeRaw.MarshalJSON()
+	schemaType, err = getJsonString(contents, "type")
 	if err != nil {
 		return nil, err
 	}
 
-	schemaType = string(schemaTypeBytes)
-	schemaType = strings.Replace(schemaType, "\"", "", -1)
+	if(len(schemaType) <= 0) {
+		return nil, errors.New("Schema could not be parsed, type was not specified")
+	}
 
 	switch schemaType {
 
@@ -145,4 +133,26 @@ func recurseObjectSchema(schema *ObjectSchema, schemas []*ObjectSchema) []*Objec
 	}
 
 	return schemas
+}
+
+func getJsonString(source map[string]*json.RawMessage, key string) (string, error) {
+
+	var ret string
+	var retBytes []byte
+	var message *json.RawMessage
+	var err error
+	var present bool
+
+	message, present = source[key]
+	if(!present) {
+		return "", nil
+	}
+
+	retBytes, err = message.MarshalJSON()
+	if(err != nil) {
+		return "", err
+	}
+
+	ret = string(retBytes)
+	return strings.Replace(ret, "\"", "", -1), nil
 }
