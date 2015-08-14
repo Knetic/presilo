@@ -1,6 +1,8 @@
 package presilo
 
 type NumericSchemaType interface {
+
+	TypeSchema
 	HasConstraints() bool
 	HasMinimum() bool
 	HasMaximum() bool
