@@ -146,7 +146,14 @@ func generateJSNumericSetter(schema NumericSchemaType) string {
 
 	ret.WriteString(generateJSTypeCheck(schema))
 
-	// TODO: min/max check
+	if(schema.HasMinimum()) {
+		ret.WriteString(generateJSRangeCheck(schema.GetMinimum(), schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+	}
+
+	if(schema.HasMaximum()) {
+		ret.WriteString(generateJSRangeCheck(schema.GetMaximum(), schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+	}
+
   if(schema.HasEnum()) {
 	   ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "", ""))
    }
@@ -181,6 +188,27 @@ func generateJSArraySetter(schema *ArraySchema) string {
 	ret.WriteString(generateJSTypeCheck(schema))
 	// TODO: value uniformity check
 	// TODO: length checks
+	return ret.String()
+}
+
+func generateJSRangeCheck(value interface{}, format string, exclusive bool, comparator, exclusiveComparator string) string {
+
+	var ret bytes.Buffer
+	var toWrite, compareString string
+
+	if(exclusive) {
+		compareString = exclusiveComparator
+	} else {
+		compareString = comparator
+	}
+
+	toWrite = "\n\tif(value " + compareString + " " +format+ ")\n\t{"
+	toWrite = fmt.Sprintf(toWrite, value)
+	ret.WriteString(toWrite)
+
+	toWrite = fmt.Sprintf("\n\t\tthrow new RangeError(\"Property '\"+value+\"' was out of range.\")\n\t}\n")
+	ret.WriteString(toWrite)
+
 	return ret.String()
 }
 
