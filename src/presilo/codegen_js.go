@@ -93,7 +93,7 @@ func generateJSFunctions(schema *ObjectSchema, module string) string {
 		propertyNameCamel = ToCamelCase(propertyName)
 		propertyNameJava = ToJavaCase(propertyName)
 
-		toWrite = fmt.Sprintf("%s.%s.prototype.set%s = function(%s)\n{\n", module, schemaName, propertyNameCamel, propertyNameJava)
+		toWrite = fmt.Sprintf("%s.%s.prototype.set%s = function(value)\n{\n", module, schemaName, propertyNameCamel)
 		ret.WriteString(toWrite)
 
     // undefined check
@@ -120,7 +120,7 @@ func generateJSFunctions(schema *ObjectSchema, module string) string {
 
     ret.WriteString(toWrite)
 
-		toWrite = fmt.Sprintf("\n\tthis.%s = %s\n}\n", propertyNameJava, propertyNameJava)
+		toWrite = fmt.Sprintf("\n\tthis.%s = value\n}\n", propertyNameJava)
 		ret.WriteString(toWrite)
 	}
   return ret.String()
@@ -257,8 +257,8 @@ func generateJSEnumCheck(schema interface{}, enumValues []interface{}, prefix st
 
 	// compare
 	ret.WriteString("\tvar isValid = false\n")
-	ret.WriteString("\tfor(validValue in validValues) \n\t{\n")
-	ret.WriteString("\t\tif(validValue === value)\n\t\t{\n\t\t\tisValid = true")
+	ret.WriteString("\tfor(var i = 0; i < validValues.length; i++) \n\t{\n")
+	ret.WriteString("\t\tif(validValues[i] === value)\n\t\t{\n\t\t\tisValid = true")
 	ret.WriteString("\n\t\t\tbreak\n\t\t}\n\t}")
 
 	ret.WriteString("\n\tif(!isValid)\n\t{")
