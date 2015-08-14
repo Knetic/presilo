@@ -167,6 +167,7 @@ func generateJSNumericSetter(schema NumericSchemaType) string {
 func generateJSStringSetter(schema *StringSchema) string {
 
 	var ret bytes.Buffer
+	var toWrite string
 
 	ret.WriteString(generateJSTypeCheck(schema))
 
@@ -178,7 +179,20 @@ func generateJSStringSetter(schema *StringSchema) string {
 		ret.WriteString(generateJSRangeCheck(*schema.MaxLength, "value.length", "%d", false, ">", ""))
 	}
 
-	// TODO: pattern check
+	if(schema.Pattern != nil) {
+
+		toWrite = fmt.Sprintf("\tvar regex = new RegExp(\"%s\")\n", *schema.Pattern)
+		ret.WriteString(toWrite)
+
+		toWrite = fmt.Sprintf("\tif(!regex.test(value))\n\t{")
+		ret.WriteString(toWrite)
+
+		toWrite = fmt.Sprintf("\n\t\tthrow new Error(\"Property '\"+value+\"' did not match pattern '%s'\")", *schema.Pattern)
+		ret.WriteString(toWrite)
+
+		ret.WriteString("\n\t}\n")
+	}
+
   if(schema.Enum != nil) {
 	   ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "\"", "\""))
    }
