@@ -65,6 +65,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 	}
 
 	// figure out type
+	// TODO: allow "null" as a secondary type.
 	schemaType, err = getJsonString(contents, "type")
 	if err != nil {
 		return nil, err
@@ -78,7 +79,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 
 	case "boolean":
 		schema, err = NewBooleanSchema(contentsBytes, context)
-		
+
 	case "integer":
 		schema, err = NewIntegerSchema(contentsBytes, context)
 
