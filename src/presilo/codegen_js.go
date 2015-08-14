@@ -147,11 +147,11 @@ func generateJSNumericSetter(schema NumericSchemaType) string {
 	ret.WriteString(generateJSTypeCheck(schema))
 
 	if(schema.HasMinimum()) {
-		ret.WriteString(generateJSRangeCheck(schema.GetMinimum(), schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+		ret.WriteString(generateJSRangeCheck(schema.GetMinimum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
 	}
 
 	if(schema.HasMaximum()) {
-		ret.WriteString(generateJSRangeCheck(schema.GetMaximum(), schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+		ret.WriteString(generateJSRangeCheck(schema.GetMaximum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
 	}
 
   if(schema.HasEnum()) {
@@ -170,7 +170,14 @@ func generateJSStringSetter(schema *StringSchema) string {
 
 	ret.WriteString(generateJSTypeCheck(schema))
 
-	// TODO: length check
+	if(schema.MinLength != nil) {
+		ret.WriteString(generateJSRangeCheck(*schema.MinLength, "value.length", "%d", false, "<", ""))
+	}
+
+	if(schema.MaxLength != nil) {
+		ret.WriteString(generateJSRangeCheck(*schema.MaxLength, "value.length", "%d", false, ">", ""))
+	}
+
 	// TODO: pattern check
   if(schema.Enum != nil) {
 	   ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "\"", "\""))
@@ -191,7 +198,7 @@ func generateJSArraySetter(schema *ArraySchema) string {
 	return ret.String()
 }
 
-func generateJSRangeCheck(value interface{}, format string, exclusive bool, comparator, exclusiveComparator string) string {
+func generateJSRangeCheck(value interface{}, reference string, format string, exclusive bool, comparator, exclusiveComparator string) string {
 
 	var ret bytes.Buffer
 	var toWrite, compareString string
@@ -202,7 +209,7 @@ func generateJSRangeCheck(value interface{}, format string, exclusive bool, comp
 		compareString = comparator
 	}
 
-	toWrite = "\n\tif(value " + compareString + " " +format+ ")\n\t{"
+	toWrite = "\n\tif("+ reference +" " + compareString + " " +format+ ")\n\t{"
 	toWrite = fmt.Sprintf(toWrite, value)
 	ret.WriteString(toWrite)
 

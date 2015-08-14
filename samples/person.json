@@ -6,11 +6,13 @@
   {
     "firstName":
     {
-      "type": "string"
+      "type": "string",
+      "minLength": 3
     },
     "lastName":
     {
-      "type": "string"
+      "type": "string",
+      "minLength": 3
     },
     "age":
     {
