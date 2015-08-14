@@ -133,7 +133,7 @@ func generateJSObjectSetter(schema *ObjectSchema) string {
 
 	var ret bytes.Buffer
 
-	ret.WriteString(generateJSTypeCheck(schema.GetSchemaType()))
+	ret.WriteString(generateJSTypeCheck(schema))
 	return ret.String()
 }
 
@@ -144,7 +144,7 @@ func generateJSNumericSetter(schema NumericSchemaType) string {
 
 	var ret bytes.Buffer
 
-	ret.WriteString(generateJSTypeCheck(schema.GetSchemaType()))
+	ret.WriteString(generateJSTypeCheck(schema))
 
 	// TODO: min/max check
   if(schema.HasEnum()) {
@@ -161,7 +161,7 @@ func generateJSStringSetter(schema *StringSchema) string {
 
 	var ret bytes.Buffer
 
-	ret.WriteString(generateJSTypeCheck(schema.GetSchemaType()))
+	ret.WriteString(generateJSTypeCheck(schema))
 
 	// TODO: length check
 	// TODO: pattern check
@@ -178,7 +178,7 @@ func generateJSArraySetter(schema *ArraySchema) string {
 
 	var ret bytes.Buffer
 
-	ret.WriteString(generateJSTypeCheck(schema.GetSchemaType()))
+	ret.WriteString(generateJSTypeCheck(schema))
 	// TODO: value uniformity check
 	// TODO: length checks
 	return ret.String()
@@ -187,11 +187,14 @@ func generateJSArraySetter(schema *ArraySchema) string {
 /*
 	Generates code which throws an error if the given [parameter]'s type name is not equal to the given [typeName]
 */
-func generateJSTypeCheck(schemaType SchemaType) string {
+func generateJSTypeCheck(schema TypeSchema) string {
 
   var ret bytes.Buffer
+	var schemaType SchemaType
   var toWrite, expectedType string
+	var shouldWriteCtorCheck bool
 
+	schemaType = schema.GetSchemaType()
   expectedType = getJSTypeFromSchemaType(schemaType)
 
   toWrite = fmt.Sprintf("\tif(typeof(value) !== \"%s\")\n\t{", expectedType)
@@ -200,6 +203,28 @@ func generateJSTypeCheck(schemaType SchemaType) string {
   toWrite = fmt.Sprintf("\n\t\tthrow new TypeError(\"Property \"+value+\" was not of the expected type '%s'\")", expectedType)
   ret.WriteString(toWrite)
   ret.WriteString("\n\t}\n")
+
+	// if this is an array or object, check the constructor
+	shouldWriteCtorCheck = false
+	switch schemaType {
+	case SCHEMATYPE_ARRAY:
+		shouldWriteCtorCheck = true
+		expectedType = "Array"
+	case SCHEMATYPE_OBJECT:
+		shouldWriteCtorCheck = true
+		expectedType = ToCamelCase(schema.GetTitle())
+	}
+
+	if(shouldWriteCtorCheck) {
+
+		toWrite = fmt.Sprintf("\tif(value.constructor !== %s)\n\t{", expectedType)
+		ret.WriteString(toWrite)
+
+		toWrite = fmt.Sprintf("\n\t\tthrow new TypeError(\"Property '\"+value+\"'was not of the expected type '%s'\")", expectedType)
+		ret.WriteString(toWrite)
+
+		ret.WriteString("\n\t}\n")
+	}
 
   return ret.String()
 }
