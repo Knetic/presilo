@@ -208,7 +208,14 @@ func generateJSArraySetter(schema *ArraySchema) string {
 
 	ret.WriteString(generateJSTypeCheck(schema))
 	// TODO: value uniformity check
-	// TODO: length checks
+
+	if(schema.MinItems != nil) {
+		ret.WriteString(generateJSRangeCheck(*schema.MinItems, "value.length", "%d", false, "<", ""))
+	}
+
+	if(schema.MaxItems != nil) {
+		ret.WriteString(generateJSRangeCheck(*schema.MaxItems, "value.length", "%d", false, ">", ""))
+	}
 	return ret.String()
 }
 
