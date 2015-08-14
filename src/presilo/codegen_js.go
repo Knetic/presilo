@@ -97,7 +97,7 @@ func generateJSFunctions(schema *ObjectSchema, module string) string {
 		ret.WriteString(toWrite)
 
     // undefined check
-    ret.WriteString("\tif(typeof(value) === 'undefined')\n{\n")
+    ret.WriteString("\tif(typeof(value) === 'undefined')\n\t{\n")
 
     toWrite = fmt.Sprintf("\t\tthrow new ReferenceError(\"Cannot set property '%s', no value given\")", propertyNameJava)
     ret.WriteString(toWrite)
