@@ -143,6 +143,7 @@ func generateJSObjectSetter(schema *ObjectSchema) string {
 func generateJSNumericSetter(schema NumericSchemaType) string {
 
 	var ret bytes.Buffer
+  var toWrite string
 
 	ret.WriteString(generateJSTypeCheck(schema))
 
@@ -157,7 +158,17 @@ func generateJSNumericSetter(schema NumericSchemaType) string {
   if(schema.HasEnum()) {
 	   ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "", ""))
    }
-	// TODO: multiple check
+
+  if(schema.HasMultiple()) {
+
+    toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
+    ret.WriteString(toWrite)
+
+    toWrite = fmt.Sprintf("\n\t\tthrow new Error(\"Property '\"+value+\"' was not a multiple of %s\")", schema.GetMultiple())
+    ret.WriteString(toWrite)
+
+    ret.WriteString("\n\t}\n")
+  }
 	return ret.String()
 }
 
