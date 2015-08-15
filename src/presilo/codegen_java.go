@@ -308,7 +308,7 @@ func generateJavaEnumCheck(schema TypeSchema, enumValues []interface{}, prefix s
 	ret.WriteString("\n\t\t\tbreak;\n\t\t}\n\t}")
 
 	ret.WriteString("\n\tif(!isValid)\n\t{")
-	ret.WriteString("\n\t\tthrow new Error(\"Given value '\"+value+\"' was not found in list of acceptable values\");\n")
+	ret.WriteString("\n\t\tthrow new Exception(\"Given value '\"+value+\"' was not found in list of acceptable values\");\n")
 	ret.WriteString("\t}\n")
 
 	return ret.String()
