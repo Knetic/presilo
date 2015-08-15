@@ -21,6 +21,7 @@ var SUPPORTED_LANGUAGES = []string{
 	"cs",
 	/*
 	  "py",
+		"rb",
 	  "sql",
 	*/
 }
