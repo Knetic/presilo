@@ -112,8 +112,14 @@ func generateJavaFunctions(schema *ObjectSchema) string {
     ret.WriteString(toWrite)
 
     // setter
-    toWrite = fmt.Sprintf("\n\tpublic void set%s(%s value)\n\t{", camelName, typeName)
+    toWrite = fmt.Sprintf("\n\tpublic void set%s(%s value)", camelName, typeName)
     ret.WriteString(toWrite)
+
+    if(subschema.HasConstraints()) {
+      ret.WriteString(" throws Exception")
+    }
+
+    ret.WriteString("\n\t{")
 
     switch subschema.GetSchemaType() {
     case SCHEMATYPE_BOOLEAN:
@@ -140,6 +146,84 @@ func generateJavaFunctions(schema *ObjectSchema) string {
   return ret.String()
 }
 
+func generateJavaStringSetter(schema *StringSchema) string {
+
+  var ret bytes.Buffer
+
+  ret.WriteString(generateJavaNullCheck())
+  // TODO: length checks
+  // TODO: pattern checks
+  return ret.String()
+}
+
+func generateJavaNumericSetter(schema NumericSchemaType) string {
+
+  var ret bytes.Buffer
+  var toWrite string
+
+  ret.WriteString(generateJavaNullCheck())
+
+  if(schema.HasMinimum()) {
+		ret.WriteString(generateJavaRangeCheck(schema.GetMinimum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+	}
+
+	if(schema.HasMaximum()) {
+		ret.WriteString(generateJavaRangeCheck(schema.GetMaximum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+	}
+
+  if(schema.HasEnum()) {
+		ret.WriteString(generateJavaEnumCheck(schema, schema.GetEnum(), "", ""))
+	}
+
+  if(schema.HasMultiple()) {
+
+    toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
+    ret.WriteString(toWrite)
+
+    toWrite = fmt.Sprintf("\n\t\tthrow new Exception(\"Property '\"+value+\"' was not a multiple of %s\")", schema.GetMultiple())
+    ret.WriteString(toWrite)
+
+    ret.WriteString("\n\t}\n")
+  }
+  return ret.String()
+}
+
+func generateJavaObjectSetter(schema *ObjectSchema) string {
+
+  var ret bytes.Buffer
+
+  ret.WriteString(generateJavaNullCheck())
+  return ret.String()
+}
+
+func generateJavaArraySetter(schema *ArraySchema) string {
+
+  var ret bytes.Buffer
+
+  ret.WriteString(generateJavaNullCheck())
+
+  if(schema.MinItems != nil) {
+    ret.WriteString(generateJavaRangeCheck(*schema.MinItems, "value.length", "%d", false, "<", ""))
+  }
+
+  if(schema.MaxItems != nil) {
+    ret.WriteString(generateJavaRangeCheck(*schema.MaxItems, "value.length", "%d", false, ">", ""))
+  }
+
+  return ret.String()
+}
+
+func generateJavaNullCheck() string {
+
+  var ret bytes.Buffer
+
+  ret.WriteString("\n\t\tif(value == null)\n\t\t{")
+  ret.WriteString("\n\t\t\tthrow new NullPointerException(\"Cannot set property to null value\");")
+  ret.WriteString("\n\t\t}\n")
+
+  return ret.String()
+}
+
 func generateJavaRangeCheck(value interface{}, reference string, format string, exclusive bool, comparator, exclusiveComparator string) string {
 
 	var ret bytes.Buffer
@@ -161,52 +245,43 @@ func generateJavaRangeCheck(value interface{}, reference string, format string, 
 	return ret.String()
 }
 
-func generateJavaStringSetter(schema *StringSchema) string {
+/*
+	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
+*/
+func generateJavaEnumCheck(schema interface{}, enumValues []interface{}, prefix string, postfix string) string {
 
-  var ret bytes.Buffer
+	var ret bytes.Buffer
+	var constraint string
+	var length int
 
-  ret.WriteString(generateJavaNullCheck())
-  // TODO: length checks
-  // TODO: pattern checks
-  return ret.String()
-}
+	length = len(enumValues)
 
-func generateJavaNumericSetter(schema NumericSchemaType) string {
+	if(length <= 0) {
+		return ""
+	}
 
-  var ret bytes.Buffer
+	// write array of valid values
+	constraint = fmt.Sprintf("\t validValues = [%s%v%s", prefix, enumValues[0], postfix)
+	ret.WriteString(constraint)
 
-  ret.WriteString(generateJavaNullCheck())
-  // TODO: min/max checks
-  // TODO: multiple checks
-  return ret.String()
-}
+	for _, enumValue := range enumValues[1:length] {
 
-func generateJavaObjectSetter(schema *ObjectSchema) string {
+		constraint = fmt.Sprintf(",%s%v%s", prefix, enumValue, postfix)
+		ret.WriteString(constraint)
+	}
+	ret.WriteString("]\n")
 
-  var ret bytes.Buffer
+	// compare
+	ret.WriteString("\tvar isValid = false\n")
+	ret.WriteString("\tfor(int i = 0; i < validValues.length; i++) \n\t{\n")
+	ret.WriteString("\t\tif(validValues[i] === value)\n\t\t{\n\t\t\tisValid = true")
+	ret.WriteString("\n\t\t\tbreak\n\t\t}\n\t}")
 
-  ret.WriteString(generateJavaNullCheck())
-  return ret.String()
-}
+	ret.WriteString("\n\tif(!isValid)\n\t{")
+	ret.WriteString("\n\t\tthrow new Error(\"Given value '\"+value+\"' was not found in list of acceptable values\")\n")
+	ret.WriteString("\t}\n")
 
-func generateJavaArraySetter(schema *ArraySchema) string {
-
-  var ret bytes.Buffer
-
-  ret.WriteString(generateJavaNullCheck())
-  // TODO: min/max length checks
-  return ret.String()
-}
-
-func generateJavaNullCheck() string {
-
-  var ret bytes.Buffer
-
-  ret.WriteString("\n\t\tif(value == null)\n\t\t{")
-  ret.WriteString("\n\t\t\tthrow new NullPointerException(\"Cannot set property to null value\");")
-  ret.WriteString("\n\t\t}\n")
-
-  return ret.String()
+	return ret.String()
 }
 
 func generateJavaTypeForSchema(subschema TypeSchema) string {

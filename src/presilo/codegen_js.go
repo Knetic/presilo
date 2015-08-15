@@ -156,8 +156,8 @@ func generateJSNumericSetter(schema NumericSchemaType) string {
 	}
 
   if(schema.HasEnum()) {
-	   ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "", ""))
-   }
+		ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "", ""))
+	}
 
   if(schema.HasMultiple()) {
 

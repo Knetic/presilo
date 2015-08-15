@@ -6,6 +6,7 @@ type TypeSchema interface {
 	GetDescription() string
 	SetTitle(string)
 	GetID() string
+	HasConstraints() bool
 }
 
 /*

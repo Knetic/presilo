@@ -110,3 +110,7 @@ func (this *ObjectSchema) checkRequiredProperties() error {
 
 	return nil
 }
+
+func (this *ObjectSchema) HasConstraints() bool {
+	return false
+}

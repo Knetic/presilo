@@ -29,3 +29,7 @@ func NewBooleanSchema(contents []byte, context *SchemaParseContext) (*BooleanSch
 
 	return ret, nil
 }
+
+func (this *BooleanSchema) HasConstraints() bool {
+	return false
+}
