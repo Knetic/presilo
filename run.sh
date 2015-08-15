@@ -16,7 +16,7 @@ make
 pushd ./.temp/
 go build .
 
-mkdir foo
+mkdir -p foo
 mv *.java ./foo/
 cd ./foo
 javac $(find . -name "*.java")

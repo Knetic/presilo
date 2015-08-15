@@ -42,6 +42,11 @@ func generateGoImports(schema *ObjectSchema) string {
 		imports = append(imports, "regexp")
 	}
 
+	// if any number (but not integer!) has a multiple clause, import math
+	if(containsNumberMod(schema)) {
+		imports = append(imports, "math")
+	}
+
 	// write imports (if they exist)
 	if(len(imports) > 0) {
 
@@ -259,8 +264,13 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
 
 		multiple = schema.GetMultiple()
 
-		constraintTemplate = "\tif(value %% " + formatString + " != 0) {"
-		constraint = fmt.Sprintf(constraintTemplate, multiple)
+		if(schema.GetSchemaType() == SCHEMATYPE_NUMBER) {
+
+			constraint = fmt.Sprintf("\tif(math.Mod(value, %f) != 0) {", multiple)
+		} else {
+
+			constraint = fmt.Sprintf("\tif(value %% %d != 0) {", multiple)
+		}
 
 		constraintTemplate = "\n\t\treturn errors.New(\"Value is not a multiple of '" + formatString + "'\")"
 		constraint += fmt.Sprintf(constraintTemplate, multiple)

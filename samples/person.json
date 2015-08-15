@@ -22,7 +22,7 @@
     },
     "height":
     {
-      "description": "Age in meters",
+      "description": "Height in meters",
       "type": "number",
       "minimum": 0,
       "multipleOf": 2
