@@ -71,6 +71,8 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
     generator = GenerateJS
   case "java":
     generator = GenerateJava
+  case "cs":
+    generator = GenerateCSharp
 	}
 
 	writtenChannel = make(chan string)

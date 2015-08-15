@@ -18,8 +18,8 @@ var SUPPORTED_LANGUAGES = []string{
 	"go",
 	"js",
 	"java",
+	"cs",
 	/*
-	  "cs",
 	  "py",
 	  "sql",
 	*/
