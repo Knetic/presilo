@@ -13,7 +13,7 @@ func GenerateJava(schema *ObjectSchema, module string) string {
 
 	var ret bytes.Buffer
 
-	ret.WriteString("package " + module)
+	ret.WriteString("package " + module + ";")
 	ret.WriteString("\n")
 	ret.WriteString(generateJavaImports(schema))
 	ret.WriteString("\n")
@@ -31,7 +31,7 @@ func generateJavaImports(schema *ObjectSchema) string {
 
   // import regex if we need it
   if(containsRegexpMatch(schema)) {
-    return "import java.util.regex.Pattern;\n\n"
+    return "import java.util.regex.*;\n\n"
   }
   return ""
 }
@@ -63,6 +63,7 @@ func generateJavaConstructor(schema *ObjectSchema) string {
   var declarations, setters []string
   var propertyName string
   var toWrite string
+  var constrained bool
 
   toWrite = fmt.Sprintf("\n\tpublic %s(", ToCamelCase(schema.Title))
   ret.WriteString(toWrite)
@@ -71,6 +72,10 @@ func generateJavaConstructor(schema *ObjectSchema) string {
 
     subschema = schema.Properties[propertyName]
     propertyName = ToJavaCase(propertyName)
+
+    if(subschema.HasConstraints()) {
+      constrained = true
+    }
 
     toWrite = fmt.Sprintf("%s %s", generateJavaTypeForSchema(subschema), propertyName)
     declarations = append(declarations, toWrite)
@@ -81,7 +86,13 @@ func generateJavaConstructor(schema *ObjectSchema) string {
 
   toWrite = strings.Join(declarations, ",")
   ret.WriteString(toWrite)
-  ret.WriteString(")\n\t{")
+  ret.WriteString(")")
+
+  if(constrained) {
+    ret.WriteString(" throws Exception")
+  }
+
+  ret.WriteString("\n\t{")
 
   for _, setter := range setters {
     ret.WriteString(setter)
@@ -149,6 +160,7 @@ func generateJavaFunctions(schema *ObjectSchema) string {
 func generateJavaStringSetter(schema *StringSchema) string {
 
   var ret bytes.Buffer
+  var toWrite string
 
   ret.WriteString(generateJavaNullCheck())
 
@@ -160,7 +172,18 @@ func generateJavaStringSetter(schema *StringSchema) string {
     ret.WriteString(generateJavaRangeCheck(*schema.MaxLength, "value.length()", "was longer than allowable maximum", "%d", false, ">", ""))
   }
 
-  // TODO: pattern checks
+  if(schema.Pattern != nil) {
+
+    toWrite = fmt.Sprintf("\n\t\tPattern regex = Pattern.compile(\"%s\");", sanitizeQuotedString(*schema.Pattern))
+    ret.WriteString(toWrite)
+
+    ret.WriteString("\n\t\tif(!regex.matcher(value).matches())\n\t\t{")
+
+    toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Value '\"+value+\"' did not match pattern '%s'\");", *schema.Pattern)
+    ret.WriteString(toWrite)
+
+    ret.WriteString("\n\t\t}")
+  }
   return ret.String()
 }
 
@@ -168,8 +191,6 @@ func generateJavaNumericSetter(schema NumericSchemaType) string {
 
   var ret bytes.Buffer
   var toWrite string
-
-  ret.WriteString(generateJavaNullCheck())
 
   if(schema.HasMinimum()) {
 		ret.WriteString(generateJavaRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
@@ -188,7 +209,7 @@ func generateJavaNumericSetter(schema NumericSchemaType) string {
     toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
     ret.WriteString(toWrite)
 
-    toWrite = fmt.Sprintf("\n\t\tthrow new Exception(\"Property '\"+value+\"' was not a multiple of %s\")", schema.GetMultiple())
+    toWrite = fmt.Sprintf("\n\t\tthrow new Exception(\"Property '\"+value+\"' was not a multiple of %s\");", schema.GetMultiple())
     ret.WriteString(toWrite)
 
     ret.WriteString("\n\t}\n")
@@ -247,7 +268,7 @@ func generateJavaRangeCheck(value interface{}, reference, message, format string
 	toWrite = fmt.Sprintf(toWrite, value)
 	ret.WriteString(toWrite)
 
-	toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Property '\"+value+\"' %s.\")\n\t\t}\n", message)
+	toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Property '\"+value+\"' %s.\");\n\t\t}\n", message)
 	ret.WriteString(toWrite)
 
 	return ret.String()
@@ -256,10 +277,10 @@ func generateJavaRangeCheck(value interface{}, reference, message, format string
 /*
 	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
 */
-func generateJavaEnumCheck(schema interface{}, enumValues []interface{}, prefix string, postfix string) string {
+func generateJavaEnumCheck(schema TypeSchema, enumValues []interface{}, prefix string, postfix string) string {
 
 	var ret bytes.Buffer
-	var constraint string
+	var constraint, typeName string
 	var length int
 
 	length = len(enumValues)
@@ -269,7 +290,8 @@ func generateJavaEnumCheck(schema interface{}, enumValues []interface{}, prefix 
 	}
 
 	// write array of valid values
-	constraint = fmt.Sprintf("\t validValues = [%s%v%s", prefix, enumValues[0], postfix)
+  typeName = generateJavaTypeForSchema(schema)
+	constraint = fmt.Sprintf("\t%s[] validValues = new %s[]{%s%v%s", typeName, typeName, prefix, enumValues[0], postfix)
 	ret.WriteString(constraint)
 
 	for _, enumValue := range enumValues[1:length] {
@@ -277,16 +299,16 @@ func generateJavaEnumCheck(schema interface{}, enumValues []interface{}, prefix 
 		constraint = fmt.Sprintf(",%s%v%s", prefix, enumValue, postfix)
 		ret.WriteString(constraint)
 	}
-	ret.WriteString("]\n")
+	ret.WriteString("};\n")
 
 	// compare
-	ret.WriteString("\tvar isValid = false\n")
+	ret.WriteString("\tboolean isValid = false;\n")
 	ret.WriteString("\tfor(int i = 0; i < validValues.length; i++) \n\t{\n")
-	ret.WriteString("\t\tif(validValues[i] === value)\n\t\t{\n\t\t\tisValid = true")
-	ret.WriteString("\n\t\t\tbreak\n\t\t}\n\t}")
+	ret.WriteString("\t\tif(validValues[i] == value)\n\t\t{\n\t\t\tisValid = true;")
+	ret.WriteString("\n\t\t\tbreak;\n\t\t}\n\t}")
 
 	ret.WriteString("\n\tif(!isValid)\n\t{")
-	ret.WriteString("\n\t\tthrow new Error(\"Given value '\"+value+\"' was not found in list of acceptable values\")\n")
+	ret.WriteString("\n\t\tthrow new Error(\"Given value '\"+value+\"' was not found in list of acceptable values\");\n")
 	ret.WriteString("\t}\n")
 
 	return ret.String()
