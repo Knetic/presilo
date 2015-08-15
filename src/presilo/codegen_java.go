@@ -151,7 +151,15 @@ func generateJavaStringSetter(schema *StringSchema) string {
   var ret bytes.Buffer
 
   ret.WriteString(generateJavaNullCheck())
-  // TODO: length checks
+
+  if(schema.MinLength!= nil) {
+    ret.WriteString(generateJavaRangeCheck(*schema.MinLength, "value.length()", "was shorter than allowable minimum", "%d", false, "<", ""))
+  }
+
+  if(schema.MaxLength != nil) {
+    ret.WriteString(generateJavaRangeCheck(*schema.MaxLength, "value.length()", "was longer than allowable maximum", "%d", false, ">", ""))
+  }
+
   // TODO: pattern checks
   return ret.String()
 }
@@ -164,11 +172,11 @@ func generateJavaNumericSetter(schema NumericSchemaType) string {
   ret.WriteString(generateJavaNullCheck())
 
   if(schema.HasMinimum()) {
-		ret.WriteString(generateJavaRangeCheck(schema.GetMinimum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+		ret.WriteString(generateJavaRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
 	}
 
 	if(schema.HasMaximum()) {
-		ret.WriteString(generateJavaRangeCheck(schema.GetMaximum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+		ret.WriteString(generateJavaRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
 	}
 
   if(schema.HasEnum()) {
@@ -203,11 +211,11 @@ func generateJavaArraySetter(schema *ArraySchema) string {
   ret.WriteString(generateJavaNullCheck())
 
   if(schema.MinItems != nil) {
-    ret.WriteString(generateJavaRangeCheck(*schema.MinItems, "value.length", "%d", false, "<", ""))
+    ret.WriteString(generateJavaRangeCheck(*schema.MinItems, "value.length", "does not have enough items", "%d", false, "<", ""))
   }
 
   if(schema.MaxItems != nil) {
-    ret.WriteString(generateJavaRangeCheck(*schema.MaxItems, "value.length", "%d", false, ">", ""))
+    ret.WriteString(generateJavaRangeCheck(*schema.MaxItems, "value.length", "does not have enough items", "%d", false, ">", ""))
   }
 
   return ret.String()
@@ -224,7 +232,7 @@ func generateJavaNullCheck() string {
   return ret.String()
 }
 
-func generateJavaRangeCheck(value interface{}, reference string, format string, exclusive bool, comparator, exclusiveComparator string) string {
+func generateJavaRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string) string {
 
 	var ret bytes.Buffer
 	var toWrite, compareString string
@@ -235,11 +243,11 @@ func generateJavaRangeCheck(value interface{}, reference string, format string, 
 		compareString = comparator
 	}
 
-	toWrite = "\n\tif("+ reference +" " + compareString + " " +format+ ")\n\t{"
+	toWrite = "\n\t\tif("+ reference +" " + compareString + " " +format+ ")\n\t\t{"
 	toWrite = fmt.Sprintf(toWrite, value)
 	ret.WriteString(toWrite)
 
-	toWrite = fmt.Sprintf("\n\t\tthrow new Exception(\"Property '\"+value+\"' was out of range.\")\n\t}\n")
+	toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Property '\"+value+\"' %s.\")\n\t\t}\n", message)
 	ret.WriteString(toWrite)
 
 	return ret.String()
@@ -289,8 +297,8 @@ func generateJavaTypeForSchema(subschema TypeSchema) string {
   switch(subschema.GetSchemaType()) {
   case SCHEMATYPE_NUMBER: return "double"
   case SCHEMATYPE_INTEGER: return "int"
-  case SCHEMATYPE_ARRAY: return subschema.GetTitle() + "[]"
-  case SCHEMATYPE_OBJECT: return subschema.GetTitle()
+  case SCHEMATYPE_ARRAY: return ToCamelCase(subschema.(*ArraySchema).Items.GetTitle()) + "[]"
+  case SCHEMATYPE_OBJECT: return ToCamelCase(subschema.GetTitle())
   case SCHEMATYPE_STRING: return "String"
   case SCHEMATYPE_BOOLEAN: return "boolean"
   }
