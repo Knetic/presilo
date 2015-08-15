@@ -129,6 +129,8 @@ func generateJavaFunctions(schema *ObjectSchema) string {
       toWrite = generateJavaArraySetter(subschema.(*ArraySchema))
     }
 
+    ret.WriteString(toWrite)
+
     toWrite = fmt.Sprintf("\n\t\t%s = value;", properName)
     ret.WriteString(toWrite)
 
@@ -163,7 +165,7 @@ func generateJavaStringSetter(schema *StringSchema) string {
 
   var ret bytes.Buffer
 
-  // TODO: null check
+  ret.WriteString(generateJavaNullCheck())
   // TODO: length checks
   // TODO: pattern checks
   return ret.String()
@@ -173,7 +175,7 @@ func generateJavaNumericSetter(schema NumericSchemaType) string {
 
   var ret bytes.Buffer
 
-  // TODO: null check
+  ret.WriteString(generateJavaNullCheck())
   // TODO: min/max checks
   // TODO: multiple checks
   return ret.String()
@@ -183,7 +185,7 @@ func generateJavaObjectSetter(schema *ObjectSchema) string {
 
   var ret bytes.Buffer
 
-  // TODO: null check
+  ret.WriteString(generateJavaNullCheck())
   return ret.String()
 }
 
@@ -191,8 +193,19 @@ func generateJavaArraySetter(schema *ArraySchema) string {
 
   var ret bytes.Buffer
 
-  // TODO: null check
+  ret.WriteString(generateJavaNullCheck())
   // TODO: min/max length checks
+  return ret.String()
+}
+
+func generateJavaNullCheck() string {
+
+  var ret bytes.Buffer
+
+  ret.WriteString("\n\t\tif(value == null)\n\t\t{")
+  ret.WriteString("\n\t\t\tthrow new NullPointerException(\"Cannot set property to null value\");")
+  ret.WriteString("\n\t\t}\n")
+
   return ret.String()
 }
 
