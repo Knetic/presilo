@@ -141,3 +141,11 @@ Isn't there something else which does this?
 There are a few projects which do similar things, but I don't find their patterns to match what I've found is the best method for defining schemas. I wanted one schema to be enforced on webservers (client request validation), client SDKs, and data persistence (DB schemas, file formats). One single schema that describes the data format for everything else. I wanted to generate large amounts of code for multiple languages, and not need to maintain any of it. I also wanted to be able to update existing code when a schema changes, without needing to manually edit code. I haven't found a project that does that.
 
 There are some projects which take a piece of code, or a sql table definition, and try to generate other pieces of code or schemas. That's great if you fit exactly into those use cases. But I wanted to define a contract about the data which is _implemented_ by code or a DB schema. And, specifically, I didn't want a language- or DB-specific solution, I wanted to use this everywhere.
+
+###Branching
+
+I use green masters, and heavily develop with private feature branches. Full releases are pinned and unchangeable, representing the best available version with the best documentation and test coverage. Master branch, however, should always have all tests pass and implementations considered "working", even if it's just a first pass. Master should never panic.
+
+###Activity
+
+If this repository hasn't been updated in a while, it's probably because I don't have any outstanding issues to work on - it's not because I've abandoned the project. If you have questions, issues, or patches; I'm completely open to pull requests, issues opened on github, or emails from out of the blue.
