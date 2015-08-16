@@ -1,7 +1,7 @@
 package presilo
 
 import (
-  "strings"
+	"strings"
 )
 
 /*
@@ -15,7 +15,7 @@ func containsRegexpMatch(schema *ObjectSchema) bool {
 
 		schemaType = property.GetSchemaType()
 
-		if(schemaType == SCHEMATYPE_STRING && property.(*StringSchema).Pattern != nil) {
+		if schemaType == SCHEMATYPE_STRING && property.(*StringSchema).Pattern != nil {
 			return true
 		}
 	}
@@ -34,7 +34,7 @@ func containsNumberMod(schema *ObjectSchema) bool {
 
 		schemaType = property.GetSchemaType()
 
-		if(schemaType == SCHEMATYPE_NUMBER && property.(*NumberSchema).MultipleOf != nil) {
+		if schemaType == SCHEMATYPE_NUMBER && property.(*NumberSchema).MultipleOf != nil {
 			return true
 		}
 	}

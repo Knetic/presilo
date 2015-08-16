@@ -48,11 +48,11 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 
 	// if this is a reference schema, simply return that exact schema, and do no other processing.
 	schemaRef, err = getJsonString(contents, "$ref")
-	if(err != nil) {
+	if err != nil {
 		return nil, err
 	}
 
-	if(len(schemaRef) > 0) {
+	if len(schemaRef) > 0 {
 
 		schema, present = context.SchemaDefinitions[schemaRef]
 
@@ -71,7 +71,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 		return nil, err
 	}
 
-	if(len(schemaType) <= 0) {
+	if len(schemaType) <= 0 {
 		return nil, errors.New("Schema could not be parsed, type was not specified")
 	}
 
@@ -148,12 +148,12 @@ func getJsonString(source map[string]*json.RawMessage, key string) (string, erro
 	var present bool
 
 	message, present = source[key]
-	if(!present) {
+	if !present {
 		return "", nil
 	}
 
 	retBytes, err = message.MarshalJSON()
-	if(err != nil) {
+	if err != nil {
 		return "", err
 	}
 

@@ -2,8 +2,8 @@ package presilo
 
 import (
 	"bytes"
-  "fmt"
-  "strings"
+	"fmt"
+	"strings"
 )
 
 /*
@@ -13,9 +13,9 @@ func GenerateJS(schema *ObjectSchema, module string) string {
 
 	var ret bytes.Buffer
 
-  ret.WriteString(generateJSModuleCheck(module))
+	ret.WriteString(generateJSModuleCheck(module))
 	ret.WriteString("\n")
-  ret.WriteString(generateJSConstructor(schema, module))
+	ret.WriteString(generateJSConstructor(schema, module))
 	ret.WriteString("\n")
 	ret.WriteString(generateJSFunctions(schema, module))
 	ret.WriteString("\n")
@@ -25,64 +25,64 @@ func GenerateJS(schema *ObjectSchema, module string) string {
 
 func generateJSModuleCheck(module string) string {
 
-  var ret bytes.Buffer
-  var check string
+	var ret bytes.Buffer
+	var check string
 
-  // check for undefined, first.
-  check = fmt.Sprintf("if(typeof(%s) === \"undefined\")\n{", module)
-  ret.WriteString(check)
+	// check for undefined, first.
+	check = fmt.Sprintf("if(typeof(%s) === \"undefined\")\n{", module)
+	ret.WriteString(check)
 
-  check = fmt.Sprintf("\n\t%s = {}", module)
-  ret.WriteString(check)
-  ret.WriteString("\n}\n")
+	check = fmt.Sprintf("\n\t%s = {}", module)
+	ret.WriteString(check)
+	ret.WriteString("\n}\n")
 
-  // then null check.
-  ret.WriteString("else\n{\n")
+	// then null check.
+	ret.WriteString("else\n{\n")
 
-  check = fmt.Sprintf("\t%s = %s || {}", module, module)
-  ret.WriteString(check)
-  ret.WriteString("\n}\n")
-  return ret.String()
+	check = fmt.Sprintf("\t%s = %s || {}", module, module)
+	ret.WriteString(check)
+	ret.WriteString("\n}\n")
+	return ret.String()
 }
 
 func generateJSConstructor(schema *ObjectSchema, module string) string {
 
-  var ret bytes.Buffer
-  var parameterNames []string
-  var toWrite, propertyName, parameterName string
+	var ret bytes.Buffer
+	var parameterNames []string
+	var toWrite, propertyName, parameterName string
 
-  // generate list of property names
-  for _, propertyName = range schema.RequiredProperties {
+	// generate list of property names
+	for _, propertyName = range schema.RequiredProperties {
 
 		propertyName = ToJavaCase(propertyName)
 		parameterNames = append(parameterNames, propertyName)
 	}
 
-  // write constructor signature
+	// write constructor signature
 	toWrite = fmt.Sprintf("\n/*\n%s\n*/\n", schema.Description)
 	ret.WriteString(toWrite)
 
-  toWrite = fmt.Sprintf("%s.%s = function(", module, schema.Title)
-  ret.WriteString(toWrite)
+	toWrite = fmt.Sprintf("%s.%s = function(", module, schema.Title)
+	ret.WriteString(toWrite)
 
-  ret.WriteString(strings.Join(parameterNames, ","))
-  ret.WriteString(")\n{")
+	ret.WriteString(strings.Join(parameterNames, ","))
+	ret.WriteString(")\n{")
 
-  // body
-  for _, parameterName = range parameterNames {
+	// body
+	for _, parameterName = range parameterNames {
 
-    toWrite = fmt.Sprintf("\n\tthis.set%s(%s)", ToCamelCase(parameterName), parameterName)
-    ret.WriteString(toWrite)
-  }
+		toWrite = fmt.Sprintf("\n\tthis.set%s(%s)", ToCamelCase(parameterName), parameterName)
+		ret.WriteString(toWrite)
+	}
 
-  ret.WriteString("\n}\n\n")
+	ret.WriteString("\n}\n\n")
 
-  return ret.String()
+	return ret.String()
 }
 
 func generateJSFunctions(schema *ObjectSchema, module string) string {
 
-  var ret bytes.Buffer
+	var ret bytes.Buffer
 	var subschema TypeSchema
 	var propertyName, propertyNameCamel, propertyNameJava, schemaName, toWrite string
 
@@ -96,34 +96,35 @@ func generateJSFunctions(schema *ObjectSchema, module string) string {
 		toWrite = fmt.Sprintf("%s.%s.prototype.set%s = function(value)\n{\n", module, schemaName, propertyNameCamel)
 		ret.WriteString(toWrite)
 
-    // undefined check
-    ret.WriteString("\tif(typeof(value) === 'undefined')\n\t{\n")
+		// undefined check
+		ret.WriteString("\tif(typeof(value) === 'undefined')\n\t{\n")
 
-    toWrite = fmt.Sprintf("\t\tthrow new ReferenceError(\"Cannot set property '%s', no value given\")", propertyNameJava)
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\t\tthrow new ReferenceError(\"Cannot set property '%s', no value given\")", propertyNameJava)
+		ret.WriteString(toWrite)
 
-    ret.WriteString("\n\t}\n")
+		ret.WriteString("\n\t}\n")
 
-    switch subschema.GetSchemaType() {
-    case SCHEMATYPE_BOOLEAN:
-      toWrite = ""
-    case SCHEMATYPE_STRING:
-      toWrite = generateJSStringSetter(subschema.(*StringSchema))
-    case SCHEMATYPE_INTEGER: fallthrough
-    case SCHEMATYPE_NUMBER:
-      toWrite = generateJSNumericSetter(subschema.(NumericSchemaType))
-    case SCHEMATYPE_OBJECT:
-      toWrite = generateJSObjectSetter(subschema.(*ObjectSchema))
-    case SCHEMATYPE_ARRAY:
-      toWrite = generateJSArraySetter(subschema.(*ArraySchema))
-    }
+		switch subschema.GetSchemaType() {
+		case SCHEMATYPE_BOOLEAN:
+			toWrite = ""
+		case SCHEMATYPE_STRING:
+			toWrite = generateJSStringSetter(subschema.(*StringSchema))
+		case SCHEMATYPE_INTEGER:
+			fallthrough
+		case SCHEMATYPE_NUMBER:
+			toWrite = generateJSNumericSetter(subschema.(NumericSchemaType))
+		case SCHEMATYPE_OBJECT:
+			toWrite = generateJSObjectSetter(subschema.(*ObjectSchema))
+		case SCHEMATYPE_ARRAY:
+			toWrite = generateJSArraySetter(subschema.(*ArraySchema))
+		}
 
-    ret.WriteString(toWrite)
+		ret.WriteString(toWrite)
 
 		toWrite = fmt.Sprintf("\n\tthis.%s = value\n}\n", propertyNameJava)
 		ret.WriteString(toWrite)
 	}
-  return ret.String()
+	return ret.String()
 }
 
 /*
@@ -143,32 +144,32 @@ func generateJSObjectSetter(schema *ObjectSchema) string {
 func generateJSNumericSetter(schema NumericSchemaType) string {
 
 	var ret bytes.Buffer
-  var toWrite string
+	var toWrite string
 
 	ret.WriteString(generateJSTypeCheck(schema))
 
-	if(schema.HasMinimum()) {
+	if schema.HasMinimum() {
 		ret.WriteString(generateJSRangeCheck(schema.GetMinimum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
 	}
 
-	if(schema.HasMaximum()) {
+	if schema.HasMaximum() {
 		ret.WriteString(generateJSRangeCheck(schema.GetMaximum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
 	}
 
-  if(schema.HasEnum()) {
+	if schema.HasEnum() {
 		ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "", ""))
 	}
 
-  if(schema.HasMultiple()) {
+	if schema.HasMultiple() {
 
-    toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
+		ret.WriteString(toWrite)
 
-    toWrite = fmt.Sprintf("\n\t\tthrow new Error(\"Property '\"+value+\"' was not a multiple of %s\")", schema.GetMultiple())
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\t\tthrow new Error(\"Property '\"+value+\"' was not a multiple of %s\")", schema.GetMultiple())
+		ret.WriteString(toWrite)
 
-    ret.WriteString("\n\t}\n")
-  }
+		ret.WriteString("\n\t}\n")
+	}
 	return ret.String()
 }
 
@@ -182,15 +183,15 @@ func generateJSStringSetter(schema *StringSchema) string {
 
 	ret.WriteString(generateJSTypeCheck(schema))
 
-	if(schema.MinLength != nil) {
+	if schema.MinLength != nil {
 		ret.WriteString(generateJSRangeCheck(*schema.MinLength, "value.length", "%d", false, "<", ""))
 	}
 
-	if(schema.MaxLength != nil) {
+	if schema.MaxLength != nil {
 		ret.WriteString(generateJSRangeCheck(*schema.MaxLength, "value.length", "%d", false, ">", ""))
 	}
 
-	if(schema.Pattern != nil) {
+	if schema.Pattern != nil {
 
 		toWrite = fmt.Sprintf("\tvar regex = new RegExp(\"%s\")\n", *schema.Pattern)
 		ret.WriteString(toWrite)
@@ -204,9 +205,9 @@ func generateJSStringSetter(schema *StringSchema) string {
 		ret.WriteString("\n\t}\n")
 	}
 
-  if(schema.Enum != nil) {
-	   ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "\"", "\""))
-   }
+	if schema.Enum != nil {
+		ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "\"", "\""))
+	}
 	return ret.String()
 }
 
@@ -220,11 +221,11 @@ func generateJSArraySetter(schema *ArraySchema) string {
 	ret.WriteString(generateJSTypeCheck(schema))
 	// TODO: value uniformity check
 
-	if(schema.MinItems != nil) {
+	if schema.MinItems != nil {
 		ret.WriteString(generateJSRangeCheck(*schema.MinItems, "value.length", "%d", false, "<", ""))
 	}
 
-	if(schema.MaxItems != nil) {
+	if schema.MaxItems != nil {
 		ret.WriteString(generateJSRangeCheck(*schema.MaxItems, "value.length", "%d", false, ">", ""))
 	}
 	return ret.String()
@@ -235,13 +236,13 @@ func generateJSRangeCheck(value interface{}, reference string, format string, ex
 	var ret bytes.Buffer
 	var toWrite, compareString string
 
-	if(exclusive) {
+	if exclusive {
 		compareString = exclusiveComparator
 	} else {
 		compareString = comparator
 	}
 
-	toWrite = "\n\tif("+ reference +" " + compareString + " " +format+ ")\n\t{"
+	toWrite = "\n\tif(" + reference + " " + compareString + " " + format + ")\n\t{"
 	toWrite = fmt.Sprintf(toWrite, value)
 	ret.WriteString(toWrite)
 
@@ -256,20 +257,20 @@ func generateJSRangeCheck(value interface{}, reference string, format string, ex
 */
 func generateJSTypeCheck(schema TypeSchema) string {
 
-  var ret bytes.Buffer
+	var ret bytes.Buffer
 	var schemaType SchemaType
-  var toWrite, expectedType string
+	var toWrite, expectedType string
 	var shouldWriteCtorCheck bool
 
 	schemaType = schema.GetSchemaType()
-  expectedType = getJSTypeFromSchemaType(schemaType)
+	expectedType = getJSTypeFromSchemaType(schemaType)
 
-  toWrite = fmt.Sprintf("\tif(typeof(value) !== \"%s\")\n\t{", expectedType)
-  ret.WriteString(toWrite)
+	toWrite = fmt.Sprintf("\tif(typeof(value) !== \"%s\")\n\t{", expectedType)
+	ret.WriteString(toWrite)
 
-  toWrite = fmt.Sprintf("\n\t\tthrow new TypeError(\"Property \"+value+\" was not of the expected type '%s'\")", expectedType)
-  ret.WriteString(toWrite)
-  ret.WriteString("\n\t}\n")
+	toWrite = fmt.Sprintf("\n\t\tthrow new TypeError(\"Property \"+value+\" was not of the expected type '%s'\")", expectedType)
+	ret.WriteString(toWrite)
+	ret.WriteString("\n\t}\n")
 
 	// if this is an array or object, check the constructor
 	shouldWriteCtorCheck = false
@@ -282,7 +283,7 @@ func generateJSTypeCheck(schema TypeSchema) string {
 		expectedType = ToCamelCase(schema.GetTitle())
 	}
 
-	if(shouldWriteCtorCheck) {
+	if shouldWriteCtorCheck {
 
 		toWrite = fmt.Sprintf("\tif(value.constructor !== %s)\n\t{", expectedType)
 		ret.WriteString(toWrite)
@@ -293,7 +294,7 @@ func generateJSTypeCheck(schema TypeSchema) string {
 		ret.WriteString("\n\t}\n")
 	}
 
-  return ret.String()
+	return ret.String()
 }
 
 /*
@@ -307,7 +308,7 @@ func generateJSEnumCheck(schema interface{}, enumValues []interface{}, prefix st
 
 	length = len(enumValues)
 
-	if(length <= 0) {
+	if length <= 0 {
 		return ""
 	}
 
@@ -337,14 +338,20 @@ func generateJSEnumCheck(schema interface{}, enumValues []interface{}, prefix st
 
 func getJSTypeFromSchemaType(schemaType SchemaType) string {
 
-  switch(schemaType) {
-  case SCHEMATYPE_NUMBER: fallthrough
-  case SCHEMATYPE_INTEGER: return "number"
-  case SCHEMATYPE_ARRAY: fallthrough
-  case SCHEMATYPE_OBJECT: return "object"
-  case SCHEMATYPE_STRING: return "string"
-  case SCHEMATYPE_BOOLEAN: return "boolean"
-  }
+	switch schemaType {
+	case SCHEMATYPE_NUMBER:
+		fallthrough
+	case SCHEMATYPE_INTEGER:
+		return "number"
+	case SCHEMATYPE_ARRAY:
+		fallthrough
+	case SCHEMATYPE_OBJECT:
+		return "object"
+	case SCHEMATYPE_STRING:
+		return "string"
+	case SCHEMATYPE_BOOLEAN:
+		return "boolean"
+	}
 
-  return "object"
+	return "object"
 }

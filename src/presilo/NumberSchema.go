@@ -9,12 +9,12 @@ import (
 */
 type NumberSchema struct {
 	Schema
-	Minimum          *float64 `json:"minimum"`
-	Maximum          *float64 `json:"maximum"`
-	ExclusiveMinimum *bool    `json:"exclusiveMinimum"`
-	ExclusiveMaximum *bool    `json:"exclusiveMaximum"`
-	MultipleOf       *float64 `json:"multipleOf"`
-	Enum						*[]float64 `json:"enum"`
+	Minimum          *float64   `json:"minimum"`
+	Maximum          *float64   `json:"maximum"`
+	ExclusiveMinimum *bool      `json:"exclusiveMinimum"`
+	ExclusiveMaximum *bool      `json:"exclusiveMaximum"`
+	MultipleOf       *float64   `json:"multipleOf"`
+	Enum             *[]float64 `json:"enum"`
 }
 
 /*
@@ -38,9 +38,9 @@ func NewNumberSchema(contents []byte, context *SchemaParseContext) (*NumberSchem
 
 func (this *NumberSchema) HasConstraints() bool {
 	return this.Minimum != nil ||
-				this.Maximum != nil ||
-				this.MultipleOf != nil ||
-				this.Enum != nil
+		this.Maximum != nil ||
+		this.MultipleOf != nil ||
+		this.Enum != nil
 }
 
 func (this *NumberSchema) HasMinimum() bool {

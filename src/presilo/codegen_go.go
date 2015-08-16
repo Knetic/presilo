@@ -33,22 +33,22 @@ func generateGoImports(schema *ObjectSchema) string {
 	var imports []string
 
 	// import errors if there are any constrained fields
-	if(len(schema.ConstrainedProperties) > 0) {
+	if len(schema.ConstrainedProperties) > 0 {
 		imports = append(imports, "errors")
 	}
 
 	// if any string schema has a pattern match, import regex.
-	if(containsRegexpMatch(schema)) {
+	if containsRegexpMatch(schema) {
 		imports = append(imports, "regexp")
 	}
 
 	// if any number (but not integer!) has a multiple clause, import math
-	if(containsNumberMod(schema)) {
+	if containsNumberMod(schema) {
 		imports = append(imports, "math")
 	}
 
 	// write imports (if they exist)
-	if(len(imports) > 0) {
+	if len(imports) > 0 {
 
 		ret.WriteString("import (\n")
 
@@ -132,7 +132,7 @@ func generateGoFunctions(schema *ObjectSchema) string {
 		body = fmt.Sprintf("\n\tthis.%s = value\n\treturn nil\n}\n\n", casedJavaName)
 
 		switch subschema.GetSchemaType() {
-    case SCHEMATYPE_BOOLEAN:
+		case SCHEMATYPE_BOOLEAN:
 		case SCHEMATYPE_STRING:
 			constraintChecks = generateGoStringSetter(subschema.(*StringSchema))
 		case SCHEMATYPE_NUMBER:
@@ -217,7 +217,7 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
 
 	formatString = schema.GetConstraintFormat()
 
-	if(schema.HasEnum()) {
+	if schema.HasEnum() {
 		ret.WriteString(generateGoEnumForSchema(schema, schema.GetEnum(), "", ""))
 	}
 
@@ -264,7 +264,7 @@ func generateGoNumericSetter(schema NumericSchemaType) string {
 
 		multiple = schema.GetMultiple()
 
-		if(schema.GetSchemaType() == SCHEMATYPE_NUMBER) {
+		if schema.GetSchemaType() == SCHEMATYPE_NUMBER {
 
 			constraint = fmt.Sprintf("\tif(math.Mod(value, %f) != 0) {", multiple)
 		} else {
@@ -292,11 +292,11 @@ func generateGoStringSetter(schema *StringSchema) string {
 	var constraintString string
 	var cutoff int
 
-	if(schema.Enum != nil) {
+	if schema.Enum != nil {
 		ret.WriteString(generateGoEnumForSchema(schema, schema.GetEnum(), "\"", "\""))
 	}
 
-	if(schema.MinLength != nil) {
+	if schema.MinLength != nil {
 
 		cutoff = *schema.MinLength
 
@@ -307,7 +307,7 @@ func generateGoStringSetter(schema *StringSchema) string {
 		ret.WriteString(constraintString)
 	}
 
-	if(schema.MaxLength != nil) {
+	if schema.MaxLength != nil {
 
 		cutoff = *schema.MaxLength
 
@@ -318,7 +318,7 @@ func generateGoStringSetter(schema *StringSchema) string {
 		ret.WriteString(constraintString)
 	}
 
-	if(schema.Pattern != nil) {
+	if schema.Pattern != nil {
 
 		constraintString = fmt.Sprintf("\tmatched, err := regexp.Match(\"%s\", []byte(value))", sanitizeQuotedString(*schema.Pattern))
 		ret.WriteString(constraintString)
@@ -388,7 +388,7 @@ func generateGoEnumForSchema(schema interface{}, enumValues []interface{}, prefi
 
 	length = len(enumValues)
 
-	if(length <= 0) {
+	if length <= 0 {
 		return ""
 	}
 
@@ -423,12 +423,18 @@ func generateGoEnumForSchema(schema interface{}, enumValues []interface{}, prefi
 func generateGoTypeForSchema(schema interface{}) string {
 
 	switch schema.(type) {
-	case *BooleanSchema: return "bool"
-	case *StringSchema: return "string"
-	case *IntegerSchema: return "int"
-	case *NumberSchema: return "float64"
-	case *ObjectSchema: return "*" + ToCamelCase(schema.(TypeSchema).GetTitle())
-	case *ArraySchema: return "[]" + ToCamelCase(schema.(*ArraySchema).Items.GetTitle())
+	case *BooleanSchema:
+		return "bool"
+	case *StringSchema:
+		return "string"
+	case *IntegerSchema:
+		return "int"
+	case *NumberSchema:
+		return "float64"
+	case *ObjectSchema:
+		return "*" + ToCamelCase(schema.(TypeSchema).GetTitle())
+	case *ArraySchema:
+		return "[]" + ToCamelCase(schema.(*ArraySchema).Items.GetTitle())
 	}
 
 	return "interface{}"

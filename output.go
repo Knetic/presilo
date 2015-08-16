@@ -1,16 +1,15 @@
 package main
 
 import (
-  "os"
-  "bufio"
-  "io/ioutil"
-  "errors"
-  "fmt"
-  "sync"
-  "path/filepath"
-  . "presilo"
+	"bufio"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	. "presilo"
+	"sync"
 )
-
 
 /*
   Given the output path, returns the absolute value of it,
@@ -35,13 +34,13 @@ func prepareOutputPath(targetPath string) (string, error) {
 
 func writeGeneratedCode(schema TypeSchema, module string, targetPath string, language string, splitFiles bool) error {
 
-  var wg sync.WaitGroup
-  var err error
+	var wg sync.WaitGroup
+	var err error
 
-  err = generateCode(schema, module, targetPath, language, splitFiles, &wg)
-  wg.Wait()
+	err = generateCode(schema, module, targetPath, language, splitFiles, &wg)
+	wg.Wait()
 
-  return err
+	return err
 }
 
 func generateCode(schema TypeSchema, module string, targetPath string, language string, splitFiles bool, wg *sync.WaitGroup) error {
@@ -67,12 +66,12 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 
 	case "go":
 		generator = GenerateGo
-  case "js":
-    generator = GenerateJS
-  case "java":
-    generator = GenerateJava
-  case "cs":
-    generator = GenerateCSharp
+	case "js":
+		generator = GenerateJS
+	case "java":
+		generator = GenerateJava
+	case "cs":
+		generator = GenerateCSharp
 	}
 
 	writtenChannel = make(chan string)
@@ -84,7 +83,7 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 	wg.Add(2)
 
 	// Start writer goroutines based on our split strategy
-	if(splitFiles) {
+	if splitFiles {
 
 		fileNameChannel = make(chan string)
 		defer close(fileNameChannel)
@@ -95,13 +94,13 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 		go writeSingleFile(schemaPath, writtenChannel, errorChannel, wg)
 	}
 
-  // write errors to stderr, no matter where they come from.
+	// write errors to stderr, no matter where they come from.
 	go writeErrors(errorChannel, wg)
 
-  // generate schemas, pass to writers.
+	// generate schemas, pass to writers.
 	for _, objectSchema = range schemas {
 
-		if(splitFiles) {
+		if splitFiles {
 			schemaPath = fmt.Sprintf("%s%s%s.%s", targetPath, string(os.PathSeparator), objectSchema.GetTitle(), language)
 			fileNameChannel <- schemaPath
 		}
@@ -126,12 +125,12 @@ func writeSplitFiles(source chan string, fileNames chan string, resultError chan
 
 	for {
 
-		schemaPath, ok =<- fileNames
-		if(!ok) {
+		schemaPath, ok = <-fileNames
+		if !ok {
 			return
 		}
 
-		contents =<- source
+		contents = <-source
 
 		err = ioutil.WriteFile(schemaPath, []byte(contents), os.ModePerm)
 
@@ -157,7 +156,7 @@ func writeSingleFile(schemaPath string, source chan string, resultError chan err
 	defer wg.Done()
 
 	outFile, err = os.Create(schemaPath)
-	if(err != nil) {
+	if err != nil {
 		resultError <- err
 		return
 	}
@@ -165,18 +164,18 @@ func writeSingleFile(schemaPath string, source chan string, resultError chan err
 	writer = bufio.NewWriter(outFile)
 
 	for {
-		contents, ok =<- source
-		if(!ok) {
+		contents, ok = <-source
+		if !ok {
 			break
 		}
 
 		_, err = writer.Write([]byte(contents))
-		if(err != nil) {
+		if err != nil {
 			resultError <- err
 		}
 	}
 
-  writer.Flush()
+	writer.Flush()
 }
 
 /*
@@ -190,8 +189,8 @@ func writeErrors(intake chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for {
-		err, ok =<- intake
-		if(!ok) {
+		err, ok = <-intake
+		if !ok {
 			return
 		}
 

@@ -14,8 +14,8 @@ func GenerateCSharp(schema *ObjectSchema, module string) string {
 	var ret bytes.Buffer
 
 	ret.WriteString(generateCSharpImports(schema))
-  ret.WriteString("\n")
-  ret.WriteString("namespace " + module + "\n{")
+	ret.WriteString("\n")
+	ret.WriteString("namespace " + module + "\n{")
 	ret.WriteString("\n")
 	ret.WriteString(generateCSharpTypeDeclaration(schema))
 	ret.WriteString("\n")
@@ -29,228 +29,229 @@ func GenerateCSharp(schema *ObjectSchema, module string) string {
 
 func generateCSharpImports(schema *ObjectSchema) string {
 
-  var ret bytes.Buffer
-  var usings []string
-  var toWrite string
+	var ret bytes.Buffer
+	var usings []string
+	var toWrite string
 
-  usings = []string{"System"}
+	usings = []string{"System"}
 
-  // import regex if we need it
-  if(containsRegexpMatch(schema)) {
-    usings = append(usings, "System.Text.RegularExpressions")
-  }
+	// import regex if we need it
+	if containsRegexpMatch(schema) {
+		usings = append(usings, "System.Text.RegularExpressions")
+	}
 
-  for _, using := range usings {
+	for _, using := range usings {
 
-    toWrite = fmt.Sprintf("using %s;", using)
-    ret.WriteString(toWrite)
-  }
+		toWrite = fmt.Sprintf("using %s;", using)
+		ret.WriteString(toWrite)
+	}
 
-  return ret.String()
+	return ret.String()
 }
 
 func generateCSharpTypeDeclaration(schema *ObjectSchema) string {
 
-  var ret bytes.Buffer
-  var subschema TypeSchema
-  var propertyName string
-  var toWrite string
+	var ret bytes.Buffer
+	var subschema TypeSchema
+	var propertyName string
+	var toWrite string
 
-  toWrite = fmt.Sprintf("public class %s\n{\n", ToCamelCase(schema.Title))
-  ret.WriteString(toWrite)
+	toWrite = fmt.Sprintf("public class %s\n{\n", ToCamelCase(schema.Title))
+	ret.WriteString(toWrite)
 
-  for propertyName, subschema = range schema.Properties {
+	for propertyName, subschema = range schema.Properties {
 
-    propertyName = ToJavaCase(propertyName)
-    toWrite = fmt.Sprintf("\n\tprotected %s %s;", generateCSharpTypeForSchema(subschema), propertyName)
-    ret.WriteString(toWrite)
-  }
+		propertyName = ToJavaCase(propertyName)
+		toWrite = fmt.Sprintf("\n\tprotected %s %s;", generateCSharpTypeForSchema(subschema), propertyName)
+		ret.WriteString(toWrite)
+	}
 
-  return ret.String()
+	return ret.String()
 }
 
 func generateCSharpConstructor(schema *ObjectSchema) string {
 
-  var ret bytes.Buffer
-  var subschema TypeSchema
-  var declarations, setters []string
-  var propertyName string
-  var toWrite string
+	var ret bytes.Buffer
+	var subschema TypeSchema
+	var declarations, setters []string
+	var propertyName string
+	var toWrite string
 
-  toWrite = fmt.Sprintf("\n\tpublic %s(", ToCamelCase(schema.Title))
-  ret.WriteString(toWrite)
+	toWrite = fmt.Sprintf("\n\tpublic %s(", ToCamelCase(schema.Title))
+	ret.WriteString(toWrite)
 
-  for _, propertyName = range schema.RequiredProperties {
+	for _, propertyName = range schema.RequiredProperties {
 
-    subschema = schema.Properties[propertyName]
-    propertyName = ToJavaCase(propertyName)
+		subschema = schema.Properties[propertyName]
+		propertyName = ToJavaCase(propertyName)
 
-    toWrite = fmt.Sprintf("%s %s", generateCSharpTypeForSchema(subschema), propertyName)
-    declarations = append(declarations, toWrite)
+		toWrite = fmt.Sprintf("%s %s", generateCSharpTypeForSchema(subschema), propertyName)
+		declarations = append(declarations, toWrite)
 
-    toWrite = fmt.Sprintf("\n\t\tset%s(%s);", ToCamelCase(propertyName), propertyName)
-    setters = append(setters, toWrite)
-  }
+		toWrite = fmt.Sprintf("\n\t\tset%s(%s);", ToCamelCase(propertyName), propertyName)
+		setters = append(setters, toWrite)
+	}
 
-  toWrite = strings.Join(declarations, ",")
-  ret.WriteString(toWrite)
-  ret.WriteString(")")
+	toWrite = strings.Join(declarations, ",")
+	ret.WriteString(toWrite)
+	ret.WriteString(")")
 
-  ret.WriteString("\n\t{")
+	ret.WriteString("\n\t{")
 
-  for _, setter := range setters {
-    ret.WriteString(setter)
-  }
+	for _, setter := range setters {
+		ret.WriteString(setter)
+	}
 
-  ret.WriteString("\n\t}\n")
-  return ret.String()
+	ret.WriteString("\n\t}\n")
+	return ret.String()
 }
 
 func generateCSharpFunctions(schema *ObjectSchema) string {
 
-  var ret bytes.Buffer
-  var subschema TypeSchema
-  var toWrite string
-  var propertyName, properName, camelName, typeName string
+	var ret bytes.Buffer
+	var subschema TypeSchema
+	var toWrite string
+	var propertyName, properName, camelName, typeName string
 
-  for propertyName, subschema = range schema.Properties {
+	for propertyName, subschema = range schema.Properties {
 
-    properName = ToJavaCase(propertyName)
-    camelName = ToCamelCase(propertyName)
-    typeName = generateCSharpTypeForSchema(subschema)
+		properName = ToJavaCase(propertyName)
+		camelName = ToCamelCase(propertyName)
+		typeName = generateCSharpTypeForSchema(subschema)
 
-    // getter
-    toWrite = fmt.Sprintf("\n\tpublic %s get%s()\n\t{", typeName, camelName)
-    ret.WriteString(toWrite)
+		// getter
+		toWrite = fmt.Sprintf("\n\tpublic %s get%s()\n\t{", typeName, camelName)
+		ret.WriteString(toWrite)
 
-    toWrite = fmt.Sprintf("\n\t\treturn this.%s;\n\t}", properName)
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\t\treturn this.%s;\n\t}", properName)
+		ret.WriteString(toWrite)
 
-    // setter
-    toWrite = fmt.Sprintf("\n\tpublic void set%s(%s value)", camelName, typeName)
-    ret.WriteString(toWrite)
+		// setter
+		toWrite = fmt.Sprintf("\n\tpublic void set%s(%s value)", camelName, typeName)
+		ret.WriteString(toWrite)
 
-    ret.WriteString("\n\t{")
+		ret.WriteString("\n\t{")
 
-    switch subschema.GetSchemaType() {
-    case SCHEMATYPE_BOOLEAN:
-      toWrite = ""
-    case SCHEMATYPE_STRING:
-      toWrite = generateCSharpStringSetter(subschema.(*StringSchema))
-    case SCHEMATYPE_INTEGER: fallthrough
-    case SCHEMATYPE_NUMBER:
-      toWrite = generateCSharpNumericSetter(subschema.(NumericSchemaType))
-    case SCHEMATYPE_OBJECT:
-      toWrite = generateCSharpObjectSetter(subschema.(*ObjectSchema))
-    case SCHEMATYPE_ARRAY:
-      toWrite = generateCSharpArraySetter(subschema.(*ArraySchema))
-    }
+		switch subschema.GetSchemaType() {
+		case SCHEMATYPE_BOOLEAN:
+			toWrite = ""
+		case SCHEMATYPE_STRING:
+			toWrite = generateCSharpStringSetter(subschema.(*StringSchema))
+		case SCHEMATYPE_INTEGER:
+			fallthrough
+		case SCHEMATYPE_NUMBER:
+			toWrite = generateCSharpNumericSetter(subschema.(NumericSchemaType))
+		case SCHEMATYPE_OBJECT:
+			toWrite = generateCSharpObjectSetter(subschema.(*ObjectSchema))
+		case SCHEMATYPE_ARRAY:
+			toWrite = generateCSharpArraySetter(subschema.(*ArraySchema))
+		}
 
-    ret.WriteString(toWrite)
+		ret.WriteString(toWrite)
 
-    toWrite = fmt.Sprintf("\n\t\t%s = value;", properName)
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\t\t%s = value;", properName)
+		ret.WriteString(toWrite)
 
-    ret.WriteString("\n\t}\n")
-  }
+		ret.WriteString("\n\t}\n")
+	}
 
-  return ret.String()
+	return ret.String()
 }
 
 func generateCSharpStringSetter(schema *StringSchema) string {
 
-  var ret bytes.Buffer
-  var toWrite string
+	var ret bytes.Buffer
+	var toWrite string
 
-  ret.WriteString(generateCSharpNullCheck())
+	ret.WriteString(generateCSharpNullCheck())
 
-  if(schema.MinLength!= nil) {
-    ret.WriteString(generateCSharpRangeCheck(*schema.MinLength, "value.Length", "was shorter than allowable minimum", "%d", false, "<", ""))
-  }
+	if schema.MinLength != nil {
+		ret.WriteString(generateCSharpRangeCheck(*schema.MinLength, "value.Length", "was shorter than allowable minimum", "%d", false, "<", ""))
+	}
 
-  if(schema.MaxLength != nil) {
-    ret.WriteString(generateCSharpRangeCheck(*schema.MaxLength, "value.Length", "was longer than allowable maximum", "%d", false, ">", ""))
-  }
+	if schema.MaxLength != nil {
+		ret.WriteString(generateCSharpRangeCheck(*schema.MaxLength, "value.Length", "was longer than allowable maximum", "%d", false, ">", ""))
+	}
 
-  if(schema.Pattern != nil) {
+	if schema.Pattern != nil {
 
-    toWrite = fmt.Sprintf("\n\t\tRegex regex = new Regex(\"%s\");", sanitizeQuotedString(*schema.Pattern))
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\t\tRegex regex = new Regex(\"%s\");", sanitizeQuotedString(*schema.Pattern))
+		ret.WriteString(toWrite)
 
-    ret.WriteString("\n\t\tif(!regex.IsMatch(value))\n\t\t{")
+		ret.WriteString("\n\t\tif(!regex.IsMatch(value))\n\t\t{")
 
-    toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Value '\"+value+\"' did not match pattern '%s'\");", *schema.Pattern)
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Value '\"+value+\"' did not match pattern '%s'\");", *schema.Pattern)
+		ret.WriteString(toWrite)
 
-    ret.WriteString("\n\t\t}")
-  }
-  return ret.String()
+		ret.WriteString("\n\t\t}")
+	}
+	return ret.String()
 }
 
 func generateCSharpNumericSetter(schema NumericSchemaType) string {
 
-  var ret bytes.Buffer
-  var toWrite string
+	var ret bytes.Buffer
+	var toWrite string
 
-  if(schema.HasMinimum()) {
+	if schema.HasMinimum() {
 		ret.WriteString(generateCSharpRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
 	}
 
-	if(schema.HasMaximum()) {
+	if schema.HasMaximum() {
 		ret.WriteString(generateCSharpRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
 	}
 
-  if(schema.HasEnum()) {
+	if schema.HasEnum() {
 		ret.WriteString(generateCSharpEnumCheck(schema, schema.GetEnum(), "", ""))
 	}
 
-  if(schema.HasMultiple()) {
+	if schema.HasMultiple() {
 
-    toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
+		ret.WriteString(toWrite)
 
-    toWrite = fmt.Sprintf("\n\t\tthrow new Exception(\"Property '\"+value+\"' was not a multiple of %s\");", schema.GetMultiple())
-    ret.WriteString(toWrite)
+		toWrite = fmt.Sprintf("\n\t\tthrow new Exception(\"Property '\"+value+\"' was not a multiple of %s\");", schema.GetMultiple())
+		ret.WriteString(toWrite)
 
-    ret.WriteString("\n\t}\n")
-  }
-  return ret.String()
+		ret.WriteString("\n\t}\n")
+	}
+	return ret.String()
 }
 
 func generateCSharpObjectSetter(schema *ObjectSchema) string {
 
-  var ret bytes.Buffer
+	var ret bytes.Buffer
 
-  ret.WriteString(generateCSharpNullCheck())
-  return ret.String()
+	ret.WriteString(generateCSharpNullCheck())
+	return ret.String()
 }
 
 func generateCSharpArraySetter(schema *ArraySchema) string {
 
-  var ret bytes.Buffer
+	var ret bytes.Buffer
 
-  ret.WriteString(generateCSharpNullCheck())
+	ret.WriteString(generateCSharpNullCheck())
 
-  if(schema.MinItems != nil) {
-    ret.WriteString(generateCSharpRangeCheck(*schema.MinItems, "value.Length", "does not have enough items", "%d", false, "<", ""))
-  }
+	if schema.MinItems != nil {
+		ret.WriteString(generateCSharpRangeCheck(*schema.MinItems, "value.Length", "does not have enough items", "%d", false, "<", ""))
+	}
 
-  if(schema.MaxItems != nil) {
-    ret.WriteString(generateCSharpRangeCheck(*schema.MaxItems, "value.Length", "does not have enough items", "%d", false, ">", ""))
-  }
+	if schema.MaxItems != nil {
+		ret.WriteString(generateCSharpRangeCheck(*schema.MaxItems, "value.Length", "does not have enough items", "%d", false, ">", ""))
+	}
 
-  return ret.String()
+	return ret.String()
 }
 
 func generateCSharpNullCheck() string {
 
-  var ret bytes.Buffer
+	var ret bytes.Buffer
 
-  ret.WriteString("\n\t\tif(value == null)\n\t\t{")
-  ret.WriteString("\n\t\t\tthrow new NullReferenceException(\"Cannot set property to null value\");")
-  ret.WriteString("\n\t\t}\n")
+	ret.WriteString("\n\t\tif(value == null)\n\t\t{")
+	ret.WriteString("\n\t\t\tthrow new NullReferenceException(\"Cannot set property to null value\");")
+	ret.WriteString("\n\t\t}\n")
 
-  return ret.String()
+	return ret.String()
 }
 
 func generateCSharpRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string) string {
@@ -258,13 +259,13 @@ func generateCSharpRangeCheck(value interface{}, reference, message, format stri
 	var ret bytes.Buffer
 	var toWrite, compareString string
 
-	if(exclusive) {
+	if exclusive {
 		compareString = exclusiveComparator
 	} else {
 		compareString = comparator
 	}
 
-	toWrite = "\n\t\tif("+ reference +" " + compareString + " " +format+ ")\n\t\t{"
+	toWrite = "\n\t\tif(" + reference + " " + compareString + " " + format + ")\n\t\t{"
 	toWrite = fmt.Sprintf(toWrite, value)
 	ret.WriteString(toWrite)
 
@@ -285,12 +286,12 @@ func generateCSharpEnumCheck(schema TypeSchema, enumValues []interface{}, prefix
 
 	length = len(enumValues)
 
-	if(length <= 0) {
+	if length <= 0 {
 		return ""
 	}
 
 	// write array of valid values
-  typeName = generateCSharpTypeForSchema(schema)
+	typeName = generateCSharpTypeForSchema(schema)
 	constraint = fmt.Sprintf("\t%s[] validValues = new %s[]{%s%v%s", typeName, typeName, prefix, enumValues[0], postfix)
 	ret.WriteString(constraint)
 
@@ -316,14 +317,20 @@ func generateCSharpEnumCheck(schema TypeSchema, enumValues []interface{}, prefix
 
 func generateCSharpTypeForSchema(subschema TypeSchema) string {
 
-  switch(subschema.GetSchemaType()) {
-  case SCHEMATYPE_NUMBER: return "double"
-  case SCHEMATYPE_INTEGER: return "int"
-  case SCHEMATYPE_ARRAY: return ToCamelCase(subschema.(*ArraySchema).Items.GetTitle()) + "[]"
-  case SCHEMATYPE_OBJECT: return ToCamelCase(subschema.GetTitle())
-  case SCHEMATYPE_STRING: return "string"
-  case SCHEMATYPE_BOOLEAN: return "bool"
-  }
+	switch subschema.GetSchemaType() {
+	case SCHEMATYPE_NUMBER:
+		return "double"
+	case SCHEMATYPE_INTEGER:
+		return "int"
+	case SCHEMATYPE_ARRAY:
+		return ToCamelCase(subschema.(*ArraySchema).Items.GetTitle()) + "[]"
+	case SCHEMATYPE_OBJECT:
+		return ToCamelCase(subschema.GetTitle())
+	case SCHEMATYPE_STRING:
+		return "string"
+	case SCHEMATYPE_BOOLEAN:
+		return "bool"
+	}
 
-  return "Object"
+	return "Object"
 }

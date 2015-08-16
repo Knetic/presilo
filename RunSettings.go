@@ -20,9 +20,9 @@ var SUPPORTED_LANGUAGES = []string{
 	"java",
 	"cs",
 	/*
-	  "py",
-		"rb",
-	  "sql",
+		  "py",
+			"rb",
+		  "sql",
 	*/
 }
 
@@ -48,7 +48,7 @@ func ParseRunSettings() (*RunSettings, error) {
 	}
 
 	// determine if the given language is one that should split files.
-	if(ret.Language == "js") {
+	if ret.Language == "js" {
 		ret.splitFiles = false
 	} else {
 		ret.splitFiles = true
