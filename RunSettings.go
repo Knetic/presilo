@@ -20,10 +20,10 @@ var SUPPORTED_LANGUAGES = []string{
 	"js",
 	"java",
 	"cs",
+	"rb",
 	/*
-		  "py",
-			"rb",
-		  "sql",
+	  "py",
+	  "sql",
 	*/
 }
 

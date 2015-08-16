@@ -72,6 +72,9 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 		generator = GenerateJava
 	case "cs":
 		generator = GenerateCSharp
+	case "rb":
+		generator = GenerateRuby
+	default: return errors.New("No valid language specified")
 	}
 
 	writtenChannel = make(chan string)
