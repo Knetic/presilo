@@ -125,22 +125,15 @@ Sometimes your schema will have a nested schema, where one object contains anoth
 
 This will generate both Car.go and Tire.go, each containing the relevant data model and associated functions. The "Car" model will actually reference the "Tire" model. Note that if there are multiple schemas with the same title, an error will be given. You _must_ uniquely name your models.
 
-That's cool, but not everyone uses Go. What about other languages? Using `-l` lists all supported languages.
+That's cool, but not everyone uses Go. What about other languages? Using `-a` lists all supported languages.
 
-    presilo -l
+    presilo -a
 
-All supported languages have some form of "package" notion, which should be specified by the `-p` flag. For instance:
+All supported languages have some form of "module" notion, which should be specified by the `-m` flag. For instance:
 
-    presilo -l go -p awesome schema.json
+    presilo -l go -m awesome schema.json
 
 Will make it so that instead of `package main`, the generated files will be listed as `package awesome`. Languages with nested package names (Java, Ruby, C#) will accept the dot-notation to separate package names (`com.awesome.project`, for example). If you give nested package names and tell `presilo` to generate a schema for a language which does not support them, it will give you an error.
-
-How do I update a schema?
-====
-
-Sometimes your schemas aren't perfect, and new features will introduce new fields in existing schemas. You may have even inserted code into the generated data model. If `presilo` finds an existing code file when generating from a schema, it will try to merge its changes into the new file. This merge will first find-and-replace variable- and class-names in the generated file. If there are getters or setters for a variable that has been renamed, the old ones will be deleted wholesale. Then it will rewrite methods that would be created by it (getters, setters, and constructors, mainly). All other code / comments are left unchanged.
-
-Note that this still means that downstream consumers of the schema will need to be manually updated. Updating the schema will _not_ update all of your business logic! Just the data model. And, you'll lose any code that you've added to the getters or setters.
 
 Isn't there something else which does this?
 ====

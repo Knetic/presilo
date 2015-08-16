@@ -18,6 +18,11 @@ func main() {
 		return
 	}
 
+	if(settings.ListLanguages) {
+		printLanguages()
+		return
+	}
+
 	settings.OutputPath, err = prepareOutputPath(settings.OutputPath)
 	if err != nil {
 		exitWith("Unable to create output directory: %s\n", err)
@@ -34,6 +39,13 @@ func main() {
 	if err != nil {
 		exitWith("Unable to generate code: %s\n", err)
 		return
+	}
+}
+
+func printLanguages() {
+
+	for _, language := range SUPPORTED_LANGUAGES {
+		fmt.Println(language)
 	}
 }
 

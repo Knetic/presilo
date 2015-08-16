@@ -11,6 +11,7 @@ type RunSettings struct {
 	OutputPath string
 	Language   string
 	Module     string
+	ListLanguages bool
 	splitFiles bool
 }
 
@@ -34,10 +35,15 @@ func ParseRunSettings() (*RunSettings, error) {
 	flag.StringVar(&ret.Language, "l", "go", "Language for the generated files")
 	flag.StringVar(&ret.OutputPath, "o", "./", "Optional destination directory for generated files")
 	flag.StringVar(&ret.Module, "m", "main", "Module to use for the generated files")
+	flag.BoolVar(&ret.ListLanguages, "a", false, "Lists all supported languages")
 
 	flag.Parse()
 	ret.InputPath = flag.Arg(0)
 
+	if(ret.ListLanguages) {
+		return ret, nil
+	}
+	
 	if len(ret.InputPath) == 0 {
 		return nil, errors.New("Input path not specified")
 	}
