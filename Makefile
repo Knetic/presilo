@@ -16,6 +16,7 @@ test:
 
 clean:
 	@rm -rf ./.output/
+	@rm -rf ./pkg/
 
 format:
 	go fmt . presilo
