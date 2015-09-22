@@ -49,11 +49,18 @@ ifeq ($(shell which fpm), )
 	@exit 1
 endif
 
+ifeq ($(PRESILO_VERSION), )
+
+	@echo "No 'PRESILO_VERSION' was specified."
+	@echo "Export a 'PRESILO_VERSION' environment variable to perform a package"
+	@exit 1
+endif
+
 	fpm \
 		--log error \
 		-s dir \
 		-t deb \
-		-v 1.0 \
+		-v $(PRESILO_VERSION) \
 		-n presilo \
 		./.output/presilo64=/usr/local/bin/presilo
 
@@ -61,7 +68,7 @@ endif
 		--log error \
 		-s dir \
 		-t deb \
-		-v 1.0 \
+		-v $(PRESILO_VERSION) \
 		-n presilo \
 		-a i686 \
 		./.output/presilo32=/usr/local/bin/presilo
@@ -72,14 +79,14 @@ endif
 		--log error \
 		-s dir \
 		-t rpm \
-		-v 1.0 \
+		-v $(PRESILO_VERSION) \
 		-n presilo \
 		./.output/presilo64=/usr/local/bin/presilo
 	fpm \
 		--log error \
 		-s dir \
 		-t rpm \
-		-v 1.0 \
+		-v $(PRESILO_VERSION) \
 		-n presilo \
 		-a i686 \
 		./.output/presilo32=/usr/local/bin/presilo
