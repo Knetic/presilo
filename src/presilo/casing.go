@@ -23,6 +23,35 @@ func ToJavaCase(target string) string {
 	return iterateRunes(target, unicode.ToLower)
 }
 
+/*
+	Converts the given target string to snake_case, e.g.
+	"somethingQuiteFine" becomes "something_quite_fine"
+*/
+func ToSnakeCase(target string) string {
+
+	var ret bytes.Buffer
+	var channel chan rune
+	var character rune
+
+	channel = make(chan rune)
+	go getCharacterChannel(target, channel)
+
+	ret.WriteRune(character)
+
+	for character = range channel {
+
+		if(unicode.IsUpper(character)) {
+
+			ret.WriteRune('_')
+			ret.WriteRune(unicode.ToLower(character))
+		} else {
+			ret.WriteRune(character)
+		}
+	}
+
+	return ret.String()
+}
+
 func iterateRunes(target string, transformer func(rune) rune) string {
 
 	var ret bytes.Buffer
