@@ -74,6 +74,8 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 		generator = GenerateCSharp
 	case "rb":
 		generator = GenerateRuby
+	case "py":
+		generator = GeneratePython
 	default: return errors.New("No valid language specified")
 	}
 

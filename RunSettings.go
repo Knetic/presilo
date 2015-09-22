@@ -21,9 +21,13 @@ var SUPPORTED_LANGUAGES = []string{
 	"java",
 	"cs",
 	"rb",
+  "py",
 	/*
-	  "py",
-	  "sql",
+		"lua",
+	  "mysql",
+		"mssql",
+		"c",
+		"cpp",
 	*/
 }
 
@@ -43,7 +47,7 @@ func ParseRunSettings() (*RunSettings, error) {
 	if(ret.ListLanguages) {
 		return ret, nil
 	}
-	
+
 	if len(ret.InputPath) == 0 {
 		return nil, errors.New("Input path not specified")
 	}
