@@ -168,10 +168,10 @@ func generateRubyNumericSetter(schema NumericSchemaType) string {
 
 	if schema.HasMultiple() {
 
-		toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
+		toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t", schema.GetMultiple())
 		ret.WriteString(toWrite)
 
-		toWrite = fmt.Sprintf("\n\t\traise StandardError.new(\"Property '#{value}' was not a multiple of %s\")", schema.GetMultiple())
+		toWrite = fmt.Sprintf("\n\t\traise StandardError.new(\"Property '#{value}' was not a multiple of %v\")", schema.GetMultiple())
 		ret.WriteString(toWrite)
 
 		ret.WriteString("\n\tend\n")
