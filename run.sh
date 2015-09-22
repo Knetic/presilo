@@ -32,6 +32,8 @@ pushd ./.temp/cs/
 #mcs $(find . -name "*.cs")
 popd
 pushd ./.temp/rb/
+ruby $(find . -name "*.rb")
 popd
 pushd ./.temp/py/
+python $(find . -name "*.py")
 popd

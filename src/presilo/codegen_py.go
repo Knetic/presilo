@@ -37,7 +37,7 @@ func generatePythonImports(schema *ObjectSchema) string {
 
 func generatePythonSignature(schema *ObjectSchema) string {
 
-	return fmt.Sprintf("class %s(Object):", ToCamelCase(schema.Title))
+	return fmt.Sprintf("class %s(object):", ToCamelCase(schema.Title))
 }
 
 func generatePythonConstructor(schema *ObjectSchema) string {
@@ -47,7 +47,7 @@ func generatePythonConstructor(schema *ObjectSchema) string {
 	var propertyName string
 	var toWrite string
 
-	ret.WriteString("\n\tdef __init__(")
+	ret.WriteString("\n\tdef __init__(self, ")
 
 	// required properties
 	for _, propertyName = range schema.RequiredProperties {
@@ -60,7 +60,7 @@ func generatePythonConstructor(schema *ObjectSchema) string {
 		setters = append(setters, toWrite)
 	}
 
-	toWrite = strings.Join(declarations, ",")
+	toWrite = strings.Join(declarations, ", ")
 	ret.WriteString(toWrite)
 	ret.WriteString("):")
 
@@ -83,7 +83,7 @@ func generatePythonFunctions(schema *ObjectSchema) string {
 		snakeName = ToSnakeCase(propertyName)
 
 		// setter
-		toWrite = fmt.Sprintf("\n\tdef set_%s(%s):", snakeName, snakeName)
+		toWrite = fmt.Sprintf("\n\tdef set_%s(self, %s):", snakeName, snakeName)
 		ret.WriteString(toWrite)
 
 		switch subschema.GetSchemaType() {

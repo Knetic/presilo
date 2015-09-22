@@ -36,7 +36,7 @@ func ToSnakeCase(target string) string {
 	channel = make(chan rune)
 	go getCharacterChannel(target, channel)
 
-	ret.WriteRune(character)
+	ret.WriteRune(<-channel)
 
 	for character = range channel {
 

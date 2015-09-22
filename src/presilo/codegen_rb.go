@@ -11,7 +11,7 @@ func GenerateRuby(schema *ObjectSchema, module string) string {
 	var ret bytes.Buffer
 	var toWrite string
 
-	toWrite = fmt.Sprintf("module %s\n\n", module)
+	toWrite = fmt.Sprintf("module %s\n\n", ToCamelCase(module))
 	ret.WriteString(toWrite)
 
 	ret.WriteString(generateRubySignature(schema))
@@ -19,7 +19,7 @@ func GenerateRuby(schema *ObjectSchema, module string) string {
 	ret.WriteString(generateRubyConstructor(schema))
 	ret.WriteString("\n")
 	ret.WriteString(generateRubyFunctions(schema))
-	ret.WriteString("\nend\n")
+	ret.WriteString("\nend\nend\n")
 
 	return ret.String()
 }
@@ -28,6 +28,7 @@ func generateRubySignature(schema *ObjectSchema) string {
 
 	var ret bytes.Buffer
 	var subschema TypeSchema
+	var readers, accessors []string
 	var propertyName string
 	var toWrite string
 
@@ -39,11 +40,24 @@ func generateRubySignature(schema *ObjectSchema) string {
 		propertyName = ToSnakeCase(propertyName)
 
 		if(subschema.HasConstraints()) {
-			toWrite = fmt.Sprintf("\n\tattr_reader :%s", propertyName)
+			toWrite = fmt.Sprintf(":%s", propertyName)
+			readers = append(readers, toWrite)
+
 		} else {
-			toWrite = fmt.Sprintf("\n\tattr_accessor :%s", propertyName)
+
+			toWrite = fmt.Sprintf(":%s", propertyName)
+			accessors = append(accessors, toWrite)
 		}
-		ret.WriteString(toWrite)
+	}
+
+	if(len(readers) > 0) {
+		ret.WriteString("\n\tattr_reader ")
+		ret.WriteString(strings.Join(readers, ",\n\t\t\t\t\t\t\t"))
+	}
+
+	if(len(accessors) > 0) {
+		ret.WriteString("\n\tattr_accessor ")
+		ret.WriteString(strings.Join(accessors, ",\n\t\t\t\t\t\t\t\t")) // god. Ruby.
 	}
 
 	return ret.String()
