@@ -82,6 +82,13 @@ func generatePythonFunctions(schema *ObjectSchema) string {
 
 		snakeName = ToSnakeCase(propertyName)
 
+		// getter
+		toWrite = fmt.Sprintf("\n\tdef get_%s(self):", snakeName)
+		ret.WriteString(toWrite)
+
+		toWrite = fmt.Sprintf("\n\t\treturn self.%s\n", snakeName)
+		ret.WriteString(toWrite)
+
 		// setter
 		toWrite = fmt.Sprintf("\n\tdef set_%s(self, %s):", snakeName, snakeName)
 		ret.WriteString(toWrite)

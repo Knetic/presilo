@@ -105,6 +105,13 @@ func generateRubyFunctions(schema *ObjectSchema) string {
 
 		snakeName = ToSnakeCase(propertyName)
 
+		// getter
+		toWrite = fmt.Sprintf("\n\tdef get_%s()", snakeName)
+		ret.WriteString(toWrite)
+
+		toWrite = fmt.Sprintf("\n\t\treturn @%s\n\tend\n", snakeName)
+		ret.WriteString(toWrite)
+
 		// setter
 		toWrite = fmt.Sprintf("\n\tdef set_%s(%s)", snakeName, snakeName)
 		ret.WriteString(toWrite)
