@@ -157,6 +157,10 @@ func generateRubyStringSetter(schema *StringSchema) string {
 		ret.WriteString(generateRubyRangeCheck(*schema.MaxLength, "value.length", "was longer than allowable maximum", "%d", false, ">", ""))
 	}
 
+	if schema.HasEnum() {
+		ret.WriteString(generateRubyEnumCheck(schema, schema.GetEnum(), "'", "'"))
+	}
+
 	if schema.Pattern != nil {
 
 		toWrite = fmt.Sprintf("\n\t\tif(value =~ /%s/)\n", *schema.Pattern)
@@ -261,7 +265,7 @@ func generateRubyEnumCheck(schema TypeSchema, enumValues []interface{}, prefix s
 
 	// convert enum values to strings
 	for _, enum := range enumValues {
-		stringValues = append(stringValues, fmt.Sprintf("%v", enum))
+		stringValues = append(stringValues, fmt.Sprintf("%s%v%s", prefix, enum, postfix))
 	}
 
 	// write array of valid values

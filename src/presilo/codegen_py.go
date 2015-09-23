@@ -132,6 +132,10 @@ func generatePythonStringSetter(schema *StringSchema) string {
 		ret.WriteString(generatePythonRangeCheck(*schema.MaxLength, "value.length", "was longer than allowable maximum", "%d", false, ">", ""))
 	}
 
+	if schema.HasEnum() {
+		ret.WriteString(generatePythonEnumCheck(schema, schema.GetEnum(), "\"", "\""))
+	}
+
 	if schema.Pattern != nil {
 
 		toWrite = fmt.Sprintf("\n\t\tif(not re.match(\"%s\", value)):", *schema.Pattern)
@@ -233,7 +237,7 @@ func generatePythonEnumCheck(schema TypeSchema, enumValues []interface{}, prefix
 
 	// convert enum values to strings
 	for _, enum := range enumValues {
-		stringValues = append(stringValues, fmt.Sprintf("%v", enum))
+		stringValues = append(stringValues, fmt.Sprintf("%s%v%s", prefix, enum, postfix))
 	}
 
 	// write array of valid values

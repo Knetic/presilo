@@ -41,6 +41,10 @@ func (this *StringSchema) HasConstraints() bool {
 		this.Pattern != nil
 }
 
+func (this *StringSchema) HasEnum() bool {
+	return this.Enum != nil
+}
+
 func (this *StringSchema) GetEnum() []interface{} {
 
 	var ret []interface{}
