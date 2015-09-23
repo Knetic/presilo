@@ -3,37 +3,39 @@ package presilo
 import (
 	"fmt"
 	"strings"
-	"bytes"
 )
 
 func GenerateRuby(schema *ObjectSchema, module string) string {
 
-	var ret bytes.Buffer
-	var toWrite string
+	var buffer *BufferedFormatString
 
-	toWrite = fmt.Sprintf("module %s\n\n", ToCamelCase(module))
-	ret.WriteString(toWrite)
+	buffer = NewBufferedFormatString("  ")
+	buffer.Printf("module %s\n\n", ToCamelCase(module))
+	buffer.AddIndentation(1)
 
-	ret.WriteString(generateRubySignature(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generateRubyConstructor(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generateRubyFunctions(schema))
-	ret.WriteString("\nend\nend\n")
+	generateRubySignature(schema, buffer)
+	buffer.Print("\n")
+	generateRubyConstructor(schema, buffer)
+	buffer.Print("\n")
+	generateRubyFunctions(schema, buffer)
 
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend")
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend")
+
+	return buffer.String()
 }
 
-func generateRubySignature(schema *ObjectSchema) string {
+func generateRubySignature(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
 	var subschema TypeSchema
 	var readers, accessors []string
 	var propertyName string
 	var toWrite string
 
-	toWrite = fmt.Sprintf("class %s\n", ToCamelCase(schema.Title))
-	ret.WriteString(toWrite)
+	buffer.Printf("class %s\n", ToCamelCase(schema.Title))
+	buffer.AddIndentation(1)
 
 	for propertyName, subschema = range schema.Properties {
 
@@ -51,54 +53,49 @@ func generateRubySignature(schema *ObjectSchema) string {
 	}
 
 	if(len(readers) > 0) {
-		ret.WriteString("\n\tattr_reader ")
-		ret.WriteString(strings.Join(readers, ",\n\t\t\t\t\t\t\t"))
+
+		buffer.Print("\nattr_reader ")
+		buffer.AddIndentation(6)
+		buffer.Print(strings.Join(readers, ",\n"))
+		buffer.AddIndentation(-6)
 	}
 
 	if(len(accessors) > 0) {
-		ret.WriteString("\n\tattr_accessor ")
-		ret.WriteString(strings.Join(accessors, ",\n\t\t\t\t\t\t\t\t")) // god. Ruby.
-	}
 
-	return ret.String()
+		buffer.Print("\nattr_accessor ")
+		buffer.AddIndentation(7)
+		buffer.Print(strings.Join(accessors, ",\n"))
+		buffer.AddIndentation(-7)
+	}
 }
 
-func generateRubyConstructor(schema *ObjectSchema) string {
+func generateRubyConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var declarations, setters []string
+	var declarations []string
 	var propertyName string
-	var toWrite string
 
-	ret.WriteString("\n\tdef initialize(")
+	buffer.Print("\ndef initialize(")
 
 	for _, propertyName = range schema.RequiredProperties {
 
 		propertyName = ToSnakeCase(propertyName)
-
 		declarations = append(declarations, propertyName)
-
-		toWrite = fmt.Sprintf("\n\t\tset_%s(%s)", propertyName, propertyName)
-		setters = append(setters, toWrite)
 	}
 
-	toWrite = strings.Join(declarations, ",")
-	ret.WriteString(toWrite)
-	ret.WriteString(")")
+	buffer.Printf("%s)\n", strings.Join(declarations, ","))
+	buffer.AddIndentation(1)
 
-	for _, setter := range setters {
-		ret.WriteString(setter)
+	for _, propertyName = range schema.RequiredProperties {
+		buffer.Printf("\nset_%s(%s)", propertyName, propertyName)
 	}
 
-	ret.WriteString("\n\tend\n")
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend\n")
 }
 
-func generateRubyFunctions(schema *ObjectSchema) string {
+func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
 	var subschema TypeSchema
-	var toWrite string
 	var propertyName, snakeName string
 
 	for propertyName, subschema = range schema.Properties {
@@ -106,130 +103,112 @@ func generateRubyFunctions(schema *ObjectSchema) string {
 		snakeName = ToSnakeCase(propertyName)
 
 		// getter
-		toWrite = fmt.Sprintf("\n\tdef get_%s()", snakeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\ndef get_%s()", snakeName)
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\treturn @%s\n\tend\n", snakeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nreturn @%s", snakeName)
+
+		buffer.AddIndentation(-1)
+		buffer.Print("\nend\n")
 
 		// setter
-		toWrite = fmt.Sprintf("\n\tdef set_%s(%s)", snakeName, snakeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\ndef set_%s(%s)", snakeName, snakeName)
+		buffer.AddIndentation(1)
 
 		switch subschema.GetSchemaType() {
-		case SCHEMATYPE_BOOLEAN:
-			toWrite = ""
 		case SCHEMATYPE_STRING:
-			toWrite = generateRubyStringSetter(subschema.(*StringSchema))
+			generateRubyStringSetter(subschema.(*StringSchema), buffer)
 		case SCHEMATYPE_INTEGER:
 			fallthrough
 		case SCHEMATYPE_NUMBER:
-			toWrite = generateRubyNumericSetter(subschema.(NumericSchemaType))
+			generateRubyNumericSetter(subschema.(NumericSchemaType), buffer)
 		case SCHEMATYPE_OBJECT:
-			toWrite = generateRubyObjectSetter(subschema.(*ObjectSchema))
+			generateRubyObjectSetter(subschema.(*ObjectSchema), buffer)
 		case SCHEMATYPE_ARRAY:
-			toWrite = generateRubyArraySetter(subschema.(*ArraySchema))
+			generateRubyArraySetter(subschema.(*ArraySchema), buffer)
 		}
 
-		ret.WriteString(toWrite)
-
-		toWrite = fmt.Sprintf("\n\t\t@%s = value", snakeName)
-		ret.WriteString(toWrite)
-
-		ret.WriteString("\n\tend\n")
+		buffer.Printf("\n@%s = value", snakeName)
+		buffer.AddIndentation(-1)
+		buffer.Print("\nend\n")
 	}
-
-	return ret.String()
 }
 
-func generateRubyStringSetter(schema *StringSchema) string {
+func generateRubyStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite string
-
-	ret.WriteString(generateRubyNullCheck())
+	generateRubyNullCheck(buffer)
 
 	if schema.MinLength != nil {
-		ret.WriteString(generateRubyRangeCheck(*schema.MinLength, "value.length", "was shorter than allowable minimum", "%d", false, "<", ""))
+		generateRubyRangeCheck(*schema.MinLength, "value.length", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxLength != nil {
-		ret.WriteString(generateRubyRangeCheck(*schema.MaxLength, "value.length", "was longer than allowable maximum", "%d", false, ">", ""))
+		generateRubyRangeCheck(*schema.MaxLength, "value.length", "was longer than allowable maximum", "%d", false, ">", "", buffer)
 	}
 
 	if schema.HasEnum() {
-		ret.WriteString(generateRubyEnumCheck(schema, schema.GetEnum(), "'", "'"))
+		generateRubyEnumCheck(schema, buffer, schema.GetEnum(), "'", "'")
 	}
 
 	if schema.Pattern != nil {
 
-		toWrite = fmt.Sprintf("\n\t\tif(value =~ /%s/)\n", *schema.Pattern)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nif(value =~ /%s/)\n", *schema.Pattern)
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\t\traise StandardError.new(\"Value '#{value}' did not match pattern '%s'\")", *schema.Pattern)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nraise StandardError.new(\"Value '#{value}' did not match pattern '%s'\")", *schema.Pattern)
 
-		ret.WriteString("\n\t\tend")
+		buffer.AddIndentation(-1)
+		buffer.Print("\nend")
 	}
-	return ret.String()
 }
 
-func generateRubyNumericSetter(schema NumericSchemaType) string {
-
-	var ret bytes.Buffer
-	var toWrite string
+func generateRubyNumericSetter(schema NumericSchemaType, buffer *BufferedFormatString) {
 
 	if schema.HasMinimum() {
-		ret.WriteString(generateRubyRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+		generateRubyRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<", buffer)
 	}
 
 	if schema.HasMaximum() {
-		ret.WriteString(generateRubyRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+		generateRubyRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">", buffer)
 	}
 
 	if schema.HasEnum() {
-		ret.WriteString(generateRubyEnumCheck(schema, schema.GetEnum(), "", ""))
+		generateRubyEnumCheck(schema, buffer, schema.GetEnum(), "", "")
 	}
 
 	if schema.HasMultiple() {
 
-		toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\nif(value %% %f != 0)", schema.GetMultiple())
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\traise StandardError.new(\"Property '#{value}' was not a multiple of %v\")", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\nraise StandardError.new(\"Property '#{value}' was not a multiple of %v\")", schema.GetMultiple())
 
-		ret.WriteString("\n\tend\n")
+		buffer.AddIndentation(-1)
+		buffer.Print("\nend\n")
 	}
-	return ret.String()
 }
 
-func generateRubyObjectSetter(schema *ObjectSchema) string {
+func generateRubyObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	return generateRubyNullCheck()
+	generateRubyNullCheck(buffer)
 }
 
-func generateRubyArraySetter(schema *ArraySchema) string {
+func generateRubyArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString(generateRubyNullCheck())
+	generateRubyNullCheck(buffer)
 
 	if schema.MinItems != nil {
-		ret.WriteString(generateRubyRangeCheck(*schema.MinItems, "value.Length", "does not have enough items", "%d", false, "<", ""))
+		generateRubyRangeCheck(*schema.MinItems, "value.Length", "does not have enough items", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxItems != nil {
-		ret.WriteString(generateRubyRangeCheck(*schema.MaxItems, "value.Length", "does not have enough items", "%d", false, ">", ""))
+		generateRubyRangeCheck(*schema.MaxItems, "value.Length", "does not have enough items", "%d", false, ">", "", buffer)
 	}
-
-	return ret.String()
 }
 
-func generateRubyRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string) string {
+func generateRubyRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite, compareString string
+	var compareString string
 
 	if exclusive {
 		compareString = exclusiveComparator
@@ -237,30 +216,27 @@ func generateRubyRangeCheck(value interface{}, reference, message, format string
 		compareString = comparator
 	}
 
-	toWrite = "\n\t\tif(" + reference + " " + compareString + " " + format + ")"
-	toWrite = fmt.Sprintf(toWrite, value)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nif(%s %s " + format + ")", value, compareString)
+	buffer.AddIndentation(1)
 
-	toWrite = fmt.Sprintf("\n\t\t\traise StandardError.new(\"Property '#{value}' %s.\")\n\t\tend\n", message)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nraise StandardError.new(\"Property '#{value}' %s.\")", message)
 
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend\n")
 }
 
 /*
 	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
 */
-func generateRubyEnumCheck(schema TypeSchema, enumValues []interface{}, prefix string, postfix string) string {
+func generateRubyEnumCheck(schema TypeSchema, buffer *BufferedFormatString, enumValues []interface{}, prefix string, postfix string) {
 
-	var ret bytes.Buffer
 	var stringValues []string
-	var constraint string
 	var length int
 
 	length = len(enumValues)
 
 	if length <= 0 {
-		return ""
+		return
 	}
 
 	// convert enum values to strings
@@ -269,24 +245,25 @@ func generateRubyEnumCheck(schema TypeSchema, enumValues []interface{}, prefix s
 	}
 
 	// write array of valid values
-	constraint = fmt.Sprintf("\n\t\tvalidValues = [%s]\n", strings.Join(stringValues, ","))
-	ret.WriteString(constraint)
+	buffer.Printf("\nvalidValues = [%s]\n", strings.Join(stringValues, ","))
 
 	// compare
-	ret.WriteString("\n\t\tunless(validValues.include?(value))")
-	ret.WriteString("\n\t\t\traise StandardError.new(\"Given value '#{value}' was not found in list of acceptable values\")\n")
-	ret.WriteString("\t\tend\n")
+	buffer.Print("\nunless(validValues.include?(value))")
+	buffer.AddIndentation(1)
 
-	return ret.String()
+	buffer.Print("\nraise StandardError.new(\"Given value '#{value}' was not found in list of acceptable values\")")
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend\n")
 }
 
-func generateRubyNullCheck() string {
+func generateRubyNullCheck(buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
+	buffer.Print("\nif(value == nil)")
+	buffer.AddIndentation(1)
 
-	ret.WriteString("\n\t\tif(value == nil)")
-	ret.WriteString("\n\t\t\traise StandardError.new(\"Cannot set property to null value\")")
-	ret.WriteString("\n\t\tend\n")
+	buffer.Print("\nraise StandardError.new(\"Cannot set property to null value\")")
 
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend\n")
 }
