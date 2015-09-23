@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"bytes"
+	"strings"
 	"fmt"
 )
 
@@ -30,6 +31,7 @@ func GenerateMySQL(schema *ObjectSchema, module string) string {
 func generateMysqlCreate(schema *ObjectSchema, module string) string {
 
   var ret bytes.Buffer
+	var columns []string
   var toWrite string
   var required bool
 
@@ -67,9 +69,10 @@ func generateMysqlCreate(schema *ObjectSchema, module string) string {
 			toWrite = generateMySQLArrayColumn(propertyName, required, subschema.(*ArraySchema))
 		}
 
-    ret.WriteString(toWrite)
+		columns = append(columns, toWrite)
   }
 
+	ret.WriteString(strings.Join(columns, ",\n"))
   ret.WriteString("\n);")
 
   // execution.
@@ -82,12 +85,16 @@ func generateMySQLBoolColumn(name string, required bool, schema *BooleanSchema) 
   var ret bytes.Buffer
   var toWrite string
 
-  toWrite = fmt.Sprintf("\n\t%s bit", name)
+  toWrite = fmt.Sprintf("\t%s bit", name)
   ret.WriteString(toWrite)
 
   if(required) {
     ret.WriteString(generateMySQLRequiredConstraint())
   }
+
+	toWrite = fmt.Sprintf("\n\t\tCHECK(%s = 0 OR %s = 1)", name, name)
+	ret.WriteString(toWrite)
+
   return ret.String()
 }
 
@@ -96,12 +103,20 @@ func generateMySQLStringColumn(name string, required bool, schema *StringSchema)
   var ret bytes.Buffer
   var toWrite string
 
-  toWrite = fmt.Sprintf("\n\t%s nvarchar(128)", name)
+  toWrite = fmt.Sprintf("\t%s nvarchar(128)", name)
   ret.WriteString(toWrite)
 
   if(required) {
     ret.WriteString(generateMySQLRequiredConstraint())
   }
+
+	if schema.MinLength != nil {
+		ret.WriteString(generateMySQLRangeCheck(*schema.MinLength, name, "%d", false, "<", ""))
+	}
+
+	if schema.MaxLength != nil {
+		ret.WriteString(generateMySQLRangeCheck(*schema.MaxLength, name, "%d", false, ">", ""))
+	}
 
 	if(schema.Enum != nil) {
 		ret.WriteString(generateMySQLEnumCheck(schema, schema.GetEnum(), "'", "'"))
@@ -115,17 +130,14 @@ func generateMySQLIntegerColumn(name string, required bool, schema *IntegerSchem
   var ret bytes.Buffer
   var toWrite string
 
-  toWrite = fmt.Sprintf("\n\t%s int(32)", name)
+  toWrite = fmt.Sprintf("\t%s int", name)
   ret.WriteString(toWrite)
 
   if(required) {
     ret.WriteString(generateMySQLRequiredConstraint())
   }
 
-	if(schema.Enum != nil) {
-		ret.WriteString(generateMySQLEnumCheck(schema, schema.GetEnum(), "", ""))
-	}
-
+	ret.WriteString(generateMySQLNumericConstraints(name, schema))
   return ret.String()
 }
 
@@ -134,17 +146,14 @@ func generateMySQLNumberColumn(name string, required bool, schema *NumberSchema)
   var ret bytes.Buffer
   var toWrite string
 
-  toWrite = fmt.Sprintf("\n\t%s float(32)", name)
+  toWrite = fmt.Sprintf("\t%s float", name)
   ret.WriteString(toWrite)
 
   if(required) {
     ret.WriteString(generateMySQLRequiredConstraint())
   }
 
-	if(schema.Enum != nil) {
-		ret.WriteString(generateMySQLEnumCheck(schema, schema.GetEnum(), "", ""))
-	}
-
+	ret.WriteString(generateMySQLNumericConstraints(name, schema))
   return ret.String()
 }
 
@@ -153,7 +162,7 @@ func generateMySQLReferenceColumn(name string, required bool, schema *ObjectSche
   var ret bytes.Buffer
   var toWrite string
 
-  toWrite = fmt.Sprintf("\n\t%s int(1)", name)
+  toWrite = fmt.Sprintf("\t%s int(1)", name)
   ret.WriteString(toWrite)
 
   if(required) {
@@ -171,7 +180,7 @@ func generateMySQLArrayColumn(name string, required bool, schema *ArraySchema) s
 }
 
 func generateMySQLRequiredConstraint() string {
-  return " NOT NULL"
+  return "\n\t\tNOT NULL"
 }
 
 /*
@@ -190,7 +199,7 @@ func generateMySQLEnumCheck(schema interface{}, enumValues []interface{}, prefix
 	}
 
 	// write array of valid values
-	constraint = fmt.Sprintf(" ENUM(%s%v%s", prefix, enumValues[0], postfix)
+	constraint = fmt.Sprintf("\n\t\tENUM(%s%v%s", prefix, enumValues[0], postfix)
 	ret.WriteString(constraint)
 
 	for _, enumValue := range enumValues[1:length] {
@@ -198,7 +207,46 @@ func generateMySQLEnumCheck(schema interface{}, enumValues []interface{}, prefix
 		constraint = fmt.Sprintf(",%s%v%s", prefix, enumValue, postfix)
 		ret.WriteString(constraint)
 	}
-	ret.WriteString(")\n")
+	ret.WriteString(")")
 
 	return ret.String()
+}
+
+func generateMySQLNumericConstraints(name string, schema NumericSchemaType) string {
+
+  var ret bytes.Buffer
+  var toWrite string
+
+	if schema.HasMinimum() {
+		ret.WriteString(generateMySQLRangeCheck(schema.GetMinimum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+	}
+
+	if schema.HasMaximum() {
+		ret.WriteString(generateMySQLRangeCheck(schema.GetMaximum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+	}
+
+	if schema.HasEnum() {
+		ret.WriteString(generateMySQLEnumCheck(schema, schema.GetEnum(), "", ""))
+	}
+
+	if schema.HasMultiple() {
+
+		toWrite = fmt.Sprintf("\n\t\tCHECK(mod(%s, %v) = 0)", name, schema.GetMultiple())
+		ret.WriteString(toWrite)
+	}
+
+	return ret.String()
+}
+
+func generateMySQLRangeCheck(value interface{}, reference string, format string, exclusive bool, comparator, exclusiveComparator string) string {
+
+	var compareString string
+
+	if exclusive {
+		compareString = exclusiveComparator
+	} else {
+		compareString = comparator
+	}
+
+	return fmt.Sprintf("\n\t\tCHECK(%s %s %v)", reference, compareString, value)
 }
