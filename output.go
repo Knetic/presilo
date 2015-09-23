@@ -76,6 +76,8 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 		generator = GenerateRuby
 	case "py":
 		generator = GeneratePython
+	case "mysql":
+		generator = GenerateMySQL
 	default: return errors.New("No valid language specified")
 	}
 
