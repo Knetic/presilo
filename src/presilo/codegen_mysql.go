@@ -70,7 +70,7 @@ func generateMysqlCreate(schema *ObjectSchema, module string) string {
     ret.WriteString(toWrite)
   }
 
-  ret.WriteString("\n)")
+  ret.WriteString("\n);")
 
   // execution.
   ret.WriteString("\nGO;\n\n")
@@ -102,6 +102,11 @@ func generateMySQLStringColumn(name string, required bool, schema *StringSchema)
   if(required) {
     ret.WriteString(generateMySQLRequiredConstraint())
   }
+
+	if(schema.Enum != nil) {
+		ret.WriteString(generateMySQLEnumCheck(schema, schema.GetEnum(), "'", "'"))
+	}
+
   return ret.String()
 }
 
@@ -116,6 +121,11 @@ func generateMySQLIntegerColumn(name string, required bool, schema *IntegerSchem
   if(required) {
     ret.WriteString(generateMySQLRequiredConstraint())
   }
+
+	if(schema.Enum != nil) {
+		ret.WriteString(generateMySQLEnumCheck(schema, schema.GetEnum(), "", ""))
+	}
+
   return ret.String()
 }
 
@@ -130,6 +140,11 @@ func generateMySQLNumberColumn(name string, required bool, schema *NumberSchema)
   if(required) {
     ret.WriteString(generateMySQLRequiredConstraint())
   }
+
+	if(schema.Enum != nil) {
+		ret.WriteString(generateMySQLEnumCheck(schema, schema.GetEnum(), "", ""))
+	}
+
   return ret.String()
 }
 
@@ -157,4 +172,33 @@ func generateMySQLArrayColumn(name string, required bool, schema *ArraySchema) s
 
 func generateMySQLRequiredConstraint() string {
   return " NOT NULL"
+}
+
+/*
+	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
+*/
+func generateMySQLEnumCheck(schema interface{}, enumValues []interface{}, prefix string, postfix string) string {
+
+	var ret bytes.Buffer
+	var constraint string
+	var length int
+
+	length = len(enumValues)
+
+	if length <= 0 {
+		return ""
+	}
+
+	// write array of valid values
+	constraint = fmt.Sprintf(" ENUM(%s%v%s", prefix, enumValues[0], postfix)
+	ret.WriteString(constraint)
+
+	for _, enumValue := range enumValues[1:length] {
+
+		constraint = fmt.Sprintf(",%s%v%s", prefix, enumValue, postfix)
+		ret.WriteString(constraint)
+	}
+	ret.WriteString(")\n")
+
+	return ret.String()
 }
