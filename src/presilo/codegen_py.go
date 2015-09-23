@@ -37,7 +37,20 @@ func generatePythonImports(schema *ObjectSchema) string {
 
 func generatePythonSignature(schema *ObjectSchema) string {
 
-	return fmt.Sprintf("class %s(object):", ToCamelCase(schema.Title))
+	var ret bytes.Buffer
+	var toWrite, description string
+
+	description = schema.GetDescription()
+
+	if(len(description) != 0) {
+		toWrite = fmt.Sprintf("'''\n%s\n'''\n", schema.GetDescription())
+		ret.WriteString(toWrite)
+	}
+
+	toWrite = fmt.Sprintf("class %s(object):", ToCamelCase(schema.Title))
+	ret.WriteString(toWrite)
+
+	return ret.String()
 }
 
 func generatePythonConstructor(schema *ObjectSchema) string {
@@ -76,15 +89,21 @@ func generatePythonFunctions(schema *ObjectSchema) string {
 	var ret bytes.Buffer
 	var subschema TypeSchema
 	var toWrite string
-	var propertyName, snakeName string
+	var propertyName, snakeName, description string
 
 	for propertyName, subschema = range schema.Properties {
 
 		snakeName = ToSnakeCase(propertyName)
+		description = subschema.GetDescription()
 
 		// getter
 		toWrite = fmt.Sprintf("\n\tdef get_%s(self):", snakeName)
 		ret.WriteString(toWrite)
+
+		if(len(description) != 0) {
+			toWrite = fmt.Sprintf("\n\t\t'''\n\t\t\tGets %s, defined as:\n\t\t\t%s\n\t\t'''", snakeName, description)
+			ret.WriteString(toWrite)
+		}
 
 		toWrite = fmt.Sprintf("\n\t\treturn self.%s\n", snakeName)
 		ret.WriteString(toWrite)
@@ -92,6 +111,11 @@ func generatePythonFunctions(schema *ObjectSchema) string {
 		// setter
 		toWrite = fmt.Sprintf("\n\tdef set_%s(self, %s):", snakeName, snakeName)
 		ret.WriteString(toWrite)
+
+		if(len(description) != 0) {
+			toWrite = fmt.Sprintf("\n\t\t'''\n\t\t\tSets %s, defined as:\n\t\t\t%s\n\t\t'''", snakeName, description)
+			ret.WriteString(toWrite)
+		}
 
 		switch subschema.GetSchemaType() {
 		case SCHEMATYPE_BOOLEAN:
