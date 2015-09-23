@@ -3,92 +3,83 @@ package presilo
 import (
 	"fmt"
 	"strings"
-	"bytes"
 )
 
 func GeneratePython(schema *ObjectSchema, module string) string {
 
-	var ret bytes.Buffer
+	var ret *BufferedFormatString
 
-	ret.WriteString(generatePythonImports(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generatePythonSignature(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generatePythonConstructor(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generatePythonFunctions(schema))
-	ret.WriteString("\n")
+	ret = NewBufferedFormatString("\t")
+
+	generatePythonImports(schema, ret)
+	ret.Printfln("")
+	generatePythonSignature(schema, ret)
+	ret.Printfln("")
+	generatePythonConstructor(schema, ret)
+	ret.Printfln("")
+	generatePythonFunctions(schema, ret)
+	ret.Printfln("")
 
 	return ret.String()
 }
 
-func generatePythonImports(schema *ObjectSchema) string {
+func generatePythonImports(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString("import string\n")
+	buffer.Printfln("import string")
 
 	if containsRegexpMatch(schema) {
-		ret.WriteString("import re\n")
+		buffer.Printfln("import re")
 	}
-
-	return ret.String()
 }
 
-func generatePythonSignature(schema *ObjectSchema) string {
+func generatePythonSignature(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite, description string
+	var description string
 
 	description = schema.GetDescription()
 
 	if(len(description) != 0) {
-		toWrite = fmt.Sprintf("'''\n%s\n'''\n", schema.GetDescription())
-		ret.WriteString(toWrite)
+		buffer.Printfln("'''\n%s\n'''\n", schema.GetDescription())
 	}
 
-	toWrite = fmt.Sprintf("class %s(object):", ToCamelCase(schema.Title))
-	ret.WriteString(toWrite)
-
-	return ret.String()
+	buffer.Printfln("class %s(object):", ToCamelCase(schema.Title))
+	buffer.AddIndentation(1)
 }
 
-func generatePythonConstructor(schema *ObjectSchema) string {
+func generatePythonConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
 	var declarations, setters []string
 	var propertyName string
 	var toWrite string
 
-	ret.WriteString("\n\tdef __init__(self, ")
+	buffer.Print("\ndef __init__(self, ")
 
 	// required properties
 	for _, propertyName = range schema.RequiredProperties {
 
 		propertyName = ToSnakeCase(propertyName)
-
 		declarations = append(declarations, propertyName)
 
-		toWrite = fmt.Sprintf("\n\t\tself.set_%s(%s)", propertyName, propertyName)
+		toWrite = fmt.Sprintf("\nself.set_%s(%s)", propertyName, propertyName)
 		setters = append(setters, toWrite)
 	}
 
-	toWrite = strings.Join(declarations, ", ")
-	ret.WriteString(toWrite)
-	ret.WriteString("):")
+	buffer.Print(strings.Join(declarations, ", "))
+	buffer.Print("):")
+
+	// use setters
+	buffer.AddIndentation(1)
 
 	for _, setter := range setters {
-		ret.WriteString(setter)
+		buffer.Print(setter)
 	}
 
-	return ret.String()
+	buffer.AddIndentation(-1)
 }
 
-func generatePythonFunctions(schema *ObjectSchema) string {
+func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
 	var subschema TypeSchema
-	var toWrite string
 	var propertyName, snakeName, description string
 
 	for propertyName, subschema = range schema.Properties {
@@ -97,135 +88,127 @@ func generatePythonFunctions(schema *ObjectSchema) string {
 		description = subschema.GetDescription()
 
 		// getter
-		toWrite = fmt.Sprintf("\n\tdef get_%s(self):", snakeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\ndef get_%s(self):", snakeName)
+		buffer.AddIndentation(1)
 
 		if(len(description) != 0) {
-			toWrite = fmt.Sprintf("\n\t\t'''\n\t\t\tGets %s, defined as:\n\t\t\t%s\n\t\t'''", snakeName, description)
-			ret.WriteString(toWrite)
+			buffer.Print("\n'''")
+			buffer.AddIndentation(1)
+
+			buffer.Printf("\nGets %s, defined as:\n%s\n", snakeName, description)
+
+			buffer.AddIndentation(-1)
+			buffer.Print("\n'''")
 		}
 
-		toWrite = fmt.Sprintf("\n\t\treturn self.%s\n", snakeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nreturn self.%s\n", snakeName)
+		buffer.AddIndentation(-1)
 
 		// setter
-		toWrite = fmt.Sprintf("\n\tdef set_%s(self, %s):", snakeName, snakeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\ndef set_%s(self, %s):", snakeName, snakeName)
+		buffer.AddIndentation(1)
 
 		if(len(description) != 0) {
-			toWrite = fmt.Sprintf("\n\t\t'''\n\t\t\tSets %s, defined as:\n\t\t\t%s\n\t\t'''", snakeName, description)
-			ret.WriteString(toWrite)
+			buffer.Print("\n'''")
+			buffer.AddIndentation(1)
+
+			buffer.Printf("\nSets %s, defined as:\n%s\n", snakeName, description)
+
+			buffer.AddIndentation(-1)
+			buffer.Print("\n'''")
 		}
 
 		switch subschema.GetSchemaType() {
-		case SCHEMATYPE_BOOLEAN:
-			toWrite = ""
 		case SCHEMATYPE_STRING:
-			toWrite = generatePythonStringSetter(subschema.(*StringSchema))
+			generatePythonStringSetter(subschema.(*StringSchema), buffer)
 		case SCHEMATYPE_INTEGER:
 			fallthrough
 		case SCHEMATYPE_NUMBER:
-			toWrite = generatePythonNumericSetter(subschema.(NumericSchemaType))
+			generatePythonNumericSetter(subschema.(NumericSchemaType), buffer)
 		case SCHEMATYPE_OBJECT:
-			toWrite = generatePythonObjectSetter(subschema.(*ObjectSchema))
+			generatePythonObjectSetter(subschema.(*ObjectSchema), buffer)
 		case SCHEMATYPE_ARRAY:
-			toWrite = generatePythonArraySetter(subschema.(*ArraySchema))
+			generatePythonArraySetter(subschema.(*ArraySchema), buffer)
 		}
 
-		ret.WriteString(toWrite)
-
-		toWrite = fmt.Sprintf("\n\t\tself.%s = value\n", snakeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nself.%s = value\n", snakeName)
+		buffer.AddIndentation(-1)
 	}
-
-	return ret.String()
 }
 
-func generatePythonStringSetter(schema *StringSchema) string {
+func generatePythonStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite string
-
-	ret.WriteString(generatePythonNullCheck())
+	generatePythonNullCheck(buffer)
 
 	if schema.MinLength != nil {
-		ret.WriteString(generatePythonRangeCheck(*schema.MinLength, "value.length", "was shorter than allowable minimum", "%d", false, "<", ""))
+		generatePythonRangeCheck(*schema.MinLength, "value.length", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxLength != nil {
-		ret.WriteString(generatePythonRangeCheck(*schema.MaxLength, "value.length", "was longer than allowable maximum", "%d", false, ">", ""))
+		generatePythonRangeCheck(*schema.MaxLength, "value.length", "was longer than allowable maximum", "%d", false, ">", "", buffer)
 	}
 
 	if schema.HasEnum() {
-		ret.WriteString(generatePythonEnumCheck(schema, schema.GetEnum(), "\"", "\""))
+		generatePythonEnumCheck(schema, buffer, schema.GetEnum(), "\"", "\"")
 	}
 
 	if schema.Pattern != nil {
 
-		toWrite = fmt.Sprintf("\n\t\tif(not re.match(\"%s\", value)):", *schema.Pattern)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nif(not re.match(\"%s\", value)):", *schema.Pattern)
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\t\traise ValueError(\"Value '\" value \"' did not match pattern '%s'\")", *schema.Pattern)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nraise ValueError(\"Value '\" value \"' did not match pattern '%s'\")", *schema.Pattern)
+
+		buffer.AddIndentation(-1)
 	}
-	return ret.String()
 }
 
-func generatePythonNumericSetter(schema NumericSchemaType) string {
-
-	var ret bytes.Buffer
-	var toWrite string
+func generatePythonNumericSetter(schema NumericSchemaType, buffer *BufferedFormatString) {
 
 	if schema.HasMinimum() {
-		ret.WriteString(generatePythonRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+		generatePythonRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<", buffer)
 	}
 
 	if schema.HasMaximum() {
-		ret.WriteString(generatePythonRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+		generatePythonRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">", buffer)
 	}
 
 	if schema.HasEnum() {
-		ret.WriteString(generatePythonEnumCheck(schema, schema.GetEnum(), "", ""))
+		generatePythonEnumCheck(schema, buffer, schema.GetEnum(), "", "")
 	}
 
 	if schema.HasMultiple() {
 
-		toWrite = fmt.Sprintf("\n\t\tif(value %% %f != 0):\n\t", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\n\t\tif(value %% %f != 0):\n\t", schema.GetMultiple())
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\t\traise ValueError.new(\"Property '\" + value + \"' was not a multiple of %v\")", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\nraise ValueError.new(\"Property '\" + value + \"' was not a multiple of %v\")", schema.GetMultiple())
 
+		buffer.AddIndentation(-1)
 	}
-	return ret.String()
 }
 
-func generatePythonObjectSetter(schema *ObjectSchema) string {
+func generatePythonObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	return generatePythonNullCheck()
+	generatePythonNullCheck(buffer)
 }
 
-func generatePythonArraySetter(schema *ArraySchema) string {
+func generatePythonArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString(generatePythonNullCheck())
+	generatePythonNullCheck(buffer)
 
 	if schema.MinItems != nil {
-		ret.WriteString(generatePythonRangeCheck(*schema.MinItems, "len(value)", "does not have enough items", "%d", false, "<", ""))
+		generatePythonRangeCheck(*schema.MinItems, "len(value)", "does not have enough items", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxItems != nil {
-		ret.WriteString(generatePythonRangeCheck(*schema.MaxItems, "len(value)", "does not have enough items", "%d", false, ">", ""))
+		generatePythonRangeCheck(*schema.MaxItems, "len(value)", "does not have enough items", "%d", false, ">", "", buffer)
 	}
-
-	return ret.String()
 }
 
-func generatePythonRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string) string {
+func generatePythonRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite, compareString string
+	var compareString string
 
 	if exclusive {
 		compareString = exclusiveComparator
@@ -233,30 +216,26 @@ func generatePythonRangeCheck(value interface{}, reference, message, format stri
 		compareString = comparator
 	}
 
-	toWrite = "\n\t\tif(" + reference + " " + compareString + " " + format + "):"
-	toWrite = fmt.Sprintf(toWrite, value)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nif(%s %s " + format + "):", reference, compareString, value)
+	buffer.AddIndentation(1)
 
-	toWrite = fmt.Sprintf("\n\t\t\traise ValueError(\"Property '\"+ value +\"' %s.\")\n", message)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nraise ValueError(\"Property '\"+ value +\"' %s.\")\n", message)
 
-	return ret.String()
+	buffer.AddIndentation(-1)
 }
 
 /*
 	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
 */
-func generatePythonEnumCheck(schema TypeSchema, enumValues []interface{}, prefix string, postfix string) string {
+func generatePythonEnumCheck(schema TypeSchema, buffer *BufferedFormatString, enumValues []interface{}, prefix string, postfix string) {
 
-	var ret bytes.Buffer
 	var stringValues []string
-	var constraint string
 	var length int
 
 	length = len(enumValues)
 
 	if length <= 0 {
-		return ""
+		return
 	}
 
 	// convert enum values to strings
@@ -265,22 +244,21 @@ func generatePythonEnumCheck(schema TypeSchema, enumValues []interface{}, prefix
 	}
 
 	// write array of valid values
-	constraint = fmt.Sprintf("\n\t\tvalidValues = [%s]\n", strings.Join(stringValues, ","))
-	ret.WriteString(constraint)
+	buffer.Printf("\nvalidValues = [%s]\n", strings.Join(stringValues, ","))
 
 	// compare
-	ret.WriteString("\n\t\tif(value not in validValues):")
-	ret.WriteString("\n\t\t\traise ValueError(\"Given value '\"+value+\"' was not found in list of acceptable values\")\n")
+	buffer.Print("\nif(value not in validValues):")
+	buffer.AddIndentation(1)
 
-	return ret.String()
+	buffer.Print("\nraise ValueError(\"Given value '\"+value+\"' was not found in list of acceptable values\")\n")
+
+	buffer.AddIndentation(-1)
 }
 
-func generatePythonNullCheck() string {
+func generatePythonNullCheck(buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString("\n\t\tif(value == None):")
-	ret.WriteString("\n\t\t\traise ValueError(\"Cannot set property to null value\")")
-
-	return ret.String()
+	buffer.Print("\nif(value == None):")
+	buffer.AddIndentation(1)
+	buffer.Print("\nraise ValueError(\"Cannot set property to null value\")")
+	buffer.AddIndentation(-1)
 }
