@@ -1,7 +1,6 @@
 package presilo
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 )
@@ -11,62 +10,54 @@ import (
 */
 func GenerateJava(schema *ObjectSchema, module string) string {
 
-	var ret bytes.Buffer
+	var buffer *BufferedFormatString
 
-	ret.WriteString("package " + module + ";")
-	ret.WriteString("\n")
-	ret.WriteString(generateJavaImports(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generateJavaTypeDeclaration(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generateJavaConstructor(schema))
-	ret.WriteString("\n")
-	ret.WriteString(generateJavaFunctions(schema))
-	ret.WriteString("\n}\n")
+	buffer = NewBufferedFormatString("\t")
 
-	return ret.String()
+	buffer.Printf("package %s;\n", module)
+
+	generateJavaImports(schema, buffer)
+	buffer.Print("\n")
+	generateJavaTypeDeclaration(schema, buffer)
+	buffer.Print("\n")
+	generateJavaConstructor(schema, buffer)
+	buffer.Print("\n")
+	generateJavaFunctions(schema, buffer)
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
+
+	return buffer.String()
 }
 
-func generateJavaImports(schema *ObjectSchema) string {
+func generateJavaImports(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	// import regex if we need it
 	if containsRegexpMatch(schema) {
-		return "import java.util.regex.*;\n\n"
+		buffer.Print("import java.util.regex.*;\n\n")
 	}
-	return ""
 }
 
-func generateJavaTypeDeclaration(schema *ObjectSchema) string {
+func generateJavaTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var subschema TypeSchema
-	var propertyName string
-	var toWrite string
+	buffer.Printf("public class %s\n{", ToCamelCase(schema.Title))
+	buffer.AddIndentation(1)
 
-	toWrite = fmt.Sprintf("public class %s\n{\n", ToCamelCase(schema.Title))
-	ret.WriteString(toWrite)
+	for propertyName, subschema := range schema.Properties {
 
-	for propertyName, subschema = range schema.Properties {
-
-		propertyName = ToJavaCase(propertyName)
-		toWrite = fmt.Sprintf("\n\tprotected %s %s;", generateJavaTypeForSchema(subschema), propertyName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nprotected %s %s;", generateJavaTypeForSchema(subschema), ToJavaCase(propertyName))
 	}
-
-	return ret.String()
 }
 
-func generateJavaConstructor(schema *ObjectSchema) string {
+func generateJavaConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
 	var subschema TypeSchema
 	var declarations, setters []string
 	var propertyName string
 	var toWrite string
 	var constrained bool
 
-	toWrite = fmt.Sprintf("\n\tpublic %s(", ToCamelCase(schema.Title))
-	ret.WriteString(toWrite)
+	buffer.Printf("\npublic %s(", ToCamelCase(schema.Title))
 
 	for _, propertyName = range schema.RequiredProperties {
 
@@ -80,33 +71,31 @@ func generateJavaConstructor(schema *ObjectSchema) string {
 		toWrite = fmt.Sprintf("%s %s", generateJavaTypeForSchema(subschema), propertyName)
 		declarations = append(declarations, toWrite)
 
-		toWrite = fmt.Sprintf("\n\t\tset%s(%s);", ToCamelCase(propertyName), propertyName)
+		toWrite = fmt.Sprintf("\nset%s(%s);", ToCamelCase(propertyName), propertyName)
 		setters = append(setters, toWrite)
 	}
 
-	toWrite = strings.Join(declarations, ",")
-	ret.WriteString(toWrite)
-	ret.WriteString(")")
+	buffer.Print(strings.Join(declarations, ","))
+	buffer.Print(")")
 
 	if constrained {
-		ret.WriteString(" throws Exception")
+		buffer.Print(" throws Exception")
 	}
 
-	ret.WriteString("\n\t{")
+	buffer.Print("\n{")
+	buffer.AddIndentation(1)
 
 	for _, setter := range setters {
-		ret.WriteString(setter)
+		buffer.Print(setter)
 	}
 
-	ret.WriteString("\n\t}\n")
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
 }
 
-func generateJavaFunctions(schema *ObjectSchema) string {
+func generateJavaFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
 	var subschema TypeSchema
-	var toWrite string
 	var propertyName, properName, camelName, typeName string
 
 	for propertyName, subschema = range schema.Properties {
@@ -116,148 +105,131 @@ func generateJavaFunctions(schema *ObjectSchema) string {
 		typeName = generateJavaTypeForSchema(subschema)
 
 		// getter
-		toWrite = fmt.Sprintf("\n\tpublic %s get%s()\n\t{", typeName, camelName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\npublic %s get%s()\n{", typeName, camelName)
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\treturn this.%s;\n\t}", properName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nreturn this.%s;", properName)
+
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}")
 
 		// setter
-		toWrite = fmt.Sprintf("\n\tpublic void set%s(%s value)", camelName, typeName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\npublic void set%s(%s value)", camelName, typeName)
 
 		if subschema.HasConstraints() {
-			ret.WriteString(" throws Exception")
+			buffer.Print(" throws Exception")
 		}
 
-		ret.WriteString("\n\t{")
+		buffer.Print("\n{")
+		buffer.AddIndentation(1)
 
 		switch subschema.GetSchemaType() {
-		case SCHEMATYPE_BOOLEAN:
-			toWrite = ""
 		case SCHEMATYPE_STRING:
-			toWrite = generateJavaStringSetter(subschema.(*StringSchema))
+			generateJavaStringSetter(subschema.(*StringSchema), buffer)
 		case SCHEMATYPE_INTEGER:
 			fallthrough
 		case SCHEMATYPE_NUMBER:
-			toWrite = generateJavaNumericSetter(subschema.(NumericSchemaType))
+			generateJavaNumericSetter(subschema.(NumericSchemaType), buffer)
 		case SCHEMATYPE_OBJECT:
-			toWrite = generateJavaObjectSetter(subschema.(*ObjectSchema))
+			generateJavaObjectSetter(subschema.(*ObjectSchema), buffer)
 		case SCHEMATYPE_ARRAY:
-			toWrite = generateJavaArraySetter(subschema.(*ArraySchema))
+			generateJavaArraySetter(subschema.(*ArraySchema), buffer)
 		}
 
-		ret.WriteString(toWrite)
+		buffer.Printf("\n%s = value;", properName)
 
-		toWrite = fmt.Sprintf("\n\t\t%s = value;", properName)
-		ret.WriteString(toWrite)
-
-		ret.WriteString("\n\t}\n")
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}\n")
 	}
-
-	return ret.String()
 }
 
-func generateJavaStringSetter(schema *StringSchema) string {
+func generateJavaStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite string
-
-	ret.WriteString(generateJavaNullCheck())
+	generateJavaNullCheck(buffer)
 
 	if schema.MinLength != nil {
-		ret.WriteString(generateJavaRangeCheck(*schema.MinLength, "value.length()", "was shorter than allowable minimum", "%d", false, "<", ""))
+		generateJavaRangeCheck(*schema.MinLength, "value.length()", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxLength != nil {
-		ret.WriteString(generateJavaRangeCheck(*schema.MaxLength, "value.length()", "was longer than allowable maximum", "%d", false, ">", ""))
+		generateJavaRangeCheck(*schema.MaxLength, "value.length()", "was longer than allowable maximum", "%d", false, ">", "", buffer)
 	}
 
 	if schema.Pattern != nil {
 
-		toWrite = fmt.Sprintf("\n\t\tPattern regex = Pattern.compile(\"%s\");", sanitizeQuotedString(*schema.Pattern))
-		ret.WriteString(toWrite)
+		buffer.Printf("\nPattern regex = Pattern.compile(\"%s\");", sanitizeQuotedString(*schema.Pattern))
+		buffer.Printf("\nif(!regex.matcher(value).matches())\n{")
+		buffer.AddIndentation(1)
 
-		ret.WriteString("\n\t\tif(!regex.matcher(value).matches())\n\t\t{")
+		buffer.Printf("\nthrow new Exception(\"Value '\"+value+\"' did not match pattern '%s'\");", *schema.Pattern)
 
-		toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Value '\"+value+\"' did not match pattern '%s'\");", *schema.Pattern)
-		ret.WriteString(toWrite)
-
-		ret.WriteString("\n\t\t}")
-	}
-	return ret.String()
-}
-
-func generateJavaNumericSetter(schema NumericSchemaType) string {
-
-	var ret bytes.Buffer
-	var toWrite string
-
-	if schema.HasMinimum() {
-		ret.WriteString(generateJavaRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
-	}
-
-	if schema.HasMaximum() {
-		ret.WriteString(generateJavaRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}")
 	}
 
 	if schema.HasEnum() {
-		ret.WriteString(generateJavaEnumCheck(schema, schema.GetEnum(), "", ""))
+		generateJavaEnumCheck(schema, schema.GetEnum(), "\"", "\"", buffer)
+	}
+}
+
+func generateJavaNumericSetter(schema NumericSchemaType, buffer *BufferedFormatString) {
+
+	if schema.HasMinimum() {
+		generateJavaRangeCheck(schema.GetMinimum(), "value", "is under the allowable minimum", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<", buffer)
+	}
+
+	if schema.HasMaximum() {
+		generateJavaRangeCheck(schema.GetMaximum(), "value", "is over the allowable maximum", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">", buffer)
+	}
+
+	if schema.HasEnum() {
+		generateJavaEnumCheck(schema, schema.GetEnum(), "", "", buffer)
 	}
 
 	if schema.HasMultiple() {
 
-		toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\nif(value %% %f != 0)\n{", schema.GetMultiple())
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\tthrow new Exception(\"Property '\"+value+\"' was not a multiple of %s\");", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\nthrow new Exception(\"Property '\"+value+\"' was not a multiple of %s\");", schema.GetMultiple())
 
-		ret.WriteString("\n\t}\n")
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}\n")
 	}
-	return ret.String()
 }
 
-func generateJavaObjectSetter(schema *ObjectSchema) string {
+func generateJavaObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString(generateJavaNullCheck())
-	return ret.String()
+	generateJavaNullCheck(buffer)
 }
 
-func generateJavaArraySetter(schema *ArraySchema) string {
+func generateJavaArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString(generateJavaNullCheck())
+	generateJavaNullCheck(buffer)
 
 	if schema.MinItems != nil {
-		ret.WriteString(generateJavaRangeCheck(*schema.MinItems, "value.length", "does not have enough items", "%d", false, "<", ""))
+		generateJavaRangeCheck(*schema.MinItems, "value.length", "does not have enough items", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxItems != nil {
-		ret.WriteString(generateJavaRangeCheck(*schema.MaxItems, "value.length", "does not have enough items", "%d", false, ">", ""))
+		generateJavaRangeCheck(*schema.MaxItems, "value.length", "does not have enough items", "%d", false, ">", "", buffer)
 	}
-
-	return ret.String()
 }
 
-func generateJavaNullCheck() string {
+func generateJavaNullCheck(buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
+	buffer.Printf("\nif(value == null)\n{")
+	buffer.AddIndentation(1)
 
-	ret.WriteString("\n\t\tif(value == null)\n\t\t{")
-	ret.WriteString("\n\t\t\tthrow new NullPointerException(\"Cannot set property to null value\");")
-	ret.WriteString("\n\t\t}\n")
+	buffer.Printf("\nthrow new NullPointerException(\"Cannot set property to null value\");")
 
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Printf("\n}\n")
 }
 
-func generateJavaRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string) string {
+func generateJavaRangeCheck(value interface{}, reference, message, format string, exclusive bool, comparator, exclusiveComparator string, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite, compareString string
+	var compareString string
 
 	if exclusive {
 		compareString = exclusiveComparator
@@ -265,54 +237,59 @@ func generateJavaRangeCheck(value interface{}, reference, message, format string
 		compareString = comparator
 	}
 
-	toWrite = "\n\t\tif(" + reference + " " + compareString + " " + format + ")\n\t\t{"
-	toWrite = fmt.Sprintf(toWrite, value)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nif(%s %s "+format+")\n{", reference, compareString, value)
+	buffer.AddIndentation(1)
 
-	toWrite = fmt.Sprintf("\n\t\t\tthrow new Exception(\"Property '\"+value+\"' %s.\");\n\t\t}\n", message)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nthrow new Exception(\"Property '\"+value+\"' %s.\");", message)
 
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Printf("\n}\n")
 }
 
 /*
 	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
 */
-func generateJavaEnumCheck(schema TypeSchema, enumValues []interface{}, prefix string, postfix string) string {
+func generateJavaEnumCheck(schema TypeSchema, enumValues []interface{}, prefix string, postfix string, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var constraint, typeName string
+	var typeName string
 	var length int
 
 	length = len(enumValues)
 
 	if length <= 0 {
-		return ""
+		return
 	}
 
 	// write array of valid values
 	typeName = generateJavaTypeForSchema(schema)
-	constraint = fmt.Sprintf("\t%s[] validValues = new %s[]{%s%v%s", typeName, typeName, prefix, enumValues[0], postfix)
-	ret.WriteString(constraint)
+	buffer.Printf("\n%s[] validValues = new %s[]{%s%v%s", typeName, typeName, prefix, enumValues[0], postfix)
 
 	for _, enumValue := range enumValues[1:length] {
-
-		constraint = fmt.Sprintf(",%s%v%s", prefix, enumValue, postfix)
-		ret.WriteString(constraint)
+		buffer.Printf(",%s%v%s", prefix, enumValue, postfix)
 	}
-	ret.WriteString("};\n")
+	buffer.Print("};\n")
 
 	// compare
-	ret.WriteString("\tboolean isValid = false;\n")
-	ret.WriteString("\tfor(int i = 0; i < validValues.length; i++) \n\t{\n")
-	ret.WriteString("\t\tif(validValues[i] == value)\n\t\t{\n\t\t\tisValid = true;")
-	ret.WriteString("\n\t\t\tbreak;\n\t\t}\n\t}")
 
-	ret.WriteString("\n\tif(!isValid)\n\t{")
-	ret.WriteString("\n\t\tthrow new Exception(\"Given value '\"+value+\"' was not found in list of acceptable values\");\n")
-	ret.WriteString("\t}\n")
+	buffer.Print("\nboolean isValid = false;")
+	buffer.Print("\nfor(int i = 0; i < validValues.length; i++)\n{")
+	buffer.AddIndentation(1)
 
-	return ret.String()
+	buffer.Print("\nif(validValues[i] == value)\n{")
+	buffer.AddIndentation(1)
+	buffer.Print("\nisValid = true;\nbreak;")
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}")
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}")
+
+	buffer.Print("\nif(!isValid)\n{")
+	buffer.AddIndentation(1)
+	buffer.Print("\nthrow new Exception(\"Given value '\"+value+\"' was not found in list of acceptable values\");")
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
 }
 
 func generateJavaTypeForSchema(subschema TypeSchema) string {
