@@ -1,8 +1,6 @@
 package presilo
 
 import (
-	"bytes"
-	"fmt"
 	"strings"
 )
 
@@ -11,45 +9,45 @@ import (
 */
 func GenerateJS(schema *ObjectSchema, module string) string {
 
-	var ret bytes.Buffer
+	var buffer *BufferedFormatString
 
-	ret.WriteString(generateJSModuleCheck(module))
-	ret.WriteString("\n")
-	ret.WriteString(generateJSConstructor(schema, module))
-	ret.WriteString("\n")
-	ret.WriteString(generateJSFunctions(schema, module))
-	ret.WriteString("\n")
+	buffer = NewBufferedFormatString("\t")
 
-	return ret.String()
+	generateJSModuleCheck(buffer, module)
+	buffer.Print("\n")
+	generateJSConstructor(schema, buffer, module)
+	buffer.Print("\n")
+	generateJSFunctions(schema, buffer, module)
+	buffer.Print("\n")
+
+	return buffer.String()
 }
 
-func generateJSModuleCheck(module string) string {
-
-	var ret bytes.Buffer
-	var check string
+func generateJSModuleCheck(buffer *BufferedFormatString, module string) {
 
 	// check for undefined, first.
-	check = fmt.Sprintf("if(typeof(%s) === \"undefined\")\n{", module)
-	ret.WriteString(check)
+	buffer.Printf("\nif(typeof(%s) === \"undefined\")\n{", module)
+	buffer.AddIndentation(1)
 
-	check = fmt.Sprintf("\n\t%s = {}", module)
-	ret.WriteString(check)
-	ret.WriteString("\n}\n")
+	buffer.Printf("\n%s = {}", module)
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}")
 
 	// then null check.
-	ret.WriteString("else\n{\n")
+	buffer.Print("\nelse\n{")
+	buffer.AddIndentation(1)
 
-	check = fmt.Sprintf("\t%s = %s || {}", module, module)
-	ret.WriteString(check)
-	ret.WriteString("\n}\n")
-	return ret.String()
+	buffer.Printf("\n%s = %s || {}", module, module)
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
 }
 
-func generateJSConstructor(schema *ObjectSchema, module string) string {
+func generateJSConstructor(schema *ObjectSchema, buffer *BufferedFormatString, module string) {
 
-	var ret bytes.Buffer
 	var parameterNames []string
-	var toWrite, propertyName, parameterName string
+	var propertyName, parameterName string
 
 	// generate list of property names
 	for _, propertyName = range schema.RequiredProperties {
@@ -59,32 +57,28 @@ func generateJSConstructor(schema *ObjectSchema, module string) string {
 	}
 
 	// write constructor signature
-	toWrite = fmt.Sprintf("\n/*\n%s\n*/\n", schema.Description)
-	ret.WriteString(toWrite)
+	buffer.Printf("\n/*\n%s\n*/\n", schema.Description)
 
-	toWrite = fmt.Sprintf("%s.%s = function(", module, schema.Title)
-	ret.WriteString(toWrite)
+	buffer.Printf("\n%s.%s = function(", module, schema.Title)
 
-	ret.WriteString(strings.Join(parameterNames, ","))
-	ret.WriteString(")\n{")
+	buffer.Print(strings.Join(parameterNames, ","))
+	buffer.Print(")\n{")
+
+	buffer.AddIndentation(1)
 
 	// body
 	for _, parameterName = range parameterNames {
-
-		toWrite = fmt.Sprintf("\n\tthis.set%s(%s)", ToCamelCase(parameterName), parameterName)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nthis.set%s(%s)", ToCamelCase(parameterName), parameterName)
 	}
 
-	ret.WriteString("\n}\n\n")
-
-	return ret.String()
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
 }
 
-func generateJSFunctions(schema *ObjectSchema, module string) string {
+func generateJSFunctions(schema *ObjectSchema, buffer *BufferedFormatString, module string) {
 
-	var ret bytes.Buffer
 	var subschema TypeSchema
-	var propertyName, propertyNameCamel, propertyNameJava, schemaName, toWrite string
+	var propertyName, propertyNameCamel, propertyNameJava, schemaName string
 
 	schemaName = ToCamelCase(schema.Title)
 
@@ -93,148 +87,128 @@ func generateJSFunctions(schema *ObjectSchema, module string) string {
 		propertyNameCamel = ToCamelCase(propertyName)
 		propertyNameJava = ToJavaCase(propertyName)
 
-		toWrite = fmt.Sprintf("%s.%s.prototype.set%s = function(value)\n{\n", module, schemaName, propertyNameCamel)
-		ret.WriteString(toWrite)
+		buffer.Printf("\n%s.%s.prototype.set%s = function(value)\n{", module, schemaName, propertyNameCamel)
+		buffer.AddIndentation(1)
 
 		// undefined check
-		ret.WriteString("\tif(typeof(value) === 'undefined')\n\t{\n")
+		buffer.Printf("\nif(typeof(value) === 'undefined')\n{")
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\t\tthrow new ReferenceError(\"Cannot set property '%s', no value given\")", propertyNameJava)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nthrow new ReferenceError(\"Cannot set property '%s', no value given\")", propertyNameJava)
 
-		ret.WriteString("\n\t}\n")
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}\n")
 
 		switch subschema.GetSchemaType() {
-		case SCHEMATYPE_BOOLEAN:
-			toWrite = ""
 		case SCHEMATYPE_STRING:
-			toWrite = generateJSStringSetter(subschema.(*StringSchema))
+			generateJSStringSetter(subschema.(*StringSchema), buffer)
 		case SCHEMATYPE_INTEGER:
 			fallthrough
 		case SCHEMATYPE_NUMBER:
-			toWrite = generateJSNumericSetter(subschema.(NumericSchemaType))
+			generateJSNumericSetter(subschema.(NumericSchemaType), buffer)
 		case SCHEMATYPE_OBJECT:
-			toWrite = generateJSObjectSetter(subschema.(*ObjectSchema))
+			generateJSObjectSetter(subschema.(*ObjectSchema), buffer)
 		case SCHEMATYPE_ARRAY:
-			toWrite = generateJSArraySetter(subschema.(*ArraySchema))
+			generateJSArraySetter(subschema.(*ArraySchema), buffer)
 		}
 
-		ret.WriteString(toWrite)
-
-		toWrite = fmt.Sprintf("\n\tthis.%s = value\n}\n", propertyNameJava)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nthis.%s = value;", propertyNameJava)
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}\n")
 	}
-	return ret.String()
 }
 
 /*
 	Returns checks appropriate for verifying an object's type.
 */
-func generateJSObjectSetter(schema *ObjectSchema) string {
+func generateJSObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString(generateJSTypeCheck(schema))
-	return ret.String()
+	generateJSTypeCheck(schema, buffer)
 }
 
 /*
 	Returns checks appropriate for verifying a numeric value and its constraints.
 */
-func generateJSNumericSetter(schema NumericSchemaType) string {
+func generateJSNumericSetter(schema NumericSchemaType, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite string
-
-	ret.WriteString(generateJSTypeCheck(schema))
+	generateJSTypeCheck(schema, buffer)
 
 	if schema.HasMinimum() {
-		ret.WriteString(generateJSRangeCheck(schema.GetMinimum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<"))
+		generateJSRangeCheck(schema.GetMinimum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMinimum(), "<=", "<", buffer)
 	}
 
 	if schema.HasMaximum() {
-		ret.WriteString(generateJSRangeCheck(schema.GetMaximum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">"))
+		generateJSRangeCheck(schema.GetMaximum(), "value", schema.GetConstraintFormat(), schema.IsExclusiveMaximum(), ">=", ">", buffer)
 	}
 
 	if schema.HasEnum() {
-		ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "", ""))
+		generateJSEnumCheck(schema, buffer, schema.GetEnum(), "", "")
 	}
 
 	if schema.HasMultiple() {
 
-		toWrite = fmt.Sprintf("\n\tif(value %% %f != 0)\n\t{", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\nif(value %% %f != 0)\n{", schema.GetMultiple())
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\tthrow new Error(\"Property '\"+value+\"' was not a multiple of %s\")", schema.GetMultiple())
-		ret.WriteString(toWrite)
+		buffer.Printf("\nthrow new Error(\"Property '\"+value+\"' was not a multiple of %s\")", schema.GetMultiple())
 
-		ret.WriteString("\n\t}\n")
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}\n")
 	}
-	return ret.String()
 }
 
 /*
 	Returns checks appropriate for verifying a string value and its constraints.
 */
-func generateJSStringSetter(schema *StringSchema) string {
+func generateJSStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite string
-
-	ret.WriteString(generateJSTypeCheck(schema))
+	generateJSTypeCheck(schema, buffer)
 
 	if schema.MinLength != nil {
-		ret.WriteString(generateJSRangeCheck(*schema.MinLength, "value.length", "%d", false, "<", ""))
+		generateJSRangeCheck(*schema.MinLength, "value.length", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxLength != nil {
-		ret.WriteString(generateJSRangeCheck(*schema.MaxLength, "value.length", "%d", false, ">", ""))
+		generateJSRangeCheck(*schema.MaxLength, "value.length", "%d", false, ">", "", buffer)
 	}
 
 	if schema.Pattern != nil {
 
-		toWrite = fmt.Sprintf("\tvar regex = new RegExp(\"%s\")\n", *schema.Pattern)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nvar regex = new RegExp(\"%s\")", *schema.Pattern)
+		buffer.Printf("\nif(!regex.test(value))\n{")
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\tif(!regex.test(value))\n\t{")
-		ret.WriteString(toWrite)
+		buffer.Printf("\nthrow new Error(\"Property '\"+value+\"' did not match pattern '%s'\")", *schema.Pattern)
 
-		toWrite = fmt.Sprintf("\n\t\tthrow new Error(\"Property '\"+value+\"' did not match pattern '%s'\")", *schema.Pattern)
-		ret.WriteString(toWrite)
-
-		ret.WriteString("\n\t}\n")
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}\n")
 	}
 
 	if schema.Enum != nil {
-		ret.WriteString(generateJSEnumCheck(schema, schema.GetEnum(), "\"", "\""))
+		generateJSEnumCheck(schema, buffer, schema.GetEnum(), "\"", "\"")
 	}
-	return ret.String()
 }
 
 /*
 	Returns checks appropriate for verifying an array value and its constraints.
 */
-func generateJSArraySetter(schema *ArraySchema) string {
+func generateJSArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-
-	ret.WriteString(generateJSTypeCheck(schema))
+	generateJSTypeCheck(schema, buffer)
 	// TODO: value uniformity check
 
 	if schema.MinItems != nil {
-		ret.WriteString(generateJSRangeCheck(*schema.MinItems, "value.length", "%d", false, "<", ""))
+		generateJSRangeCheck(*schema.MinItems, "value.length", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxItems != nil {
-		ret.WriteString(generateJSRangeCheck(*schema.MaxItems, "value.length", "%d", false, ">", ""))
+		generateJSRangeCheck(*schema.MaxItems, "value.length", "%d", false, ">", "", buffer)
 	}
-	return ret.String()
 }
 
-func generateJSRangeCheck(value interface{}, reference string, format string, exclusive bool, comparator, exclusiveComparator string) string {
+func generateJSRangeCheck(value interface{}, reference string, format string, exclusive bool, comparator, exclusiveComparator string, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
-	var toWrite, compareString string
+	var compareString string
 
 	if exclusive {
 		compareString = exclusiveComparator
@@ -242,38 +216,37 @@ func generateJSRangeCheck(value interface{}, reference string, format string, ex
 		compareString = comparator
 	}
 
-	toWrite = "\n\tif(" + reference + " " + compareString + " " + format + ")\n\t{"
-	toWrite = fmt.Sprintf(toWrite, value)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nif(%s %s "+format+")\n{", reference, compareString, value)
+	buffer.AddIndentation(1)
 
-	toWrite = fmt.Sprintf("\n\t\tthrow new RangeError(\"Property '\"+value+\"' was out of range.\")\n\t}\n")
-	ret.WriteString(toWrite)
-
-	return ret.String()
+	buffer.Printf("\nthrow new RangeError(\"Property '\"+value+\"' was out of range.\")")
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
 }
 
 /*
 	Generates code which throws an error if the given [parameter]'s type name is not equal to the given [typeName]
 */
-func generateJSTypeCheck(schema TypeSchema) string {
+func generateJSTypeCheck(schema TypeSchema, buffer *BufferedFormatString) {
 
-	var ret bytes.Buffer
 	var schemaType SchemaType
-	var toWrite, expectedType string
+	var expectedType string
 	var shouldWriteCtorCheck bool
 
 	schemaType = schema.GetSchemaType()
 	expectedType = getJSTypeFromSchemaType(schemaType)
 
-	toWrite = fmt.Sprintf("\tif(typeof(value) !== \"%s\")\n\t{", expectedType)
-	ret.WriteString(toWrite)
+	buffer.Printf("\nif(typeof(value) !== \"%s\")\n{", expectedType)
+	buffer.AddIndentation(1)
 
-	toWrite = fmt.Sprintf("\n\t\tthrow new TypeError(\"Property \"+value+\" was not of the expected type '%s'\")", expectedType)
-	ret.WriteString(toWrite)
-	ret.WriteString("\n\t}\n")
+	buffer.Printf("\nthrow new TypeError(\"Property \"+value+\" was not of the expected type '%s'\")", expectedType)
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
 
 	// if this is an array or object, check the constructor
 	shouldWriteCtorCheck = false
+
 	switch schemaType {
 	case SCHEMATYPE_ARRAY:
 		shouldWriteCtorCheck = true
@@ -285,55 +258,54 @@ func generateJSTypeCheck(schema TypeSchema) string {
 
 	if shouldWriteCtorCheck {
 
-		toWrite = fmt.Sprintf("\tif(value.constructor !== %s)\n\t{", expectedType)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nif(value.constructor !== %s)\n{", expectedType)
+		buffer.AddIndentation(1)
 
-		toWrite = fmt.Sprintf("\n\t\tthrow new TypeError(\"Property '\"+value+\"'was not of the expected type '%s'\")", expectedType)
-		ret.WriteString(toWrite)
+		buffer.Printf("\nthrow new TypeError(\"Property '\"+value+\"'was not of the expected type '%s'\")", expectedType)
 
-		ret.WriteString("\n\t}\n")
+		buffer.AddIndentation(-1)
+		buffer.Print("\n}\n")
 	}
-
-	return ret.String()
 }
 
 /*
 	Generates code which throws an error if the given [parameter]'s value is not contained in the given [validValues].
 */
-func generateJSEnumCheck(schema interface{}, enumValues []interface{}, prefix string, postfix string) string {
+func generateJSEnumCheck(schema interface{}, buffer *BufferedFormatString, enumValues []interface{}, prefix string, postfix string) {
 
-	var ret bytes.Buffer
-	var constraint string
 	var length int
 
 	length = len(enumValues)
 
 	if length <= 0 {
-		return ""
+		return
 	}
 
 	// write array of valid values
-	constraint = fmt.Sprintf("\tvar validValues = [%s%v%s", prefix, enumValues[0], postfix)
-	ret.WriteString(constraint)
+	buffer.Printf("\nvar validValues = [%s%v%s", prefix, enumValues[0], postfix)
 
 	for _, enumValue := range enumValues[1:length] {
-
-		constraint = fmt.Sprintf(",%s%v%s", prefix, enumValue, postfix)
-		ret.WriteString(constraint)
+		buffer.Printf(",%s%v%s", prefix, enumValue, postfix)
 	}
-	ret.WriteString("]\n")
+	buffer.Print("]\n")
 
 	// compare
-	ret.WriteString("\tvar isValid = false\n")
-	ret.WriteString("\tfor(var i = 0; i < validValues.length; i++) \n\t{\n")
-	ret.WriteString("\t\tif(validValues[i] === value)\n\t\t{\n\t\t\tisValid = true")
-	ret.WriteString("\n\t\t\tbreak\n\t\t}\n\t}")
+	buffer.Print("\nvar isValid = false")
+	buffer.Print("\nfor(var i = 0; i < validValues.length; i++) \n{")
+	buffer.AddIndentation(1)
 
-	ret.WriteString("\n\tif(!isValid)\n\t{")
-	ret.WriteString("\n\t\tthrow new Error(\"Given value '\"+value+\"' was not found in list of acceptable values\")\n")
-	ret.WriteString("\t}\n")
+	buffer.Print("\nif(validValues[i] === value)\n{\nisValid = true")
+	buffer.Print("\nbreak;")
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}")
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}")
 
-	return ret.String()
+	buffer.Print("\nif(!isValid)\n{")
+	buffer.AddIndentation(1)
+	buffer.Print("\nthrow new Error(\"Given value '\"+value+\"' was not found in list of acceptable values\")")
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}")
 }
 
 func getJSTypeFromSchemaType(schemaType SchemaType) string {
