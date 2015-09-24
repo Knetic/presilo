@@ -10,7 +10,7 @@ func GenerateRuby(schema *ObjectSchema, module string) string {
 	var buffer *BufferedFormatString
 
 	buffer = NewBufferedFormatString("  ")
-	buffer.Printf("module %s\n\n", ToCamelCase(module))
+	buffer.Printf("module %s\n", ToCamelCase(module))
 	buffer.AddIndentation(1)
 
 	generateRubySignature(schema, buffer)
@@ -34,7 +34,7 @@ func generateRubySignature(schema *ObjectSchema, buffer *BufferedFormatString) {
 	var propertyName string
 	var toWrite string
 
-	buffer.Printf("class %s\n", ToCamelCase(schema.Title))
+	buffer.Printf("\nclass %s", ToCamelCase(schema.Title))
 	buffer.AddIndentation(1)
 
 	for propertyName, subschema = range schema.Properties {
