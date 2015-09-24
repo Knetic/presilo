@@ -26,13 +26,13 @@ make
 ./.output/presilo -o ./.temp/mysql/ -l mysql -m foo ./samples/car.json
 
 pushd ./.temp/go
-#go build .
+go build .
 popd
 pushd ./.temp/java
-#javac $(find . -name "*.java")
+javac $(find . -name "*.java")
 popd
 pushd ./.temp/cs/
-#mcs $(find . -name "*.cs")
+mcs $(find . -name "*.cs") --parse
 popd
 pushd ./.temp/rb/
 ruby $(find . -name "*.rb")
