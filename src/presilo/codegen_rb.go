@@ -17,6 +17,8 @@ func GenerateRuby(schema *ObjectSchema, module string) string {
 	buffer.Print("\n")
 	generateRubyConstructor(schema, buffer)
 	buffer.Print("\n")
+	generateRubySerializers(schema, buffer)
+	buffer.Print("\n")
 	generateRubyFunctions(schema, buffer)
 
 	buffer.AddIndentation(-1)
@@ -93,16 +95,67 @@ func generateRubyConstructor(schema *ObjectSchema, buffer *BufferedFormatString)
 	buffer.Print("\nend\n")
 }
 
+func generateRubySerializers(schema *ObjectSchema, buffer *BufferedFormatString) {
+
+	var title string
+
+	title = ToCamelCase(schema.GetTitle())
+
+	// serialize
+	buffer.Printf("\n# Serializes and returns a hash of this %s.", title)
+	buffer.Print("\ndef to_hash()")
+	buffer.AddIndentation(1)
+
+	buffer.Print("\nret = {}")
+	buffer.Print("\ninstance_variables.each {|field|")
+	buffer.AddIndentation(1)
+	buffer.Print("\nfield_name = field.to_s().delete(\"@\")")
+	buffer.Print("\nfield_value = instance_variable_get(field)")
+	buffer.Print("\n\nif field_value.methods.include? 'to_hash'")
+	buffer.AddIndentation(1)
+	buffer.Print("\nret[field_name] = field_value.to_hash()")
+	buffer.Print("\nnext")
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend")
+
+	buffer.Print("\nret[field_name] = field_value")
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
+	buffer.Print("\nreturn ret")
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend")
+
+	// deserialize
+	/*
+	buffer.Printf("\n# Deserializes and returns a new %s from the given hash.", title)
+	buffer.Print("\ndef self.from_hash(hash)")
+	buffer.AddIndentation(1)
+
+	buffer.Printf("\nret = %s.new()", title)
+	buffer.Print("\nreturn ret")
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\nend")
+	*/
+}
+
 func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	var subschema TypeSchema
-	var propertyName, snakeName string
+	var propertyName, snakeName, description string
 
 	for propertyName, subschema = range schema.Properties {
 
 		snakeName = ToSnakeCase(propertyName)
+		description = subschema.GetDescription()
+		description = strings.Replace(description, "\n", "\n# ", -1)
 
 		// getter
+		if(len(description) > 0) {
+			buffer.Printf("\n# Gets the value of %s, which is defined as:\n# %s", snakeName, description)
+		}
+
 		buffer.Printf("\ndef get_%s()", snakeName)
 		buffer.AddIndentation(1)
 
@@ -112,6 +165,10 @@ func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 		buffer.Print("\nend\n")
 
 		// setter
+		if(len(description) > 0) {
+			buffer.Printf("\n# Sets the value of %s, which is defined as:\n# %s", snakeName, description)
+		}
+
 		buffer.Printf("\ndef set_%s(%s)", snakeName, snakeName)
 		buffer.AddIndentation(1)
 
