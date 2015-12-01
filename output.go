@@ -45,6 +45,7 @@ func writeGeneratedCode(schema TypeSchema, module string, targetPath string, lan
 
 func generateCode(schema TypeSchema, module string, targetPath string, language string, splitFiles bool, wg *sync.WaitGroup) error {
 
+	var schemaGraph *SchemaGraph
 	var schemas []*ObjectSchema
 	var objectSchema *ObjectSchema
 	var generator func(*ObjectSchema, string) string
@@ -60,6 +61,7 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 	}
 
 	schemas = RecurseObjectSchemas(schema, schemas)
+	schemaGraph = NewSchemaGraph(schemas)
 
 	// figure out which code generator to use
 	switch language {
@@ -105,6 +107,8 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 	go writeErrors(errorChannel, wg)
 
 	// generate schemas, pass to writers.
+	schemas, _ = schemaGraph.GetOrderedSchemas()
+
 	for _, objectSchema = range schemas {
 
 		if splitFiles {
