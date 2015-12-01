@@ -36,7 +36,8 @@ func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFo
   // create table
   buffer.Printf("CREATE TABLE dbo.%s\n(", schema.GetTitle())
   buffer.AddIndentation(1)
-	buffer.Printf("\n")
+	generateMySQLPrimaryKey(schema, buffer)
+	buffer.Printf("\n\n")
 
 	firstProperty = true
 
@@ -146,13 +147,28 @@ func generateMySQLNumberColumn(name string, required bool, schema *NumberSchema,
 
 func generateMySQLReferenceColumn(name string, required bool, schema *ObjectSchema, buffer *BufferedFormatString) {
 
-  buffer.Printf("%s int(1)", name)
+  buffer.Printf("%s__id int(4)", name)
   buffer.AddIndentation(1)
 
   if(required) {
     generateMySQLRequiredConstraint(buffer)
   }
 
+	// add foreign key constraint.
+	buffer.Printf("\nFOREIGN KEY(%s__id)", name)
+	buffer.AddIndentation(1)
+
+	buffer.Printf("\nREFERENCES %s(__id)", schema.GetTitle())
+	buffer.Printf("\nON DELETE CASCADE")
+
+	buffer.AddIndentation(-1)
+	buffer.AddIndentation(-1)
+}
+
+func generateMySQLPrimaryKey(schema *ObjectSchema, buffer *BufferedFormatString) {
+	buffer.Printf("\n__id int NOT NULL,")
+	buffer.AddIndentation(1)
+	buffer.Printf("\nPRIMARY KEY(__id)")
 	buffer.AddIndentation(-1)
 }
 
