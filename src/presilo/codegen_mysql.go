@@ -31,10 +31,10 @@ func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFo
 
   var required, firstProperty bool
 
-  buffer.Printf("USE %s;\nGO;\n", module)
+  buffer.Printf("USE %s;\n", module)
 
   // create table
-  buffer.Printf("CREATE TABLE dbo.%s\n(", schema.GetTitle())
+  buffer.Printf("CREATE TABLE %s\n(", schema.GetTitle())
   buffer.AddIndentation(1)
 	generateMySQLPrimaryKey(schema, buffer)
 	buffer.Printf("\n\n")
@@ -79,7 +79,7 @@ func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFo
   buffer.Print("\n);")
 
   // execution.
-  buffer.Print("\nGO;\n\n")
+  buffer.Print("\n\n")
 }
 
 func generateMySQLBoolColumn(name string, required bool, schema *BooleanSchema, buffer *BufferedFormatString) {
@@ -155,7 +155,7 @@ func generateMySQLReferenceColumn(name string, required bool, schema *ObjectSche
   }
 
 	// add foreign key constraint.
-	buffer.Printf("\nFOREIGN KEY(%s__id)", name)
+	buffer.Printf(",\nFOREIGN KEY(%s__id)", name)
 	buffer.AddIndentation(1)
 
 	buffer.Printf("\nREFERENCES %s(__id)", schema.GetTitle())
@@ -168,7 +168,7 @@ func generateMySQLReferenceColumn(name string, required bool, schema *ObjectSche
 func generateMySQLPrimaryKey(schema *ObjectSchema, buffer *BufferedFormatString) {
 	buffer.Printf("\n__id int NOT NULL,")
 	buffer.AddIndentation(1)
-	buffer.Printf("\nPRIMARY KEY(__id)")
+	buffer.Printf("\nPRIMARY KEY(__id),")
 	buffer.AddIndentation(-1)
 }
 
@@ -187,8 +187,10 @@ func generateMySQLRequiredConstraint(buffer *BufferedFormatString) {
 */
 func generateMySQLEnumCheck(schema interface{}, enumValues []interface{}, prefix string, postfix string, buffer *BufferedFormatString) {
 
+	var schemaName string
 	var length int
 
+	schemaName = ToJavaCase((schema.(TypeSchema)).GetTitle())
 	length = len(enumValues)
 
 	if length <= 0 {
@@ -196,13 +198,13 @@ func generateMySQLEnumCheck(schema interface{}, enumValues []interface{}, prefix
 	}
 
 	// write array of valid values
-	buffer.Printf("\nENUM(%s%v%s", prefix, enumValues[0], postfix)
+	buffer.Printf(",\nCONSTRAINT %sValuesCheck CHECK(%s in (%s%v%s", schemaName, schemaName, prefix, enumValues[0], postfix)
 
 	for _, enumValue := range enumValues[1:length] {
 		buffer.Printf(",%s%v%s", prefix, enumValue, postfix)
 	}
 
-	buffer.Print(")")
+	buffer.Print("))")
 }
 
 func generateMySQLNumericConstraints(name string, schema NumericSchemaType, buffer *BufferedFormatString) {
