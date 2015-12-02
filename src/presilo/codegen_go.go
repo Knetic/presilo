@@ -155,33 +155,46 @@ func generateGoConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 	for _, propertyName := range schema.RequiredProperties {
 
 		subschema = schema.Properties[propertyName]
-		propertyName = getAppropriateGoCase(schema, propertyName)
+		parameterNames = append(parameterNames, propertyName)
 
+		propertyName = getAppropriateGoCase(schema, propertyName)
 		ret.WriteString(propertyName)
 		ret.WriteString(" ")
 		ret.WriteString(generateGoTypeForSchema(subschema))
 
-		parameterNames = append(parameterNames, propertyName)
 		parameters = append(parameters, ret.String())
 		ret.Reset()
 	}
 
 	// signature
 	title = ToCamelCase(schema.Title)
-	buffer.Printf("\nfunc New%s(%s)(*%s) {\n", title, strings.Join(parameters, ","), title)
+	buffer.Printf("\nfunc New%s(%s)(*%s, error) {\n", title, strings.Join(parameters, ","), title)
 	buffer.AddIndentation(1)
 
 	// body
+	buffer.Printf("\nvar err error")
 	buffer.Printf("\nret := new(%s)\n", title)
 
 	for _, propertyName := range parameterNames {
 
-		// TODO: Only set these fields if not constrained
-		// If constrained, use setter.
-		buffer.Printf("\nret.%s = %s", propertyName, propertyName)
+		subschema = schema.Properties[propertyName]
+		propertyName = getAppropriateGoCase(schema, propertyName)
+
+		if(subschema.HasConstraints()) {
+
+			buffer.Printf("\nerr = ret.Set%s(%s)", ToCamelCase(propertyName), propertyName)
+
+			buffer.Printf("\nif(err != nil) {")
+			buffer.AddIndentation(1)
+			buffer.Printf("\nreturn nil, err")
+			buffer.AddIndentation(-1)
+			buffer.Printf("\n}")
+		} else {
+			buffer.Printf("\nret.%s = %s", propertyName, propertyName)
+		}
 	}
 
-	buffer.Print("\nreturn ret")
+	buffer.Print("\nreturn ret, nil")
 	buffer.AddIndentation(-1)
 	buffer.Print("\n}\n")
 }
