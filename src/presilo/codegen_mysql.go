@@ -17,11 +17,11 @@ import (
   - Does not support regex constraints.
   - Uses 'bit' to represent booleans, with 0 = true, 1 = false.
 */
-func GenerateMySQL(schema *ObjectSchema, module string) string {
+func GenerateMySQL(schema *ObjectSchema, module string, tabstyle string) string {
 
 	var buffer *BufferedFormatString
 
-	buffer = NewBufferedFormatString("\t")
+	buffer = NewBufferedFormatString(tabstyle)
 	generateMysqlCreate(schema, module, buffer)
 
 	return buffer.String()

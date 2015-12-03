@@ -7,11 +7,11 @@ import (
 /*
   Generates valid JS code for a given schema.
 */
-func GenerateJS(schema *ObjectSchema, module string) string {
+func GenerateJS(schema *ObjectSchema, module string, tabstyle string) string {
 
 	var buffer *BufferedFormatString
 
-	buffer = NewBufferedFormatString("\t")
+	buffer = NewBufferedFormatString(tabstyle)
 
 	generateJSModuleCheck(buffer, module)
 	buffer.Print("\n")

@@ -12,6 +12,7 @@ type RunSettings struct {
 	Language   string
 	Module     string
 	ListLanguages bool
+	TabStyle	 string
 	splitFiles bool
 }
 
@@ -39,6 +40,7 @@ func ParseRunSettings() (*RunSettings, error) {
 	flag.StringVar(&ret.Language, "l", "go", "Language for the generated files")
 	flag.StringVar(&ret.OutputPath, "o", "./", "Optional destination directory for generated files")
 	flag.StringVar(&ret.Module, "m", "main", "Module to use for the generated files")
+	flag.StringVar(&ret.TabStyle, "t", "\t", "The indent delimiter ('tab style') to use")
 	flag.BoolVar(&ret.ListLanguages, "a", false, "Lists all supported languages")
 
 	flag.Parse()

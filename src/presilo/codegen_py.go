@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func GeneratePython(schema *ObjectSchema, module string) string {
+func GeneratePython(schema *ObjectSchema, module string, tabstyle string) string {
 
 	var ret *BufferedFormatString
 
-	ret = NewBufferedFormatString("\t")
+	ret = NewBufferedFormatString(tabstyle)
 
 	generatePythonImports(schema, ret)
 	ret.Printfln("")

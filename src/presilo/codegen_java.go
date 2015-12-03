@@ -8,11 +8,11 @@ import (
 /*
   Generates valid Java code for a given schema.
 */
-func GenerateJava(schema *ObjectSchema, module string) string {
+func GenerateJava(schema *ObjectSchema, module string, tabstyle string) string {
 
 	var buffer *BufferedFormatString
 
-	buffer = NewBufferedFormatString("\t")
+	buffer = NewBufferedFormatString(tabstyle)
 
 	buffer.Printf("package %s;\n", module)
 

@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func GenerateRuby(schema *ObjectSchema, module string) string {
+func GenerateRuby(schema *ObjectSchema, module string, tabstyle string) string {
 
 	var buffer *BufferedFormatString
 
-	buffer = NewBufferedFormatString("  ")
+	buffer = NewBufferedFormatString(tabstyle)
 	buffer.Printf("module %s\n", ToCamelCase(module))
 	buffer.AddIndentation(1)
 

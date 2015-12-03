@@ -8,11 +8,11 @@ import (
 /*
   Generates valid Go code for a given schema.
 */
-func GenerateGo(schema *ObjectSchema, module string) string {
+func GenerateGo(schema *ObjectSchema, module string, tabstyle string) string {
 
 	var buffer *BufferedFormatString
 
-	buffer = NewBufferedFormatString("\t")
+	buffer = NewBufferedFormatString(tabstyle)
 
 	buffer.Printf("package %s", module)
 	buffer.Print("\n")
@@ -171,8 +171,9 @@ func generateGoConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 	buffer.Printf("\nfunc New%s(%s)(*%s, error) {\n", title, strings.Join(parameters, ","), title)
 	buffer.AddIndentation(1)
 
+	buffer.Printf("\nvar err error = nil")
+
 	// body
-	buffer.Printf("\nvar err error")
 	buffer.Printf("\nret := new(%s)\n", title)
 
 	for _, propertyName := range parameterNames {
@@ -194,7 +195,7 @@ func generateGoConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 		}
 	}
 
-	buffer.Print("\nreturn ret, nil")
+	buffer.Print("\nreturn ret, err")
 	buffer.AddIndentation(-1)
 	buffer.Print("\n}\n")
 }

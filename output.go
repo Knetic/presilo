@@ -32,23 +32,23 @@ func prepareOutputPath(targetPath string) (string, error) {
 	return targetPath, nil
 }
 
-func writeGeneratedCode(schema TypeSchema, module string, targetPath string, language string, splitFiles bool) error {
+func writeGeneratedCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, splitFiles bool) error {
 
 	var wg sync.WaitGroup
 	var err error
 
-	err = generateCode(schema, module, targetPath, language, splitFiles, &wg)
+	err = generateCode(schema, module, targetPath, language, tabstyle, splitFiles, &wg)
 	wg.Wait()
 
 	return err
 }
 
-func generateCode(schema TypeSchema, module string, targetPath string, language string, splitFiles bool, wg *sync.WaitGroup) error {
+func generateCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, splitFiles bool, wg *sync.WaitGroup) error {
 
 	var schemaGraph *SchemaGraph
 	var schemas []*ObjectSchema
 	var objectSchema *ObjectSchema
-	var generator func(*ObjectSchema, string) string
+	var generator func(*ObjectSchema, string, string) string
 	var writtenChannel chan string
 	var fileNameChannel chan string
 	var errorChannel chan error
@@ -116,7 +116,7 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 			fileNameChannel <- schemaPath
 		}
 
-		written = generator(objectSchema, module)
+		written = generator(objectSchema, module, tabstyle)
 		writtenChannel <- written
 	}
 

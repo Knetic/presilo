@@ -8,11 +8,11 @@ import (
 /*
   Generates valid CSharp code for a given schema.
 */
-func GenerateCSharp(schema *ObjectSchema, module string) string {
+func GenerateCSharp(schema *ObjectSchema, module string, tabstyle string) string {
 
 	var buffer *BufferedFormatString
 
-	buffer = NewBufferedFormatString("\t")
+	buffer = NewBufferedFormatString(tabstyle)
 
 	generateCSharpImports(schema, buffer)
 	buffer.Print("\n")
