@@ -35,7 +35,6 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Tab style: '%s'\n", settings.TabStyle)
 	err = writeGeneratedCode(schema, settings.Module, settings.OutputPath, settings.Language, settings.TabStyle, settings.splitFiles)
 	if err != nil {
 		exitWith("Unable to generate code: %s\n", err)

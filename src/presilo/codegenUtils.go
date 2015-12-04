@@ -49,3 +49,17 @@ func sanitizeQuotedString(target string) string {
 
 	return strings.Replace(target, "\"", "\\\"", -1)
 }
+
+/*
+	Returns true if the given [source] array contains the given [candidate].
+	False otherwise.
+*/
+func arrayContainsString(source []string, candidate string) bool {
+
+	for _, str := range source {
+		if(str == candidate) {
+			return true
+		}
+	}
+	return false
+}

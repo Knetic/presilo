@@ -1,6 +1,7 @@
 package presilo
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -16,6 +17,8 @@ func GenerateJS(schema *ObjectSchema, module string, tabstyle string) string {
 	generateJSModuleCheck(buffer, module)
 	buffer.Print("\n")
 	generateJSConstructor(schema, buffer, module)
+	buffer.Print("\n")
+	generateJSDeserializer(schema, buffer, module)
 	buffer.Print("\n")
 	generateJSFunctions(schema, buffer, module)
 	buffer.Print("\n")
@@ -73,6 +76,60 @@ func generateJSConstructor(schema *ObjectSchema, buffer *BufferedFormatString, m
 
 	buffer.AddIndentation(-1)
 	buffer.Print("\n}\n")
+}
+
+func generateJSDeserializer(schema *ObjectSchema, buffer *BufferedFormatString, module string) {
+
+	var property TypeSchema
+	var ctorArguments []string
+	var argument string
+	var className string
+	var propertyName, casedPropertyName string
+
+	className = ToCamelCase(schema.GetTitle())
+
+	buffer.Printf("\n%s.%s.deserializeFrom(map)", module, className)
+	buffer.Printf("\n{")
+	buffer.AddIndentation(1)
+
+	// use constructor
+	buffer.Printf("\nvar ret = new %s.%s(", module, className)
+
+	for _, propertyName = range schema.RequiredProperties {
+
+		argument = fmt.Sprintf("map[\"%s\"]", ToJavaCase(propertyName))
+		ctorArguments = append(ctorArguments, argument)
+	}
+
+	buffer.Printf("%s)", strings.Join(ctorArguments, ", "))
+
+	// misc setters
+	buffer.Printf("\n")
+	for _, property = range schema.Properties {
+
+		propertyName = ToJavaCase(property.GetTitle())
+		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
+
+		// if it's already set, skip it.
+		if(arrayContainsString(ctorArguments, casedPropertyName)) {
+			continue
+		}
+
+		// if it's constrained, use the setter
+		if(property.HasConstraints()) {
+
+			casedPropertyName = ToJavaCase(propertyName)
+			buffer.Printf("\nret.set%s(%s)", ToCamelCase(propertyName), casedPropertyName)
+			continue
+		}
+
+		// otherwise set.
+		buffer.Printf("\nret.%s = %s", propertyName, casedPropertyName)
+	}
+
+	buffer.Printf("\nreturn ret")
+	buffer.AddIndentation(-1)
+	buffer.Printf("\n}\n")
 }
 
 func generateJSFunctions(schema *ObjectSchema, buffer *BufferedFormatString, module string) {
@@ -294,7 +351,9 @@ func generateJSEnumCheck(schema interface{}, buffer *BufferedFormatString, enumV
 	buffer.Print("\nfor(var i = 0; i < validValues.length; i++) \n{")
 	buffer.AddIndentation(1)
 
-	buffer.Print("\nif(validValues[i] === value)\n{\nisValid = true")
+	buffer.Print("\nif(validValues[i] === value)\n{")
+	buffer.AddIndentation(1)
+	buffer.Print("\nisValid = true")
 	buffer.Print("\nbreak;")
 	buffer.AddIndentation(-1)
 	buffer.Print("\n}")
