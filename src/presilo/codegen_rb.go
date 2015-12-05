@@ -17,7 +17,9 @@ func GenerateRuby(schema *ObjectSchema, module string, tabstyle string) string {
 	buffer.Print("\n")
 	generateRubyConstructor(schema, buffer)
 	buffer.Print("\n")
-	generateRubySerializers(schema, buffer)
+	generateRubySerializer(schema, buffer)
+	buffer.Print("\n")
+	generateRubyDeserializer(schema, buffer)
 	buffer.Print("\n")
 	generateRubyFunctions(schema, buffer)
 
@@ -95,7 +97,7 @@ func generateRubyConstructor(schema *ObjectSchema, buffer *BufferedFormatString)
 	buffer.Print("\nend\n")
 }
 
-func generateRubySerializers(schema *ObjectSchema, buffer *BufferedFormatString) {
+func generateRubySerializer(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	var title string
 
@@ -125,19 +127,59 @@ func generateRubySerializers(schema *ObjectSchema, buffer *BufferedFormatString)
 	buffer.Print("\nreturn ret")
 	buffer.AddIndentation(-1)
 	buffer.Print("\nend")
+}
 
-	// deserialize
-	/*
-	buffer.Printf("\n# Deserializes and returns a new %s from the given hash.", title)
-	buffer.Print("\ndef self.from_hash(hash)")
+func generateRubyDeserializer(schema *ObjectSchema, buffer *BufferedFormatString) {
+
+	var property TypeSchema
+	var ctorArguments []string
+	var argument string
+	var className string
+	var propertyName, casedPropertyName string
+
+	className = ToCamelCase(schema.GetTitle())
+
+	buffer.Printf("\ndef from_hash(map)")
 	buffer.AddIndentation(1)
 
-	buffer.Printf("\nret = %s.new()", title)
-	buffer.Print("\nreturn ret")
+	// use constructor
+	buffer.Printf("\nret = %s.new(", className)
 
+	for _, propertyName = range schema.RequiredProperties {
+
+		argument = fmt.Sprintf("map[\"%s\"]", ToJavaCase(propertyName))
+		ctorArguments = append(ctorArguments, argument)
+	}
+
+	buffer.Printf("%s)", strings.Join(ctorArguments, ", "))
+
+	// misc setters
+	buffer.Printf("\n")
+	for _, property = range schema.Properties {
+
+		propertyName = ToJavaCase(property.GetTitle())
+		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
+
+		// if it's already set, skip it.
+		if(arrayContainsString(ctorArguments, casedPropertyName)) {
+			continue
+		}
+
+		// if it's constrained, use the setter
+		if(property.HasConstraints()) {
+
+			casedPropertyName = ToJavaCase(propertyName)
+			buffer.Printf("\nret.set%s(%s)", ToCamelCase(propertyName), casedPropertyName)
+			continue
+		}
+
+		// otherwise set.
+		buffer.Printf("\nret.%s = %s", propertyName, casedPropertyName)
+	}
+
+	buffer.Printf("\nreturn ret")
 	buffer.AddIndentation(-1)
-	buffer.Print("\nend")
-	*/
+	buffer.Printf("\nend\n")
 }
 
 func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
