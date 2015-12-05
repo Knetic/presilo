@@ -7,6 +7,11 @@ import (
 
 /*
   Generates valid CSharp code for a given schema.
+
+	C# code contains DataContractJsonSerializer annotations,
+	which are required for proper serialization/deserialization of fields.
+	Unfortunately this isn't available before .NET 4.5, so any generated code
+	will need to be compiled with .NET 4.5+
 */
 func GenerateCSharp(schema *ObjectSchema, module string, tabstyle string) string {
 
@@ -34,6 +39,7 @@ func GenerateCSharp(schema *ObjectSchema, module string, tabstyle string) string
 func generateCSharpImports(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	buffer.Print("using System;")
+	buffer.Print("\n using System.Runtime.Serialization;")
 
 	// import regex if we need it
 	if containsRegexpMatch(schema) {
@@ -54,11 +60,13 @@ func generateCSharpTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatS
 	var subschema TypeSchema
 	var propertyName string
 
-	buffer.Printf("public class %s\n{", ToCamelCase(schema.Title))
+	buffer.Print("[DataContract]")
+	buffer.Printf("\npublic class %s\n{", ToCamelCase(schema.Title))
 	buffer.AddIndentation(1)
 
 	for propertyName, subschema = range schema.Properties {
 
+		buffer.Print("\n[DataMember]")
 		buffer.Printf("\nprotected %s %s;", generateCSharpTypeForSchema(subschema), ToJavaCase(propertyName))
 	}
 }
