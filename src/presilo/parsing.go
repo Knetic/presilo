@@ -64,6 +64,9 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 		return schema, nil
 	}
 
+	// if there are definitions, parse them and add them now
+	parseDefinitions(contents, context)
+
 	// figure out type
 	// TODO: allow "null" as a secondary type.
 	schemaType, err = getJsonString(contents, "type")
@@ -137,6 +140,49 @@ func recurseObjectSchema(schema *ObjectSchema, schemas []*ObjectSchema) []*Objec
 	}
 
 	return schemas
+}
+
+/*
+	Parses any definitions present in the given [contents], and
+*/
+func parseDefinitions(contents map[string]*json.RawMessage, context *SchemaParseContext) {
+
+	var rawDefinitions *json.RawMessage
+	var definitionBytes []byte
+	var definitions map[string]*json.RawMessage
+	var schema TypeSchema
+	var schemaText []byte
+	var present bool
+	var err error
+
+	rawDefinitions, present = contents["definitions"]
+	if(!present) {
+		return
+	}
+
+	definitionBytes, err = rawDefinitions.MarshalJSON()
+	if(err != nil) {
+		return
+	}
+
+	err = json.Unmarshal(definitionBytes, &definitions)
+	if(err != nil) {
+		return
+	}
+
+	for definitionKey, definitionValue := range definitions {
+
+		schemaText, err = definitionValue.MarshalJSON()
+
+		schema, err = ParseSchema(schemaText, definitionKey, context)
+		if(err != nil) {
+			fmt.Printf("Unable to load definition '%s': %s\n", definitionKey, err)
+			return
+		}
+
+		definitionKey = fmt.Sprintf("#/definitions/%s", definitionKey)
+		context.SchemaDefinitions[definitionKey] = schema
+	}
 }
 
 func getJsonString(source map[string]*json.RawMessage, key string) (string, error) {
