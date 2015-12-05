@@ -17,6 +17,8 @@ func GeneratePython(schema *ObjectSchema, module string, tabstyle string) string
 	ret.Printfln("")
 	generatePythonConstructor(schema, ret)
 	ret.Printfln("")
+	generatePythonDeserializer(schema, ret)
+	ret.Printfln("")
 	generatePythonFunctions(schema, ret)
 	ret.Printfln("")
 
@@ -26,6 +28,7 @@ func GeneratePython(schema *ObjectSchema, module string, tabstyle string) string
 func generatePythonImports(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	buffer.Printfln("import string")
+	buffer.Printf("import json")
 
 	if containsRegexpMatch(schema) {
 		buffer.Printfln("import re")
@@ -75,6 +78,60 @@ func generatePythonConstructor(schema *ObjectSchema, buffer *BufferedFormatStrin
 	}
 
 	buffer.AddIndentation(-1)
+}
+
+func generatePythonDeserializer(schema *ObjectSchema, buffer *BufferedFormatString) {
+
+	var property TypeSchema
+	var ctorArguments []string
+	var argument string
+	var className string
+	var propertyName, casedPropertyName string
+
+	className = ToCamelCase(schema.GetTitle())
+
+	buffer.Printf("\n@staticmethod")
+	buffer.Printf("\ndef deserialize_from(map):")
+	buffer.AddIndentation(1)
+
+	// use constructor
+	buffer.Printf("\nret = %s(", className)
+
+	for _, propertyName = range schema.RequiredProperties {
+
+		argument = fmt.Sprintf("map[\"%s\"]", ToJavaCase(propertyName))
+		ctorArguments = append(ctorArguments, argument)
+	}
+
+	buffer.Printf("%s)", strings.Join(ctorArguments, ", "))
+
+	// misc setters
+	buffer.Printf("\n")
+	for _, property = range schema.Properties {
+
+		propertyName = ToJavaCase(property.GetTitle())
+		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
+
+		// if it's already set, skip it.
+		if(arrayContainsString(ctorArguments, casedPropertyName)) {
+			continue
+		}
+
+		// if it's constrained, use the setter
+		if(property.HasConstraints()) {
+
+			casedPropertyName = ToJavaCase(propertyName)
+			buffer.Printf("\nret.set_%s(%s)", ToJavaCase(propertyName), casedPropertyName)
+			continue
+		}
+
+		// otherwise set.
+		buffer.Printf("\nret.%s = %s", propertyName, casedPropertyName)
+	}
+
+	buffer.Printf("\nreturn ret")
+	buffer.AddIndentation(-1)
+	buffer.Printf("\n")
 }
 
 func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
