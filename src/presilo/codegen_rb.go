@@ -139,7 +139,7 @@ func generateRubyDeserializer(schema *ObjectSchema, buffer *BufferedFormatString
 
 	className = ToCamelCase(schema.GetTitle())
 
-	buffer.Printf("\ndef from_hash(map)")
+	buffer.Printf("\ndef self.from_hash(map)")
 	buffer.AddIndentation(1)
 
 	// use constructor
@@ -168,8 +168,7 @@ func generateRubyDeserializer(schema *ObjectSchema, buffer *BufferedFormatString
 		// if it's constrained, use the setter
 		if(property.HasConstraints()) {
 
-			casedPropertyName = ToJavaCase(propertyName)
-			buffer.Printf("\nret.set%s(%s)", ToCamelCase(propertyName), casedPropertyName)
+			buffer.Printf("\nret.set_%s(%s)", ToJavaCase(propertyName), casedPropertyName)
 			continue
 		}
 
@@ -211,7 +210,7 @@ func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 			buffer.Printf("\n# Sets the value of %s, which is defined as:\n# %s", snakeName, description)
 		}
 
-		buffer.Printf("\ndef set_%s(%s)", snakeName, snakeName)
+		buffer.Printf("\ndef set_%s(value)", snakeName)
 		buffer.AddIndentation(1)
 
 		switch subschema.GetSchemaType() {
@@ -315,7 +314,7 @@ func generateRubyRangeCheck(value interface{}, reference, message, format string
 		compareString = comparator
 	}
 
-	buffer.Printf("\nif(%s %s " + format + ")", value, compareString)
+	buffer.Printf("\nif(%s %s " + format + ")", reference, compareString, value)
 	buffer.AddIndentation(1)
 
 	buffer.Printf("\nraise StandardError.new(\"Property '#{value}' %s.\")", message)
