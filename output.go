@@ -32,18 +32,18 @@ func prepareOutputPath(targetPath string) (string, error) {
 	return targetPath, nil
 }
 
-func writeGeneratedCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, splitFiles bool) error {
+func writeGeneratedCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool) error {
 
 	var wg sync.WaitGroup
 	var err error
 
-	err = generateCode(schema, module, targetPath, language, tabstyle, splitFiles, &wg)
+	err = generateCode(schema, module, targetPath, language, tabstyle, unsafeModule, splitFiles, &wg)
 	wg.Wait()
 
 	return err
 }
 
-func generateCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, splitFiles bool, wg *sync.WaitGroup) error {
+func generateCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool, wg *sync.WaitGroup) error {
 
 	var schemaGraph *SchemaGraph
 	var schemas []*ObjectSchema
@@ -91,8 +91,8 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 	default: return errors.New("No valid language specified")
 	}
 
-	if(!moduleValidator(module)) {
-		errorMsg := fmt.Sprintf("Package name '%s' is not valid for language '%s'", module, language)
+	if(!unsafeModule && !moduleValidator(module)) {
+		errorMsg := fmt.Sprintf("Package name '%s' is not valid for language '%s'. Use '-usafemodule' to ignore.", module, language)
 		return errors.New(errorMsg)
 	}
 

@@ -13,6 +13,7 @@ type RunSettings struct {
 	Module     string
 	ListLanguages bool
 	TabStyle	 string
+	UnsafeModule bool
 	splitFiles bool
 }
 
@@ -41,6 +42,7 @@ func ParseRunSettings() (*RunSettings, error) {
 	flag.StringVar(&ret.OutputPath, "o", "./", "Optional destination directory for generated files")
 	flag.StringVar(&ret.Module, "m", "main", "Module to use for the generated files")
 	flag.StringVar(&ret.TabStyle, "t", "\t", "The indent delimiter ('tab style') to use")
+	flag.BoolVar(&ret.UnsafeModule, "unsafemodule", false, "Ignore errors regarding module name validation")
 	flag.BoolVar(&ret.ListLanguages, "a", false, "Lists all supported languages")
 
 	flag.Parse()

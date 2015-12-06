@@ -35,7 +35,7 @@ func main() {
 		return
 	}
 
-	err = writeGeneratedCode(schema, settings.Module, settings.OutputPath, settings.Language, settings.TabStyle, settings.splitFiles)
+	err = writeGeneratedCode(schema, settings.Module, settings.OutputPath, settings.Language, settings.TabStyle, settings.UnsafeModule, settings.splitFiles)
 	if err != nil {
 		exitWith("Unable to generate code: %s\n", err)
 		return
