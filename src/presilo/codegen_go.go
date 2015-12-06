@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"bytes"
+	"regexp"
 	"strings"
 )
 
@@ -26,6 +27,12 @@ func GenerateGo(schema *ObjectSchema, module string, tabstyle string) string {
 	buffer.Print("\n")
 
 	return buffer.String()
+}
+
+func ValidateGoModule(module string) bool {
+
+	matched, err := regexp.MatchString("^[a-zA-Z_]+[0-9a-zA-Z_]*$", module)
+	return err == nil && matched
 }
 
 func generateGoImports(schema *ObjectSchema, buffer *BufferedFormatString) {

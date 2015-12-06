@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -29,6 +30,13 @@ func GenerateRuby(schema *ObjectSchema, module string, tabstyle string) string {
 	buffer.Print("\nend")
 
 	return buffer.String()
+}
+
+func ValidateRubyModule(module string) bool {
+
+	pattern := "^[a-zA-Z_]+[0-9a-zA-Z_]*(::[a-zA-Z_]+[0-9a-zA-Z_]*)*$"
+	matched, err := regexp.MatchString(pattern, module)
+	return err == nil && matched
 }
 
 func generateRubySignature(schema *ObjectSchema, buffer *BufferedFormatString) {

@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -24,6 +25,18 @@ func GenerateJS(schema *ObjectSchema, module string, tabstyle string) string {
 	buffer.Print("\n")
 
 	return buffer.String()
+}
+
+func ValidateJSModule(module string) bool {
+
+	// TODO: This implementation isn't strictly correct, but is probably best practice.
+	// In the future, may want to implement the below pattern
+	// (which we can't do right now because it requires Perl-flavor regex)
+	// ref: http://stackoverflow.com/a/9337047
+
+	pattern := "^[a-zA-Z_]+[0-9a-zA-Z_]*(\\.[a-zA-Z_]+[0-9a-zA-Z_]*)*$"
+	matched, err := regexp.MatchString(pattern, module)
+	return err == nil && matched
 }
 
 func generateJSModuleCheck(buffer *BufferedFormatString, module string) {

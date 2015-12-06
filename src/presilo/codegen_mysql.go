@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"fmt"
+	"regexp"
 )
 
 /*
@@ -25,6 +26,14 @@ func GenerateMySQL(schema *ObjectSchema, module string, tabstyle string) string 
 	generateMysqlCreate(schema, module, buffer)
 
 	return buffer.String()
+}
+
+func ValidateMySQLModule(module string) bool {
+
+	// ref: http://dev.mysql.com/doc/refman/5.7/en/identifiers.html
+	pattern := "^[0-9a-zA-Z$_]+$"
+	matched, err := regexp.MatchString(pattern, module)
+	return err == nil && matched
 }
 
 func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFormatString) {

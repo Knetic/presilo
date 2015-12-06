@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -34,6 +35,13 @@ func GenerateCSharp(schema *ObjectSchema, module string, tabstyle string) string
 	buffer.Print("\n}")
 
 	return buffer.String()
+}
+
+func ValidateCSharpModule(module string) bool {
+
+	pattern := "^[a-zA-Z_]+[0-9a-zA-Z_]*(\\.[a-zA-Z_]+[0-9a-zA-Z_]*)*$"
+	matched, err := regexp.MatchString(pattern, module)
+	return err == nil && matched
 }
 
 func generateCSharpImports(schema *ObjectSchema, buffer *BufferedFormatString) {

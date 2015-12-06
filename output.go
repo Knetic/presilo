@@ -49,6 +49,7 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 	var schemas []*ObjectSchema
 	var objectSchema *ObjectSchema
 	var generator func(*ObjectSchema, string, string) string
+	var moduleValidator func(string) bool
 	var writtenChannel chan string
 	var fileNameChannel chan string
 	var errorChannel chan error
@@ -68,19 +69,31 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 
 	case "go":
 		generator = GenerateGo
+		moduleValidator = ValidateGoModule
 	case "js":
 		generator = GenerateJS
+		moduleValidator = ValidateJSModule
 	case "java":
 		generator = GenerateJava
+		moduleValidator = ValidateJavaModule
 	case "cs":
 		generator = GenerateCSharp
+		moduleValidator = ValidateCSharpModule
 	case "rb":
 		generator = GenerateRuby
+		moduleValidator = ValidateRubyModule
 	case "py":
 		generator = GeneratePython
+		moduleValidator = ValidatePythonModule
 	case "mysql":
 		generator = GenerateMySQL
+		moduleValidator = ValidateMySQLModule
 	default: return errors.New("No valid language specified")
+	}
+
+	if(!moduleValidator(module)) {
+		errorMsg := fmt.Sprintf("Package name '%s' is not valid for language '%s'", module, language)
+		return errors.New(errorMsg)
 	}
 
 	writtenChannel = make(chan string)

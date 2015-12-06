@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -28,6 +29,13 @@ func GenerateJava(schema *ObjectSchema, module string, tabstyle string) string {
 	buffer.Print("\n}\n")
 
 	return buffer.String()
+}
+
+func ValidateJavaModule(module string) bool {
+
+	pattern := "^[a-zA-Z_]+[0-9a-zA-Z_]*(\\.[a-zA-Z_]+[0-9a-zA-Z_]*)*$"
+	matched, err := regexp.MatchString(pattern, module)
+	return err == nil && matched
 }
 
 func generateJavaImports(schema *ObjectSchema, buffer *BufferedFormatString) {

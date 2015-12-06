@@ -2,6 +2,7 @@ package presilo
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -23,6 +24,14 @@ func GeneratePython(schema *ObjectSchema, module string, tabstyle string) string
 	ret.Printfln("")
 
 	return ret.String()
+}
+
+func ValidatePythonModule(module string) bool {
+
+	// ref: https://www.python.org/dev/peps/pep-0008/#package-and-module-names
+	pattern := "^[a-z0-9_]+$"
+	matched, err := regexp.MatchString(pattern, module)
+	return err == nil && matched
 }
 
 func generatePythonImports(schema *ObjectSchema, buffer *BufferedFormatString) {
