@@ -38,7 +38,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 	var contents map[string]*json.RawMessage
 	var schemaRef string
 	var schemaType string
-	var present bool
+	var present, nullable bool
 	var err error
 
 	err = json.Unmarshal(contentsBytes, &contents)
@@ -68,12 +68,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 	parseDefinitions(contents, context)
 
 	// figure out type
-	// TODO: allow "null" as a secondary type.
-	schemaType, err = getJsonString(contents, "type")
-	if err != nil {
-		return nil, err
-	}
-
+	schemaType, nullable, err = parseSchemaType(contents)
 	if len(schemaType) <= 0 {
 		return nil, errors.New("Schema could not be parsed, type was not specified")
 	}
@@ -106,6 +101,8 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 	if err != nil {
 		return nil, err
 	}
+
+	schema.SetNullable(nullable)
 
 	if len(schema.GetTitle()) == 0 {
 		schema.SetTitle(defaultTitle)
@@ -142,6 +139,52 @@ func recurseObjectSchema(schema *ObjectSchema, schemas []*ObjectSchema) []*Objec
 	return schemas
 }
 
+func parseSchemaType(contents map[string]*json.RawMessage) (string, bool, error) {
+
+	var typeMessage *json.RawMessage
+	var schemaTypes []string
+	var typeBytes []byte
+	var schemaType string
+	var present bool
+	var err error
+
+	typeMessage, present = contents["type"]
+	if(!present) {
+		return "", false, nil
+	}
+
+	typeBytes, err = typeMessage.MarshalJSON()
+	if(err != nil) {
+		return "", false, err
+	}
+
+	// array?
+	err = json.Unmarshal(typeBytes, &schemaTypes)
+	if(err == nil) {
+
+		// check to make sure that length is exactly two, we only support a type and null.
+		if(len(schemaTypes) != 2 || (schemaTypes[0] != "null" && schemaTypes[1] != "null")) {
+			return "", false, errors.New("Multi-type schemas must only contain a single type and 'null'")
+		}
+
+		if(schemaTypes[0] != "null") {
+			schemaType = schemaTypes[0]
+		} else {
+			schemaType = schemaTypes[1]
+		}
+
+		return schemaType, true, nil
+	}
+
+	// must be single string value?
+	err = json.Unmarshal(typeBytes, &schemaType)
+	if(err != nil) {
+		return "", false, errors.New("Schema type must be a string, or array of strings")
+	}
+
+	// some other type (like a number), ditch it.
+	return schemaType, false, nil
+}
 /*
 	Parses any definitions present in the given [contents], and
 */

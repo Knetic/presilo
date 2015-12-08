@@ -204,7 +204,9 @@ func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 
 func generatePythonStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	generatePythonNullCheck(buffer)
+	if(!schema.Nullable) {
+		generatePythonNullCheck(buffer)
+	}
 
 	if schema.MinLength != nil {
 		generatePythonRangeCheck(*schema.MinLength, "value.length", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
@@ -256,12 +258,16 @@ func generatePythonNumericSetter(schema NumericSchemaType, buffer *BufferedForma
 
 func generatePythonObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	generatePythonNullCheck(buffer)
+	if(!schema.Nullable) {
+		generatePythonNullCheck(buffer)
+	}
 }
 
 func generatePythonArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	generatePythonNullCheck(buffer)
+	if(!schema.Nullable) {
+		generatePythonNullCheck(buffer)
+	}
 
 	if schema.MinItems != nil {
 		generatePythonRangeCheck(*schema.MinItems, "len(value)", "does not have enough items", "%d", false, "<", "", buffer)

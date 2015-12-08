@@ -157,7 +157,9 @@ func generateCSharpFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 
 func generateCSharpStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	generateCSharpNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateCSharpNullCheck(buffer)
+	}
 
 	if schema.MinLength != nil {
 		generateCSharpRangeCheck(*schema.MinLength, "value.Length", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
@@ -208,12 +210,16 @@ func generateCSharpNumericSetter(schema NumericSchemaType, buffer *BufferedForma
 
 func generateCSharpObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	generateCSharpNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateCSharpNullCheck(buffer)
+	}
 }
 
 func generateCSharpArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	generateCSharpNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateCSharpNullCheck(buffer)
+	}
 
 	if schema.MinItems != nil {
 		generateCSharpRangeCheck(*schema.MinItems, "value.Length", "does not have enough items", "%d", false, "<", "", buffer)

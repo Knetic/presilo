@@ -37,8 +37,27 @@
                     }
                 }
             }
+        },
+        "muffler":
+        {
+          "title": "Muffler",
+          "type": ["null", "object"],
+                    
+          "properties":
+          {
+            "loudness":
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            "brand":
+            {
+              "type": "string",
+              "enum": ["Foord", "Bart", "Bazail"]
+            }
+          }
         }
     },
-    
+
     "required": ["wheels", "seats"]
 }

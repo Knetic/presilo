@@ -306,6 +306,11 @@ func generateJSTypeCheck(schema TypeSchema, buffer *BufferedFormatString) {
 	schemaType = schema.GetSchemaType()
 	expectedType = getJSTypeFromSchemaType(schemaType)
 
+	if(schema.GetNullable()) {
+		buffer.Printf("\nif(value != null)\n{")
+		buffer.AddIndentation(1)
+	}
+
 	buffer.Printf("\nif(typeof(value) !== \"%s\")\n{", expectedType)
 	buffer.AddIndentation(1)
 
@@ -335,6 +340,11 @@ func generateJSTypeCheck(schema TypeSchema, buffer *BufferedFormatString) {
 
 		buffer.AddIndentation(-1)
 		buffer.Print("\n}\n")
+	}
+
+	if(schema.GetNullable()) {
+		buffer.AddIndentation(-1)
+		buffer.Printf("\n}")
 	}
 }
 

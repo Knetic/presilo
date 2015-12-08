@@ -242,7 +242,9 @@ func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 func generateRubyStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	generateRubyNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateRubyNullCheck(buffer)
+	}
 
 	if schema.MinLength != nil {
 		generateRubyRangeCheck(*schema.MinLength, "value.length", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
@@ -296,12 +298,16 @@ func generateRubyNumericSetter(schema NumericSchemaType, buffer *BufferedFormatS
 
 func generateRubyObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	generateRubyNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateRubyNullCheck(buffer)
+	}
 }
 
 func generateRubyArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	generateRubyNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateRubyNullCheck(buffer)
+	}
 
 	if schema.MinItems != nil {
 		generateRubyRangeCheck(*schema.MinItems, "value.Length", "does not have enough items", "%d", false, "<", "", buffer)

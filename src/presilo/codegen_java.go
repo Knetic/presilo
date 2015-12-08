@@ -153,7 +153,9 @@ func generateJavaFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 func generateJavaStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	generateJavaNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateJavaNullCheck(buffer)
+	}
 
 	if schema.MinLength != nil {
 		generateJavaRangeCheck(*schema.MinLength, "value.length()", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
@@ -208,12 +210,16 @@ func generateJavaNumericSetter(schema NumericSchemaType, buffer *BufferedFormatS
 
 func generateJavaObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	generateJavaNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateJavaNullCheck(buffer)
+	}
 }
 
 func generateJavaArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	generateJavaNullCheck(buffer)
+	if(!schema.Nullable) {
+		generateJavaNullCheck(buffer)
+	}
 
 	if schema.MinItems != nil {
 		generateJavaRangeCheck(*schema.MinItems, "value.length", "does not have enough items", "%d", false, "<", "", buffer)

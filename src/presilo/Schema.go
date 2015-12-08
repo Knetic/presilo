@@ -6,6 +6,8 @@ type TypeSchema interface {
 	GetDescription() string
 	SetTitle(string)
 	GetID() string
+	GetNullable() bool
+	SetNullable(bool)
 	HasConstraints() bool
 }
 
@@ -16,6 +18,7 @@ type Schema struct {
 	Title       string `json:"title"`
 	ID          string `json:"id"`
 	Description string `json:"description"`
+	Nullable	  bool
 	typeCode    SchemaType
 }
 
@@ -37,4 +40,12 @@ func (this *Schema) SetTitle(title string) {
 
 func (this *Schema) GetID() string {
 	return this.ID
+}
+
+func (this *Schema) GetNullable() bool {
+	return this.Nullable
+}
+
+func (this *Schema) SetNullable(nullable bool) {
+	this.Nullable = nullable
 }

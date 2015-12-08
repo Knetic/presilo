@@ -56,7 +56,7 @@ func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFo
     required = false
     for _, requiredProperty := range schema.RequiredProperties {
 
-      if(requiredProperty == propertyName) {
+      if(requiredProperty == propertyName && !subschema.GetNullable()) {
         required = true
         break
       }
