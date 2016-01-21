@@ -49,8 +49,9 @@ func generateRubySignature(schema *ObjectSchema, buffer *BufferedFormatString) {
 	buffer.Printf("\nclass %s", ToCamelCase(schema.Title))
 	buffer.AddIndentation(1)
 
-	for propertyName, subschema = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
+		subschema = schema.Properties[propertyName]
 		propertyName = ToSnakeCase(propertyName)
 
 		if(subschema.HasConstraints()) {
@@ -163,8 +164,9 @@ func generateRubyDeserializer(schema *ObjectSchema, buffer *BufferedFormatString
 
 	// misc setters
 	buffer.Printf("\n")
-	for _, property = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
+		property = schema.Properties[propertyName]
 		propertyName = ToJavaCase(property.GetTitle())
 		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
 
@@ -194,8 +196,9 @@ func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 	var subschema TypeSchema
 	var propertyName, snakeName, description string
 
-	for propertyName, subschema = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
+		subschema = schema.Properties[propertyName]
 		snakeName = ToSnakeCase(propertyName)
 		description = subschema.GetDescription()
 		description = strings.Replace(description, "\n", "\n# ", -1)

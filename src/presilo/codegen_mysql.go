@@ -38,6 +38,8 @@ func ValidateMySQLModule(module string) bool {
 
 func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFormatString) {
 
+	var subschema TypeSchema
+	var propertyName string
   var required, firstProperty bool
 
   buffer.Printf("USE %s;\n", module)
@@ -50,7 +52,9 @@ func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFo
 
 	firstProperty = true
 
-  for propertyName, subschema := range schema.Properties {
+  for _, propertyName = range schema.GetOrderedPropertyNames() {
+
+	  subschema = schema.Properties[propertyName]
 
     // determine nullability
     required = false

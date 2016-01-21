@@ -116,8 +116,9 @@ func generatePythonDeserializer(schema *ObjectSchema, buffer *BufferedFormatStri
 
 	// misc setters
 	buffer.Printf("\n")
-	for _, property = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
+		property = schema.Properties[propertyName]
 		propertyName = ToJavaCase(property.GetTitle())
 		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
 
@@ -148,8 +149,9 @@ func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 	var subschema TypeSchema
 	var propertyName, snakeName, description string
 
-	for propertyName, subschema = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
+		subschema = schema.Properties[propertyName]
 		snakeName = ToSnakeCase(propertyName)
 		description = subschema.GetDescription()
 

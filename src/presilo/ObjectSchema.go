@@ -20,8 +20,8 @@ type ObjectSchema struct {
 	// NOT SUPPORTED: patternProperties
 	RawProperties map[string]*json.RawMessage `json:"properties"`
 
-	ConstrainedProperties   []string
-	UnconstrainedProperties []string
+	ConstrainedProperties   SortableStringArray
+	UnconstrainedProperties SortableStringArray
 }
 
 /*
@@ -90,7 +90,26 @@ func NewObjectSchema(contents []byte, context *SchemaParseContext) (*ObjectSchem
 			ret.UnconstrainedProperties = append(ret.UnconstrainedProperties, propertyName)
 		}
 	}
+
+	ret.ConstrainedProperties.Sort()
+	ret.UnconstrainedProperties.Sort()
 	return ret, nil
+}
+
+/*
+	Returns an ordered array of property names, guaranteed to be the same for the same schema input over multiple runs of the program.
+*/
+func (this *ObjectSchema) GetOrderedPropertyNames() []string {
+
+	var ret SortableStringArray
+
+	// fill
+	for key, _ := range this.Properties {
+		ret = append(ret, key)
+	}
+
+	ret.Sort()
+	return ret
 }
 
 func (this *ObjectSchema) checkRequiredProperties() error {

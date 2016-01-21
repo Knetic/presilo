@@ -118,8 +118,9 @@ func generateJSDeserializer(schema *ObjectSchema, buffer *BufferedFormatString, 
 
 	// misc setters
 	buffer.Printf("\n")
-	for _, property = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
+		property = schema.Properties[propertyName]
 		propertyName = ToJavaCase(property.GetTitle())
 		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
 

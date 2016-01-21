@@ -48,10 +48,15 @@ func generateJavaImports(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 func generateJavaTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatString) {
 
+	var subschema TypeSchema
+	var propertyName string
+
 	buffer.Printf("public class %s\n{", ToCamelCase(schema.Title))
 	buffer.AddIndentation(1)
 
-	for propertyName, subschema := range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
+
+		subschema = schema.Properties[propertyName]
 
 		buffer.Printf("\nprotected %s %s;", generateJavaTypeForSchema(subschema), ToJavaCase(propertyName))
 	}
@@ -106,7 +111,9 @@ func generateJavaFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 	var subschema TypeSchema
 	var propertyName, properName, camelName, typeName string
 
-	for propertyName, subschema = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
+
+		subschema = schema.Properties[propertyName]
 
 		properName = ToJavaCase(propertyName)
 		camelName = ToCamelCase(propertyName)

@@ -72,7 +72,9 @@ func generateCSharpTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatS
 	buffer.Printf("\npublic class %s\n{", ToCamelCase(schema.Title))
 	buffer.AddIndentation(1)
 
-	for propertyName, subschema = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
+
+		subschema = schema.Properties[propertyName]
 
 		buffer.Print("\n[DataMember]")
 		buffer.Printf("\nprotected %s %s;", generateCSharpTypeForSchema(subschema), ToJavaCase(propertyName))
@@ -117,7 +119,9 @@ func generateCSharpFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 	var subschema TypeSchema
 	var propertyName, properName, camelName, typeName string
 
-	for propertyName, subschema = range schema.Properties {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
+
+		subschema = schema.Properties[propertyName]
 
 		properName = ToJavaCase(propertyName)
 		camelName = ToCamelCase(propertyName)
