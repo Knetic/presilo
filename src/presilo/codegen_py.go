@@ -37,7 +37,7 @@ func ValidatePythonModule(module string) bool {
 func generatePythonImports(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	buffer.Printfln("import string")
-	buffer.Printf("import json")
+	buffer.Printfln("import json")
 
 	if containsRegexpMatch(schema) {
 		buffer.Printfln("import re")
@@ -227,7 +227,7 @@ func generatePythonStringSetter(schema *StringSchema, buffer *BufferedFormatStri
 		buffer.Printf("\nif(not re.match(\"%s\", value)):", *schema.Pattern)
 		buffer.AddIndentation(1)
 
-		buffer.Printf("\nraise ValueError(\"Value '\" value \"' did not match pattern '%s'\")", *schema.Pattern)
+		buffer.Printf("\nraise ValueError(\"Value '\" + value + \"' did not match pattern '%s'\")", *schema.Pattern)
 
 		buffer.AddIndentation(-1)
 	}
