@@ -443,10 +443,14 @@ func generateGoTypeForSchema(schema interface{}) string {
 */
 func generateVariableDeclaration(subschema TypeSchema, buffer *BufferedFormatString, propertyName string, casing func(string) string) {
 
+	var casedName string
+
+	casedName = ToJavaCase(propertyName)
+
 	// TODO: this means unexported fields will have json deserialization struct tags,
 	// which won't work.
 	buffer.Printf("\n%s %s", casing(propertyName), generateGoTypeForSchema(subschema))
-	buffer.Printf(" `json:\"%s\";`", ToJavaCase(propertyName))
+	buffer.Printf(" `json:\"%s\" xml:\"%s\"`", casedName, casedName)
 }
 
 /*
