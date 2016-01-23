@@ -190,7 +190,7 @@ func generateGoConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 		if(subschema.HasConstraints()) {
 
-			buffer.Printf("\nerr = ret.Set%s(%s)", ToCamelCase(propertyName), propertyName)
+			buffer.Printf("\nerr = ret.Set%s(%s)", ToStrictCamelCase(propertyName), propertyName)
 
 			buffer.Printf("\nif(err != nil) {")
 			buffer.AddIndentation(1)
