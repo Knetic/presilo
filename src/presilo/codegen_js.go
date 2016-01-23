@@ -84,7 +84,7 @@ func generateJSConstructor(schema *ObjectSchema, buffer *BufferedFormatString, m
 
 	// body
 	for _, parameterName = range parameterNames {
-		buffer.Printf("\nthis.set%s(%s)", ToCamelCase(parameterName), parameterName)
+		buffer.Printf("\nthis.set%s(%s)", ToStrictCamelCase(parameterName), parameterName)
 	}
 
 	buffer.AddIndentation(-1)
@@ -133,7 +133,7 @@ func generateJSDeserializer(schema *ObjectSchema, buffer *BufferedFormatString, 
 		if(property.HasConstraints()) {
 
 			casedPropertyName = ToJavaCase(propertyName)
-			buffer.Printf("\nret.set%s(%s)", ToCamelCase(propertyName), casedPropertyName)
+			buffer.Printf("\nret.set%s(map[\"%s\"])", ToStrictCamelCase(propertyName), casedPropertyName)
 			continue
 		}
 
@@ -155,7 +155,7 @@ func generateJSFunctions(schema *ObjectSchema, buffer *BufferedFormatString, mod
 
 	for propertyName, subschema = range schema.Properties {
 
-		propertyNameCamel = ToCamelCase(propertyName)
+		propertyNameCamel = ToStrictCamelCase(propertyName)
 		propertyNameJava = ToJavaCase(propertyName)
 
 		buffer.Printf("\n%s.%s.prototype.set%s = function(value)\n{", module, schemaName, propertyNameCamel)

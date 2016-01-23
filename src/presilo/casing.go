@@ -24,6 +24,22 @@ func ToJavaCase(target string) string {
 }
 
 /*
+	Same as ToCamelCase, except that any non-alphanumeric character is stripped from the returned value.
+*/
+func ToStrictCamelCase(target string) string {
+
+	return ToCamelCase(removeInvalidCharacters(target))
+}
+
+/*
+	Same as ToJavaCase, except that any non-alphanumeric character is stripped from the returned value.
+*/
+func ToStrictJavaCase(target string) string {
+
+	return ToJavaCase(removeInvalidCharacters(target))
+}
+
+/*
 	Converts the given target string to snake_case, e.g.
 	"somethingQuiteFine" becomes "something_quite_fine"
 */
@@ -67,6 +83,33 @@ func iterateRunes(target string, transformer func(rune) rune) string {
 
 	for character = range channel {
 		ret.WriteString(string(character))
+	}
+
+	return ret.String()
+}
+
+func removeInvalidCharacters(target string) string {
+
+	var ret bytes.Buffer
+	var channel chan rune
+	var previousInvalid bool
+
+	channel = make(chan rune)
+	previousInvalid = false
+
+	go getCharacterChannel(target, channel)
+
+	for character := range channel {
+
+		if(previousInvalid) {
+			character = unicode.ToUpper(character)
+		}
+
+		previousInvalid = !unicode.IsLetter(character) && !unicode.IsDigit(character)
+
+		if(!previousInvalid) {
+			ret.WriteRune(character)
+		}
 	}
 
 	return ret.String()

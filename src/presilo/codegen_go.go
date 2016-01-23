@@ -113,7 +113,7 @@ func generateGoFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 	for _, propertyName = range schema.ConstrainedProperties {
 
 		casedJavaName = ToJavaCase(propertyName)
-		casedCamelName = ToCamelCase(propertyName)
+		casedCamelName = ToStrictCamelCase(propertyName)
 
 		subschema = schema.Properties[propertyName]
 

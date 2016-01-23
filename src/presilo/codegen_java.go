@@ -116,7 +116,7 @@ func generateJavaFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 		subschema = schema.Properties[propertyName]
 
 		properName = ToJavaCase(propertyName)
-		camelName = ToCamelCase(propertyName)
+		camelName = ToStrictCamelCase(propertyName)
 		typeName = generateJavaTypeForSchema(subschema)
 
 		// getter

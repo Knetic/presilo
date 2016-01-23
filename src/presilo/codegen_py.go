@@ -72,7 +72,7 @@ func generatePythonConstructor(schema *ObjectSchema, buffer *BufferedFormatStrin
 		propertyName = ToSnakeCase(propertyName)
 		declarations = append(declarations, propertyName)
 
-		toWrite = fmt.Sprintf("\nself.set_%s(%s)", propertyName, propertyName)
+		toWrite = fmt.Sprintf("\nself.set_%s(%s)", ToSnakeCase(propertyName), propertyName)
 		setters = append(setters, toWrite)
 	}
 
@@ -131,7 +131,7 @@ func generatePythonDeserializer(schema *ObjectSchema, buffer *BufferedFormatStri
 		if(property.HasConstraints()) {
 
 			casedPropertyName = ToJavaCase(propertyName)
-			buffer.Printf("\nret.set_%s(%s)", ToJavaCase(propertyName), casedPropertyName)
+			buffer.Printf("\nret.set_%s(%s)", ToSnakeCase(propertyName), casedPropertyName)
 			continue
 		}
 

@@ -124,7 +124,7 @@ func generateCSharpFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 		subschema = schema.Properties[propertyName]
 
 		properName = ToJavaCase(propertyName)
-		camelName = ToCamelCase(propertyName)
+		camelName = ToStrictCamelCase(propertyName)
 		typeName = generateCSharpTypeForSchema(subschema)
 
 		// getter
