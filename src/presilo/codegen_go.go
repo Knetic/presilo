@@ -21,10 +21,14 @@ func GenerateGo(schema *ObjectSchema, module string, tabstyle string) string {
 	buffer.Print("\n")
 	generateGoTypeDeclaration(schema, buffer)
 	buffer.Print("\n")
+	generateGoExportedTypeDeclaration(schema, buffer)
+	buffer.Print("\n")
 	generateGoConstructor(schema, buffer)
 	buffer.Print("\n")
 	generateGoFunctions(schema, buffer)
 	buffer.Print("\n")
+	generateGoMarshallers(schema, buffer)
+	buffer.Printfln("")
 
 	return buffer.String()
 }
@@ -38,6 +42,8 @@ func ValidateGoModule(module string) bool {
 func generateGoImports(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	var imports []string
+
+	imports = append(imports, "encoding/json")
 
 	// import errors if there are any constrained fields
 	if len(schema.ConstrainedProperties) > 0 {
@@ -94,6 +100,31 @@ func generateGoTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatStrin
 
 		subschema = schema.Properties[propertyName]
 		generateVariableDeclaration(subschema, buffer, propertyName, ToCamelCase)
+	}
+
+	buffer.AddIndentation(-1)
+	buffer.Print("\n}\n")
+}
+
+/*
+	Same as exporting type declaration, except all fields are exported and the resulting struct is not.
+	This is exclusively used for marshalling and unmarshalling fields into a structure which doesn't necessarily export
+	all the fields it wants to "import" via marshalling.
+*/
+func generateGoExportedTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatString) {
+
+	var subschema TypeSchema
+	var propertyName string
+
+	// description first
+	buffer.Printf("/*\nUsed exclusively by internal marshalling/unmarshalling procedures. Do not use outside of this file.\n*/\n")
+	buffer.Printf("type marshalling_%s struct {", ToStrictJavaCase(schema.GetTitle()))
+	buffer.AddIndentation(1)
+
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
+
+		subschema = schema.Properties[propertyName]
+		generateVariableDeclaration(subschema, buffer, propertyName, ToStrictCamelCase)
 	}
 
 	buffer.AddIndentation(-1)
@@ -205,6 +236,70 @@ func generateGoConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 	buffer.Print("\nreturn ret, err")
 	buffer.AddIndentation(-1)
 	buffer.Print("\n}\n")
+}
+
+/*
+	Golang codegen uses an intermediate struct in order to properly marshal/unmarshal all fields of a type.
+	This generates the proper json methods to do so.
+*/
+func generateGoMarshallers(schema *ObjectSchema, buffer *BufferedFormatString) {
+
+	var baseName, marshalledName string
+	var mimicTypeName string
+
+	mimicTypeName = "marshalling_" + ToStrictJavaCase(schema.Title)
+
+	// Marshaller
+	buffer.Printf("\nfunc (this %s) MarshalJSON() ([]byte, error) {", ToCamelCase(schema.Title))
+	buffer.AddIndentation(1)
+
+	buffer.Printf("\nmimic := %s {", mimicTypeName)
+	buffer.AddIndentation(1)
+
+	for _, propertyName := range schema.ConstrainedProperties {
+
+		baseName = ToJavaCase(propertyName)
+		marshalledName = ToStrictCamelCase(propertyName)
+		buffer.Printf("\n%s: this.%s,", marshalledName, baseName)
+	}
+
+	for _, propertyName := range schema.UnconstrainedProperties {
+
+		baseName = ToCamelCase(propertyName)
+		marshalledName = ToStrictCamelCase(propertyName)
+		buffer.Printf("\n%s: this.%s,", marshalledName, baseName)
+	}
+
+	buffer.AddIndentation(-1)
+	buffer.Printf("\n}\n")
+
+	buffer.Printf("\nreturn json.Marshal(mimic)")
+	buffer.AddIndentation(-1)
+	buffer.Printf("\n}\n")
+
+	// unmarshaller
+	buffer.Printf("\nfunc (this %s) UnmarshalJSON(raw []byte) {", ToCamelCase(schema.Title))
+	buffer.AddIndentation(1)
+
+	buffer.Printf("\nvar mimic %s", mimicTypeName)
+	buffer.Printf("\njson.Unmarshal(raw, &mimic)")
+
+	for _, propertyName := range schema.ConstrainedProperties {
+
+		baseName = ToJavaCase(propertyName)
+		marshalledName = ToStrictCamelCase(propertyName)
+		buffer.Printf("\nthis.%s = mimic.%s", baseName, marshalledName)
+	}
+
+	for _, propertyName := range schema.UnconstrainedProperties {
+
+		baseName = ToCamelCase(propertyName)
+		marshalledName = ToStrictCamelCase(propertyName)
+		buffer.Printf("\nthis.%s = mimic.%s", baseName, marshalledName)
+	}
+
+	buffer.AddIndentation(-1)
+	buffer.Printf("\n}\n")
 }
 
 /*
