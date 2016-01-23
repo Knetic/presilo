@@ -92,14 +92,14 @@ func generateGoTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatStrin
 	for _, propertyName = range schema.ConstrainedProperties {
 
 		subschema = schema.Properties[propertyName]
-		generateVariableDeclaration(subschema, buffer, propertyName, ToJavaCase)
+		generateVariableDeclaration(subschema, buffer, propertyName, ToStrictJavaCase)
 	}
 
 	// write all non-required fields as exported fields.
 	for _, propertyName = range schema.UnconstrainedProperties {
 
 		subschema = schema.Properties[propertyName]
-		generateVariableDeclaration(subschema, buffer, propertyName, ToCamelCase)
+		generateVariableDeclaration(subschema, buffer, propertyName, ToStrictCamelCase)
 	}
 
 	buffer.AddIndentation(-1)
@@ -143,7 +143,7 @@ func generateGoFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	for _, propertyName = range schema.ConstrainedProperties {
 
-		casedJavaName = ToJavaCase(propertyName)
+		casedJavaName = ToStrictJavaCase(propertyName)
 		casedCamelName = ToStrictCamelCase(propertyName)
 
 		subschema = schema.Properties[propertyName]
@@ -258,14 +258,14 @@ func generateGoMarshallers(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	for _, propertyName := range schema.ConstrainedProperties {
 
-		baseName = ToJavaCase(propertyName)
+		baseName = ToStrictJavaCase(propertyName)
 		marshalledName = ToStrictCamelCase(propertyName)
 		buffer.Printf("\n%s: this.%s,", marshalledName, baseName)
 	}
 
 	for _, propertyName := range schema.UnconstrainedProperties {
 
-		baseName = ToCamelCase(propertyName)
+		baseName = ToStrictCamelCase(propertyName)
 		marshalledName = ToStrictCamelCase(propertyName)
 		buffer.Printf("\n%s: this.%s,", marshalledName, baseName)
 	}
@@ -293,7 +293,7 @@ func generateGoMarshallers(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	for _, propertyName := range schema.UnconstrainedProperties {
 
-		baseName = ToCamelCase(propertyName)
+		baseName = ToStrictCamelCase(propertyName)
 		marshalledName = ToStrictCamelCase(propertyName)
 		buffer.Printf("\nthis.%s = mimic.%s", baseName, marshalledName)
 	}
@@ -579,8 +579,8 @@ func getAppropriateGoCase(schema *ObjectSchema, propertyName string) string {
 
 	for _, constrainedName := range schema.ConstrainedProperties {
 		if constrainedName == propertyName {
-			return ToJavaCase(propertyName)
+			return ToStrictJavaCase(propertyName)
 		}
 	}
-	return ToCamelCase(propertyName)
+	return ToStrictCamelCase(propertyName)
 }
