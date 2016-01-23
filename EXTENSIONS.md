@@ -36,6 +36,8 @@ While `presilo` does what it can to make meaningful schema constraints for mysql
 
 ### golang marshalling/unmarshalling
 
-By design, the fields of generated golang structs are not always exported. Any field that has any sort of constraint on it is deliberately accessible (outside the package) via getter/setter, to help enforce constraints and use good encapsulation.
+Golang has the concept of 'exported' and 'unexported' fields. This matters a great deal when marshalling/unmarshalling, since _only_ exported fields are marshalled. Normally, if a field has constraints, one might expect that the field would be unexported, with getter/setter routines. However, `presilo` generates _only exported fields_, so anything put into a schema file will be accessible publicly.
 
-Unfortunately, this messes with marshalling and unmarshalling from some types of encodings. JSON encoding works as expected with any fields, but XML encoding does not.
+This is an intentional decision based on experience trying to extend marshalling/unmarshalling support to multiple encodings. In some (json), it's easy enough to simply implement an interface that uses only primitive types, and a certain amount of under-the-covers indirection can be used to make sure that marshalling a codegen'd struct will actually export all fields.
+
+However, in most encodings (bson, xml, etc) there is a certain amount of library-specific knowledge required in order to marshal/unmarshal. `presilo` is not particularly interested in maintaining every encoding/decoding interface's specification, nor with requiring the user to pull down third-party libraries (such as bson) just to build objects. So the decision was made to export _all_ fields.
