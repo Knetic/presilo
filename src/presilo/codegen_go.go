@@ -286,9 +286,9 @@ func generateGoMarshallers(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 	for _, propertyName := range schema.ConstrainedProperties {
 
-		baseName = ToJavaCase(propertyName)
+		baseName = ToStrictCamelCase(propertyName)
 		marshalledName = ToStrictCamelCase(propertyName)
-		buffer.Printf("\nthis.%s = mimic.%s", baseName, marshalledName)
+		buffer.Printf("\nthis.Set%s(mimic.%s)", baseName, marshalledName)
 	}
 
 	for _, propertyName := range schema.UnconstrainedProperties {

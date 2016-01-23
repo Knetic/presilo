@@ -33,3 +33,9 @@ While `presilo` does what it can to make meaningful schema constraints for mysql
 - Does not support regex constraints.
 - Uses 'bit' to represent booleans, with 0 = true, 1 = false.
 - Does not support minimum byte length constraints
+
+### golang marshalling/unmarshalling
+
+By design, the fields of generated golang structs are not always exported. Any field that has any sort of constraint on it is deliberately accessible (outside the package) via getter/setter, to help enforce constraints and use good encapsulation.
+
+Unfortunately, this messes with marshalling and unmarshalling from some types of encodings. JSON encoding works as expected with any fields, but XML encoding does not.
