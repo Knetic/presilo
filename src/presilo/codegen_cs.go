@@ -173,6 +173,14 @@ func generateCSharpStringSetter(schema *StringSchema, buffer *BufferedFormatStri
 		generateCSharpRangeCheck(*schema.MaxLength, "value.Length", "was longer than allowable maximum", "%d", false, ">", "", buffer)
 	}
 
+	if schema.MinByteLength != nil {
+		generateCSharpRangeCheck(*schema.MinByteLength, "value.Length * sizeof(Char)", "had fewer bytes than allowable minimum", "%d", false, "<", "", buffer)
+	}
+
+	if schema.MaxByteLength != nil {
+		generateCSharpRangeCheck(*schema.MaxByteLength, "value.Length * sizeof(Char)", "had more bytes than allowable minimum", "%d", false, ">", "", buffer)
+	}
+
 	if schema.Pattern != nil {
 
 		buffer.Printf("\nRegex regex = new Regex(\"%s\");", sanitizeQuotedString(*schema.Pattern))

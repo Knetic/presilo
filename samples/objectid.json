@@ -1,0 +1,16 @@
+{
+	"title": "ObjectHolder",
+	"description": "An illustration of how to use Presilo's min/max string byte lengths",
+	"type": "object",
+	
+	"properties":
+	{
+		"_id":
+		{
+			"title": "ObjectID",
+			"type": "string",
+			"minByteLength": 12,
+			"maxByteLength": 12
+		}
+	}
+}

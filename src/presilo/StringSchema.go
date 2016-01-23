@@ -12,6 +12,8 @@ type StringSchema struct {
 	MaxLength *int      `json:"maxLength"`
 	MinLength *int      `json:"minLength"`
 	Pattern   *string   `json:"pattern"`
+	MaxByteLength *int		`json:"maxByteLength"`
+	MinByteLength *int		`json:"minByteLength"`
 	Enum      *[]string `json:"enum"`
 }
 
@@ -38,7 +40,9 @@ func (this *StringSchema) HasConstraints() bool {
 	return this.Enum != nil ||
 		this.MinLength != nil ||
 		this.MaxLength != nil ||
-		this.Pattern != nil
+		this.Pattern != nil ||
+		this.MaxByteLength != nil ||
+		this.MinByteLength != nil
 }
 
 func (this *StringSchema) HasEnum() bool {

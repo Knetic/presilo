@@ -314,7 +314,29 @@ func generateGoStringSetter(schema *StringSchema, buffer *BufferedFormatString) 
 
 		buffer.Printf("\nif(len(value) > %d) {", cutoff)
 		buffer.AddIndentation(1)
-		buffer.Printf("\nreturn errors.New(\"Value is longer than minimum length of %d\")", cutoff)
+		buffer.Printf("\nreturn errors.New(\"Value is greater than maximum length of %d\")", cutoff)
+		buffer.AddIndentation(-1)
+		buffer.Printf("\n}\n")
+	}
+
+	if schema.MaxByteLength != nil {
+
+		cutoff = *schema.MaxByteLength
+
+		buffer.Printf("\nif(len([]byte(value)) > %d) {", cutoff)
+		buffer.AddIndentation(1)
+		buffer.Printf("\nreturn errors.New(\"Value's byte length is longer than maximum length of %d\")", cutoff)
+		buffer.AddIndentation(-1)
+		buffer.Printf("\n}\n")
+	}
+
+	if schema.MinByteLength != nil {
+
+		cutoff = *schema.MinByteLength
+
+		buffer.Printf("\nif(len([]byte(value)) < %d) {", cutoff)
+		buffer.AddIndentation(1)
+		buffer.Printf("\nreturn errors.New(\"Value's byte length is shorter than minimum length of %d\")", cutoff)
 		buffer.AddIndentation(-1)
 		buffer.Printf("\n}\n")
 	}

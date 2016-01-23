@@ -172,6 +172,14 @@ func generateJavaStringSetter(schema *StringSchema, buffer *BufferedFormatString
 		generateJavaRangeCheck(*schema.MaxLength, "value.length()", "was longer than allowable maximum", "%d", false, ">", "", buffer)
 	}
 
+	if schema.MinByteLength != nil {
+		generateJavaRangeCheck(*schema.MinByteLength, "value.length() * 2", "was shorter than allowable minimum bytes", "%d", false, "<", "", buffer)
+	}
+
+	if schema.MaxByteLength != nil {
+		generateJavaRangeCheck(*schema.MaxByteLength, "value.length() * 2", "was larger than allowable maximum bytes", "%d", false, ">", "", buffer)
+	}
+
 	if schema.Pattern != nil {
 
 		buffer.Printf("\nPattern regex = Pattern.compile(\"%s\");", sanitizeQuotedString(*schema.Pattern))

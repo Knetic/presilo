@@ -25,6 +25,14 @@ make
 ./.output/presilo -o ./.temp/py/ -l py -m foo ./samples/car.json
 ./.output/presilo -o ./.temp/mysql/ -l mysql -m foo ./samples/car.json
 
+./.output/presilo -o ./.temp/go/ -l go -m foo ./samples/objectid.json
+./.output/presilo -o ./.temp/js/ -l js -m foo ./samples/objectid.json
+./.output/presilo -o ./.temp/java/ -l java -m foo ./samples/objectid.json
+./.output/presilo -o ./.temp/cs/ -l cs -m foo ./samples/objectid.json
+./.output/presilo -o ./.temp/rb/ -l rb -m foo ./samples/objectid.json
+./.output/presilo -o ./.temp/py/ -l py -m foo ./samples/objectid.json
+./.output/presilo -o ./.temp/mysql/ -l mysql -m foo ./samples/objectid.json
+
 pushd ./.temp/go
 go build .
 popd
