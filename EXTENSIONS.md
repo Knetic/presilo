@@ -34,6 +34,12 @@ While `presilo` does what it can to make meaningful schema constraints for mysql
 - Uses 'bit' to represent booleans, with 0 = true, 1 = false.
 - Does not support minimum byte length constraints
 
+### Mixin $ref schemas
+
+Normally when a `$ref` is made to another schema, it's possible to add extra constraints on top of that ref. For instance, you might reference a number field that normally has no maximum size, but you want to impose a maximum size on a specific use of that schema. This is not supported - make a new schema or definition. Any field that exists sibling to `$ref` is ignored completely.
+
+The thought behind the specification's use of `$ref` being so permissive is for _validators_. This tool is not a validator. Semantically, changing anything about a `$ref` is a copy-on-write, and so creates a new schema. This is _possible_ in `presilo`, but due to technical preference, it's unallowed. All references must be leafs in the tree that represents the parsing. This makes parsing much more reliable and easy, and makes the most sense given the nature of the codegen.
+
 ### golang marshalling/unmarshalling
 
 Golang has the concept of 'exported' and 'unexported' fields. This matters a great deal when marshalling/unmarshalling, since _only_ exported fields are marshalled. Normally, if a field has constraints, one might expect that the field would be unexported, with getter/setter routines. However, `presilo` generates _only exported fields_, so anything put into a schema file will be accessible publicly.
