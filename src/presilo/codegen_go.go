@@ -121,7 +121,7 @@ func generateGoFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 		switch subschema.GetSchemaType() {
 		case SCHEMATYPE_STRING:
-			 generateGoStringSetter(subschema.(*StringSchema), buffer)
+			generateGoStringSetter(subschema.(*StringSchema), buffer)
 		case SCHEMATYPE_NUMBER:
 			generateGoNumericSetter(subschema.(*NumberSchema), buffer)
 		case SCHEMATYPE_INTEGER:
@@ -129,7 +129,6 @@ func generateGoFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 		case SCHEMATYPE_ARRAY:
 			generateGoArraySetter(subschema.(*ArraySchema), buffer)
 		}
-
 
 		buffer.Printf("\nthis.%s = value\nreturn nil", propertyName)
 		buffer.AddIndentation(-1)
@@ -179,7 +178,7 @@ func generateGoConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 		subschema = schema.Properties[propertyName]
 		propertyName = getAppropriateGoCase(schema, propertyName)
 
-		if(subschema.HasConstraints()) {
+		if subschema.HasConstraints() {
 
 			buffer.Printf("\nerr = ret.Set%s(%s)", ToStrictCamelCase(propertyName), propertyName)
 
@@ -229,10 +228,10 @@ func generateGoNumericSetter(schema NumericSchemaType, buffer *BufferedFormatStr
 
 		minimum = schema.GetMinimum()
 
-		buffer.Printf("\nif(value %s " + formatString + ") {", comparator, minimum)
+		buffer.Printf("\nif(value %s "+formatString+") {", comparator, minimum)
 		buffer.AddIndentation(1)
 
-		buffer.Printf("\nreturn errors.New(\"Minimum value of '" + formatString + "' not met\")", minimum)
+		buffer.Printf("\nreturn errors.New(\"Minimum value of '"+formatString+"' not met\")", minimum)
 
 		buffer.AddIndentation(-1)
 		buffer.Print("\n}\n")
@@ -248,10 +247,10 @@ func generateGoNumericSetter(schema NumericSchemaType, buffer *BufferedFormatStr
 
 		maximum = schema.GetMaximum()
 
-		buffer.Printf("\nif(value %s " + formatString + ") {", comparator, maximum)
+		buffer.Printf("\nif(value %s "+formatString+") {", comparator, maximum)
 		buffer.AddIndentation(1)
 
-		buffer.Printf("\nreturn errors.New(\"Maximum value of '" + formatString + "' not met\")", maximum)
+		buffer.Printf("\nreturn errors.New(\"Maximum value of '"+formatString+"' not met\")", maximum)
 
 		buffer.AddIndentation(-1)
 		buffer.Print("\n}\n")
@@ -269,7 +268,7 @@ func generateGoNumericSetter(schema NumericSchemaType, buffer *BufferedFormatStr
 
 		buffer.AddIndentation(1)
 
-		buffer.Printf("\nreturn errors.New(\"Value is not a multiple of '" + formatString + "'\")", multiple)
+		buffer.Printf("\nreturn errors.New(\"Value is not a multiple of '"+formatString+"'\")", multiple)
 
 		buffer.AddIndentation(-1)
 		buffer.Print("\n}\n")

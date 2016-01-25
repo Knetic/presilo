@@ -50,7 +50,7 @@ func generatePythonSignature(schema *ObjectSchema, buffer *BufferedFormatString)
 
 	description = schema.GetDescription()
 
-	if(len(description) != 0) {
+	if len(description) != 0 {
 		buffer.Printfln("'''\n%s\n'''\n", schema.GetDescription())
 	}
 
@@ -123,12 +123,12 @@ func generatePythonDeserializer(schema *ObjectSchema, buffer *BufferedFormatStri
 		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
 
 		// if it's already set, skip it.
-		if(arrayContainsString(ctorArguments, casedPropertyName)) {
+		if arrayContainsString(ctorArguments, casedPropertyName) {
 			continue
 		}
 
 		// if it's constrained, use the setter
-		if(property.HasConstraints()) {
+		if property.HasConstraints() {
 
 			casedPropertyName = ToJavaCase(propertyName)
 			buffer.Printf("\nret.set_%s(%s)", ToSnakeCase(propertyName), casedPropertyName)
@@ -159,7 +159,7 @@ func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 		buffer.Printf("\ndef get_%s(self):", snakeName)
 		buffer.AddIndentation(1)
 
-		if(len(description) != 0) {
+		if len(description) != 0 {
 			buffer.Print("\n'''")
 			buffer.AddIndentation(1)
 
@@ -176,7 +176,7 @@ func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 		buffer.Printf("\ndef set_%s(self, %s):", snakeName, snakeName)
 		buffer.AddIndentation(1)
 
-		if(len(description) != 0) {
+		if len(description) != 0 {
 			buffer.Print("\n'''")
 			buffer.AddIndentation(1)
 
@@ -206,7 +206,7 @@ func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 
 func generatePythonStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generatePythonNullCheck(buffer)
 	}
 
@@ -260,14 +260,14 @@ func generatePythonNumericSetter(schema NumericSchemaType, buffer *BufferedForma
 
 func generatePythonObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generatePythonNullCheck(buffer)
 	}
 }
 
 func generatePythonArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generatePythonNullCheck(buffer)
 	}
 
@@ -290,7 +290,7 @@ func generatePythonRangeCheck(value interface{}, reference, message, format stri
 		compareString = comparator
 	}
 
-	buffer.Printf("\nif(%s %s " + format + "):", reference, compareString, value)
+	buffer.Printf("\nif(%s %s "+format+"):", reference, compareString, value)
 	buffer.AddIndentation(1)
 
 	buffer.Printf("\nraise ValueError(\"Property '\"+ value +\"' %s.\")\n", message)

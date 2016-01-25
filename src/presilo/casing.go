@@ -56,7 +56,7 @@ func ToSnakeCase(target string) string {
 
 	for character = range channel {
 
-		if(unicode.IsUpper(character)) {
+		if unicode.IsUpper(character) {
 
 			ret.WriteRune('_')
 			ret.WriteRune(unicode.ToLower(character))
@@ -101,13 +101,13 @@ func removeInvalidCharacters(target string) string {
 
 	for character := range channel {
 
-		if(previousInvalid) {
+		if previousInvalid {
 			character = unicode.ToUpper(character)
 		}
 
 		previousInvalid = !unicode.IsLetter(character) && !unicode.IsDigit(character)
 
-		if(!previousInvalid) {
+		if !previousInvalid {
 			ret.WriteRune(character)
 		}
 	}

@@ -40,39 +40,39 @@ func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFo
 
 	var subschema TypeSchema
 	var propertyName string
-  var required, firstProperty bool
+	var required, firstProperty bool
 
-  buffer.Printf("USE %s;\n", module)
+	buffer.Printf("USE %s;\n", module)
 
-  // create table
-  buffer.Printf("CREATE TABLE %s\n(", schema.GetTitle())
-  buffer.AddIndentation(1)
+	// create table
+	buffer.Printf("CREATE TABLE %s\n(", schema.GetTitle())
+	buffer.AddIndentation(1)
 	generateMySQLPrimaryKey(schema, buffer)
 	buffer.Printf("\n\n")
 
 	firstProperty = true
 
-  for _, propertyName = range schema.GetOrderedPropertyNames() {
+	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
-	  subschema = schema.Properties[propertyName]
+		subschema = schema.Properties[propertyName]
 
-    // determine nullability
-    required = false
-    for _, requiredProperty := range schema.RequiredProperties {
+		// determine nullability
+		required = false
+		for _, requiredProperty := range schema.RequiredProperties {
 
-      if(requiredProperty == propertyName && !subschema.GetNullable()) {
-        required = true
-        break
-      }
-    }
+			if requiredProperty == propertyName && !subschema.GetNullable() {
+				required = true
+				break
+			}
+		}
 
-		if(firstProperty) {
+		if firstProperty {
 			firstProperty = false
 		} else {
 			buffer.Print(",\n")
 		}
 
-    switch subschema.GetSchemaType() {
+		switch subschema.GetSchemaType() {
 		case SCHEMATYPE_BOOLEAN:
 			generateMySQLBoolColumn(propertyName, required, subschema.(*BooleanSchema), buffer)
 		case SCHEMATYPE_STRING:
@@ -86,23 +86,23 @@ func generateMysqlCreate(schema *ObjectSchema, module string, buffer *BufferedFo
 		case SCHEMATYPE_ARRAY:
 			generateMySQLArrayColumn(propertyName, required, subschema.(*ArraySchema), buffer)
 		}
-  }
+	}
 
 	buffer.AddIndentation(-1)
-  buffer.Print("\n);")
+	buffer.Print("\n);")
 
-  // execution.
-  buffer.Print("\n\n")
+	// execution.
+	buffer.Print("\n\n")
 }
 
 func generateMySQLBoolColumn(name string, required bool, schema *BooleanSchema, buffer *BufferedFormatString) {
 
-  buffer.Printf("\t%s bit", name)
-  buffer.AddIndentation(1)
+	buffer.Printf("\t%s bit", name)
+	buffer.AddIndentation(1)
 
-  if(required) {
-    generateMySQLRequiredConstraint(buffer)
-  }
+	if required {
+		generateMySQLRequiredConstraint(buffer)
+	}
 
 	buffer.Printf("\nCHECK(%s = 0 OR %s = 1)", name, name)
 	buffer.AddIndentation(-1)
@@ -110,12 +110,12 @@ func generateMySQLBoolColumn(name string, required bool, schema *BooleanSchema, 
 
 func generateMySQLStringColumn(name string, required bool, schema *StringSchema, buffer *BufferedFormatString) {
 
-  buffer.Printf("%s nvarchar(128)", name)
-  buffer.AddIndentation(1)
+	buffer.Printf("%s nvarchar(128)", name)
+	buffer.AddIndentation(1)
 
-  if(required) {
-    generateMySQLRequiredConstraint(buffer)
-  }
+	if required {
+		generateMySQLRequiredConstraint(buffer)
+	}
 
 	if schema.MinLength != nil {
 		generateMySQLRangeCheck(*schema.MinLength, name, "%d", false, "<", "", buffer)
@@ -125,7 +125,7 @@ func generateMySQLStringColumn(name string, required bool, schema *StringSchema,
 		generateMySQLRangeCheck(*schema.MaxLength, name, "%d", false, ">", "", buffer)
 	}
 
-	if(schema.Enum != nil) {
+	if schema.Enum != nil {
 		generateMySQLEnumCheck(schema, schema.GetEnum(), "'", "'", buffer)
 	}
 
@@ -134,25 +134,25 @@ func generateMySQLStringColumn(name string, required bool, schema *StringSchema,
 
 func generateMySQLIntegerColumn(name string, required bool, schema *IntegerSchema, buffer *BufferedFormatString) {
 
-  buffer.Printf("%s int", name)
-  buffer.AddIndentation(1)
+	buffer.Printf("%s int", name)
+	buffer.AddIndentation(1)
 
-  if(required) {
-    generateMySQLRequiredConstraint(buffer)
-  }
+	if required {
+		generateMySQLRequiredConstraint(buffer)
+	}
 
 	generateMySQLNumericConstraints(name, schema, buffer)
-  buffer.AddIndentation(-1)
+	buffer.AddIndentation(-1)
 }
 
 func generateMySQLNumberColumn(name string, required bool, schema *NumberSchema, buffer *BufferedFormatString) {
 
-  buffer.Printf("%s float", name)
-  buffer.AddIndentation(1)
+	buffer.Printf("%s float", name)
+	buffer.AddIndentation(1)
 
-  if(required) {
-    generateMySQLRequiredConstraint(buffer)
-  }
+	if required {
+		generateMySQLRequiredConstraint(buffer)
+	}
 
 	generateMySQLNumericConstraints(name, schema, buffer)
 	buffer.AddIndentation(-1)
@@ -160,12 +160,12 @@ func generateMySQLNumberColumn(name string, required bool, schema *NumberSchema,
 
 func generateMySQLReferenceColumn(name string, required bool, schema *ObjectSchema, buffer *BufferedFormatString) {
 
-  buffer.Printf("%s__id int(4)", name)
-  buffer.AddIndentation(1)
+	buffer.Printf("%s__id int(4)", name)
+	buffer.AddIndentation(1)
 
-  if(required) {
-    generateMySQLRequiredConstraint(buffer)
-  }
+	if required {
+		generateMySQLRequiredConstraint(buffer)
+	}
 
 	// add foreign key constraint.
 	buffer.Printf(",\nFOREIGN KEY(%s__id)", name)
@@ -187,12 +187,12 @@ func generateMySQLPrimaryKey(schema *ObjectSchema, buffer *BufferedFormatString)
 
 func generateMySQLArrayColumn(name string, required bool, schema *ArraySchema, buffer *BufferedFormatString) {
 
-  fmt.Println("Schema contains an array, which has no definite analogue in MySQL.")
+	fmt.Println("Schema contains an array, which has no definite analogue in MySQL.")
 }
 
 func generateMySQLRequiredConstraint(buffer *BufferedFormatString) {
 
-  buffer.Print("\nNOT NULL")
+	buffer.Print("\nNOT NULL")
 }
 
 /*

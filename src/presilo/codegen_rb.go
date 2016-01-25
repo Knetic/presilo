@@ -54,7 +54,7 @@ func generateRubySignature(schema *ObjectSchema, buffer *BufferedFormatString) {
 		subschema = schema.Properties[propertyName]
 		propertyName = ToSnakeCase(propertyName)
 
-		if(subschema.HasConstraints()) {
+		if subschema.HasConstraints() {
 			toWrite = fmt.Sprintf(":%s", propertyName)
 			readers = append(readers, toWrite)
 
@@ -65,7 +65,7 @@ func generateRubySignature(schema *ObjectSchema, buffer *BufferedFormatString) {
 		}
 	}
 
-	if(len(readers) > 0) {
+	if len(readers) > 0 {
 
 		buffer.Print("\nattr_reader ")
 		buffer.AddIndentation(6)
@@ -73,7 +73,7 @@ func generateRubySignature(schema *ObjectSchema, buffer *BufferedFormatString) {
 		buffer.AddIndentation(-6)
 	}
 
-	if(len(accessors) > 0) {
+	if len(accessors) > 0 {
 
 		buffer.Print("\nattr_accessor ")
 		buffer.AddIndentation(7)
@@ -171,12 +171,12 @@ func generateRubyDeserializer(schema *ObjectSchema, buffer *BufferedFormatString
 		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
 
 		// if it's already set, skip it.
-		if(arrayContainsString(ctorArguments, casedPropertyName)) {
+		if arrayContainsString(ctorArguments, casedPropertyName) {
 			continue
 		}
 
 		// if it's constrained, use the setter
-		if(property.HasConstraints()) {
+		if property.HasConstraints() {
 
 			buffer.Printf("\nret.set_%s(%s)", ToJavaCase(propertyName), casedPropertyName)
 			continue
@@ -204,7 +204,7 @@ func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 		description = strings.Replace(description, "\n", "\n# ", -1)
 
 		// getter
-		if(len(description) > 0) {
+		if len(description) > 0 {
 			buffer.Printf("\n# Gets the value of %s, which is defined as:\n# %s", snakeName, description)
 		}
 
@@ -217,7 +217,7 @@ func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 		buffer.Print("\nend\n")
 
 		// setter
-		if(len(description) > 0) {
+		if len(description) > 0 {
 			buffer.Printf("\n# Sets the value of %s, which is defined as:\n# %s", snakeName, description)
 		}
 
@@ -245,7 +245,7 @@ func generateRubyFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 func generateRubyStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateRubyNullCheck(buffer)
 	}
 
@@ -301,14 +301,14 @@ func generateRubyNumericSetter(schema NumericSchemaType, buffer *BufferedFormatS
 
 func generateRubyObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateRubyNullCheck(buffer)
 	}
 }
 
 func generateRubyArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateRubyNullCheck(buffer)
 	}
 
@@ -331,7 +331,7 @@ func generateRubyRangeCheck(value interface{}, reference, message, format string
 		compareString = comparator
 	}
 
-	buffer.Printf("\nif(%s %s " + format + ")", reference, compareString, value)
+	buffer.Printf("\nif(%s %s "+format+")", reference, compareString, value)
 	buffer.AddIndentation(1)
 
 	buffer.Printf("\nraise StandardError.new(\"Property '#{value}' %s.\")", message)

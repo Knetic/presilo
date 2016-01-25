@@ -160,7 +160,7 @@ func generateJavaFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 func generateJavaStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateJavaNullCheck(buffer)
 	}
 
@@ -225,14 +225,14 @@ func generateJavaNumericSetter(schema NumericSchemaType, buffer *BufferedFormatS
 
 func generateJavaObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateJavaNullCheck(buffer)
 	}
 }
 
 func generateJavaArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateJavaNullCheck(buffer)
 	}
 

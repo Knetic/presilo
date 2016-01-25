@@ -125,12 +125,12 @@ func generateJSDeserializer(schema *ObjectSchema, buffer *BufferedFormatString, 
 		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
 
 		// if it's already set, skip it.
-		if(arrayContainsString(ctorArguments, casedPropertyName)) {
+		if arrayContainsString(ctorArguments, casedPropertyName) {
 			continue
 		}
 
 		// if it's constrained, use the setter
-		if(property.HasConstraints()) {
+		if property.HasConstraints() {
 
 			casedPropertyName = ToJavaCase(propertyName)
 			buffer.Printf("\nret.set%s(map[\"%s\"])", ToStrictCamelCase(propertyName), casedPropertyName)
@@ -307,7 +307,7 @@ func generateJSTypeCheck(schema TypeSchema, buffer *BufferedFormatString) {
 	schemaType = schema.GetSchemaType()
 	expectedType = getJSTypeFromSchemaType(schemaType)
 
-	if(schema.GetNullable()) {
+	if schema.GetNullable() {
 		buffer.Printf("\nif(value != null)\n{")
 		buffer.AddIndentation(1)
 	}
@@ -343,7 +343,7 @@ func generateJSTypeCheck(schema TypeSchema, buffer *BufferedFormatString) {
 		buffer.Print("\n}\n")
 	}
 
-	if(schema.GetNullable()) {
+	if schema.GetNullable() {
 		buffer.AddIndentation(-1)
 		buffer.Printf("\n}")
 	}

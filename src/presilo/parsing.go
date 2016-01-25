@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +25,7 @@ func ParseSchemaFile(path string) (TypeSchema, *SchemaParseContext, error) {
 	name = filepath.Base(path)
 
 	sourceFile, err = os.Open(path)
-	if(err != nil) {
+	if err != nil {
 		return nil, nil, err
 	}
 	defer sourceFile.Close()
@@ -167,25 +167,25 @@ func parseSchemaType(contents map[string]*json.RawMessage) (string, bool, error)
 	var err error
 
 	typeMessage, present = contents["type"]
-	if(!present) {
+	if !present {
 		return "", false, nil
 	}
 
 	typeBytes, err = typeMessage.MarshalJSON()
-	if(err != nil) {
+	if err != nil {
 		return "", false, err
 	}
 
 	// array?
 	err = json.Unmarshal(typeBytes, &schemaTypes)
-	if(err == nil) {
+	if err == nil {
 
 		// check to make sure that length is exactly two, we only support a type and null.
-		if(len(schemaTypes) != 2 || (schemaTypes[0] != "null" && schemaTypes[1] != "null")) {
+		if len(schemaTypes) != 2 || (schemaTypes[0] != "null" && schemaTypes[1] != "null") {
 			return "", false, errors.New("Multi-type schemas must only contain a single type and 'null'")
 		}
 
-		if(schemaTypes[0] != "null") {
+		if schemaTypes[0] != "null" {
 			schemaType = schemaTypes[0]
 		} else {
 			schemaType = schemaTypes[1]
@@ -196,13 +196,14 @@ func parseSchemaType(contents map[string]*json.RawMessage) (string, bool, error)
 
 	// must be single string value?
 	err = json.Unmarshal(typeBytes, &schemaType)
-	if(err != nil) {
+	if err != nil {
 		return "", false, errors.New("Schema type must be a string, or array of strings")
 	}
 
 	// some other type (like a number), ditch it.
 	return schemaType, false, nil
 }
+
 /*
 	Parses any definitions present in the given [contents], and
 */
@@ -217,17 +218,17 @@ func parseDefinitions(contents map[string]*json.RawMessage, context *SchemaParse
 	var err error
 
 	rawDefinitions, present = contents["definitions"]
-	if(!present) {
+	if !present {
 		return
 	}
 
 	definitionBytes, err = rawDefinitions.MarshalJSON()
-	if(err != nil) {
+	if err != nil {
 		return
 	}
 
 	err = json.Unmarshal(definitionBytes, &definitions)
-	if(err != nil) {
+	if err != nil {
 		return
 	}
 
@@ -236,7 +237,7 @@ func parseDefinitions(contents map[string]*json.RawMessage, context *SchemaParse
 		schemaText, err = definitionValue.MarshalJSON()
 
 		schema, err = ParseSchema(schemaText, definitionKey, context)
-		if(err != nil) {
+		if err != nil {
 			fmt.Printf("Unable to load definition '%s': %s\n", definitionKey, err)
 			return
 		}

@@ -7,14 +7,14 @@ import (
 )
 
 type RunSettings struct {
-	InputPath  string
-	OutputPath string
-	Language   string
-	Module     string
+	InputPath     string
+	OutputPath    string
+	Language      string
+	Module        string
 	ListLanguages bool
-	TabStyle	 string
-	UnsafeModule bool
-	splitFiles bool
+	TabStyle      string
+	UnsafeModule  bool
+	splitFiles    bool
 }
 
 var SUPPORTED_LANGUAGES = []string{
@@ -23,7 +23,7 @@ var SUPPORTED_LANGUAGES = []string{
 	"java",
 	"cs",
 	"rb",
-  "py",
+	"py",
 	"mysql",
 	/*
 		"lua",
@@ -48,7 +48,7 @@ func ParseRunSettings() (*RunSettings, error) {
 	flag.Parse()
 	ret.InputPath = flag.Arg(0)
 
-	if(ret.ListLanguages) {
+	if ret.ListLanguages {
 		return ret, nil
 	}
 

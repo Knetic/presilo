@@ -57,7 +57,7 @@ func sanitizeQuotedString(target string) string {
 func arrayContainsString(source []string, candidate string) bool {
 
 	for _, str := range source {
-		if(str == candidate) {
+		if str == candidate {
 			return true
 		}
 	}

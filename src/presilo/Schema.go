@@ -18,7 +18,7 @@ type Schema struct {
 	Title       string `json:"title"`
 	ID          string `json:"id"`
 	Description string `json:"description"`
-	Nullable	  bool
+	Nullable    bool
 	typeCode    SchemaType
 }
 

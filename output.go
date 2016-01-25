@@ -88,10 +88,11 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 	case "mysql":
 		generator = GenerateMySQL
 		moduleValidator = ValidateMySQLModule
-	default: return errors.New("No valid language specified")
+	default:
+		return errors.New("No valid language specified")
 	}
 
-	if(!unsafeModule && !moduleValidator(module)) {
+	if !unsafeModule && !moduleValidator(module) {
 		errorMsg := fmt.Sprintf("Package name '%s' is not valid for language '%s'. Use '-usafemodule' to ignore.", module, language)
 		return errors.New(errorMsg)
 	}

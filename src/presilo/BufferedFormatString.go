@@ -1,20 +1,19 @@
 package presilo
 
 import (
-  "bytes"
-  "strings"
-  "math"
-  "fmt"
+	"bytes"
+	"fmt"
+	"math"
+	"strings"
 )
 
 /*
   Represents a buffered string which
 */
 type BufferedFormatString struct {
-
-  buffer bytes.Buffer
-  indentSeparator string
-  indentation int
+	buffer          bytes.Buffer
+	indentSeparator string
+	indentation     int
 }
 
 /*
@@ -26,11 +25,11 @@ type BufferedFormatString struct {
 */
 func NewBufferedFormatString(separator string) *BufferedFormatString {
 
-  var ret *BufferedFormatString
+	var ret *BufferedFormatString
 
-  ret = new(BufferedFormatString)
-  ret.indentSeparator = separator
-  return ret
+	ret = new(BufferedFormatString)
+	ret.indentSeparator = separator
+	return ret
 }
 
 /*
@@ -41,11 +40,11 @@ func NewBufferedFormatString(separator string) *BufferedFormatString {
 */
 func (this *BufferedFormatString) AddIndentation(count int) {
 
-  // I generally try to use "max" when possible, since standard library implementations in many, many places
-  // have specific hardware / assembly paths for it, instead of using a jump.
-  // Since Go doesn't have an integer max, i'm honestly not sure if casting two floats, doing max,
-  // then casting back is cheaper. I know jumps are expensive, but not sure if they're worth three stack allocations.
-  this.indentation = int(math.Max(float64(this.indentation) + float64(count), 0))
+	// I generally try to use "max" when possible, since standard library implementations in many, many places
+	// have specific hardware / assembly paths for it, instead of using a jump.
+	// Since Go doesn't have an integer max, i'm honestly not sure if casting two floats, doing max,
+	// then casting back is cheaper. I know jumps are expensive, but not sure if they're worth three stack allocations.
+	this.indentation = int(math.Max(float64(this.indentation)+float64(count), 0))
 }
 
 /*
@@ -53,8 +52,8 @@ func (this *BufferedFormatString) AddIndentation(count int) {
 */
 func (this *BufferedFormatString) Print(source string) {
 
-  source = this.matchIndentation(source, this.indentation)
-  this.buffer.WriteString(source)
+	source = this.matchIndentation(source, this.indentation)
+	this.buffer.WriteString(source)
 }
 
 /*
@@ -62,12 +61,12 @@ func (this *BufferedFormatString) Print(source string) {
 */
 func (this *BufferedFormatString) Printf(source string, parameters ...interface{}) {
 
-  var toWrite string
+	var toWrite string
 
-  source = this.matchIndentation(source, this.indentation)
-  toWrite = fmt.Sprintf(source, parameters...)
+	source = this.matchIndentation(source, this.indentation)
+	toWrite = fmt.Sprintf(source, parameters...)
 
-  this.buffer.WriteString(toWrite)
+	this.buffer.WriteString(toWrite)
 }
 
 /*
@@ -75,14 +74,14 @@ func (this *BufferedFormatString) Printf(source string, parameters ...interface{
 */
 func (this *BufferedFormatString) Printfln(source string, parameters ...interface{}) {
 
-  this.Printf(source + "\n", parameters...)
+	this.Printf(source+"\n", parameters...)
 }
 
 /*
   Returns the current string representation of this buffer.
 */
 func (this *BufferedFormatString) String() string {
-  return this.buffer.String()
+	return this.buffer.String()
 }
 
 /*
@@ -92,7 +91,7 @@ func (this *BufferedFormatString) matchIndentation(source string, tabs int) stri
 
 	var replacement bytes.Buffer
 
-  replacement.WriteRune('\n')
+	replacement.WriteRune('\n')
 	for i := 0; i < tabs; i++ {
 		replacement.WriteString(this.indentSeparator)
 	}

@@ -18,7 +18,7 @@ func main() {
 		return
 	}
 
-	if(settings.ListLanguages) {
+	if settings.ListLanguages {
 		printLanguages()
 		return
 	}

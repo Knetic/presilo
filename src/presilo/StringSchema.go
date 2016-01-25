@@ -9,12 +9,12 @@ import (
 */
 type StringSchema struct {
 	Schema
-	MaxLength *int      `json:"maxLength"`
-	MinLength *int      `json:"minLength"`
-	Pattern   *string   `json:"pattern"`
-	MaxByteLength *int		`json:"maxByteLength"`
-	MinByteLength *int		`json:"minByteLength"`
-	Enum      *[]string `json:"enum"`
+	MaxLength     *int      `json:"maxLength"`
+	MinLength     *int      `json:"minLength"`
+	Pattern       *string   `json:"pattern"`
+	MaxByteLength *int      `json:"maxByteLength"`
+	MinByteLength *int      `json:"minByteLength"`
+	Enum          *[]string `json:"enum"`
 }
 
 /*

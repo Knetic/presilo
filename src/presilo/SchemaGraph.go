@@ -4,39 +4,37 @@ package presilo
   Represents a dependency graph that can order schemas.
 */
 type SchemaGraph struct {
-
-  nodes []*SchemaGraphNode
+	nodes []*SchemaGraphNode
 }
 
 type SchemaGraphNode struct {
-
-  schema *ObjectSchema
-  neighbors []*SchemaGraphNode
+	schema    *ObjectSchema
+	neighbors []*SchemaGraphNode
 }
 
 func NewSchemaGraph(schemas []*ObjectSchema) *SchemaGraph {
 
-  var ret *SchemaGraph
-  var node *SchemaGraphNode
+	var ret *SchemaGraph
+	var node *SchemaGraphNode
 
-  ret = new(SchemaGraph)
+	ret = new(SchemaGraph)
 
-  for _, schema := range schemas {
+	for _, schema := range schemas {
 
-    if(schema.GetSchemaType() != SCHEMATYPE_OBJECT) {
-      continue
-    }
+		if schema.GetSchemaType() != SCHEMATYPE_OBJECT {
+			continue
+		}
 
-    node = new(SchemaGraphNode)
-    node.schema = schema
-    ret.nodes = append(ret.nodes, node)
-  }
+		node = new(SchemaGraphNode)
+		node.schema = schema
+		ret.nodes = append(ret.nodes, node)
+	}
 
-  for _, node = range ret.nodes {
-    node.discoverNeighbors(ret)
-  }
+	for _, node = range ret.nodes {
+		node.discoverNeighbors(ret)
+	}
 
-  return ret
+	return ret
 }
 
 /*
@@ -45,28 +43,28 @@ func NewSchemaGraph(schemas []*ObjectSchema) *SchemaGraph {
 */
 func (this *SchemaGraph) GetOrderedSchemas() ([]*ObjectSchema, error) {
 
-  var ret []*ObjectSchema
-  //ret := make([]*ObjectSchema, len(this.nodes))
+	var ret []*ObjectSchema
+	//ret := make([]*ObjectSchema, len(this.nodes))
 
-  for _, node := range this.nodes {
-    ret = resolveDependency(node, ret)
-  }
+	for _, node := range this.nodes {
+		ret = resolveDependency(node, ret)
+	}
 
-  return ret, nil
+	return ret, nil
 }
 
-func resolveDependency(node *SchemaGraphNode, resolution []*ObjectSchema) ([]*ObjectSchema) {
+func resolveDependency(node *SchemaGraphNode, resolution []*ObjectSchema) []*ObjectSchema {
 
-  // otherwise, descend deeper into the object.
-  for _, neighbor := range node.neighbors {
-      resolution = resolveDependency(neighbor, resolution)
-  }
+	// otherwise, descend deeper into the object.
+	for _, neighbor := range node.neighbors {
+		resolution = resolveDependency(neighbor, resolution)
+	}
 
-  if(!elementExistsInSlice(node.schema, resolution)) {
-    resolution = append(resolution, node.schema)
-  }
+	if !elementExistsInSlice(node.schema, resolution) {
+		resolution = append(resolution, node.schema)
+	}
 
-  return resolution
+	return resolution
 }
 
 /*
@@ -74,37 +72,37 @@ func resolveDependency(node *SchemaGraphNode, resolution []*ObjectSchema) ([]*Ob
 */
 func (this *SchemaGraph) addDependency(source *SchemaGraphNode, target *ObjectSchema) {
 
-  for _, node := range this.nodes {
+	for _, node := range this.nodes {
 
-    if(node.schema == target) {
+		if node.schema == target {
 
-      source.addNeighbor(node)
-      break
-    }
-  }
+			source.addNeighbor(node)
+			break
+		}
+	}
 }
 
 func (this *SchemaGraphNode) addNeighbor(neighbor *SchemaGraphNode) {
-  this.neighbors = append(this.neighbors, neighbor)
+	this.neighbors = append(this.neighbors, neighbor)
 }
 
 func (this *SchemaGraphNode) discoverNeighbors(graph *SchemaGraph) {
 
-  var schema *ObjectSchema
-  var subschema TypeSchema
+	var schema *ObjectSchema
+	var subschema TypeSchema
 
-  // only object schemas can possibly have dependencies
-  if(this.schema.GetSchemaType() == SCHEMATYPE_OBJECT) {
+	// only object schemas can possibly have dependencies
+	if this.schema.GetSchemaType() == SCHEMATYPE_OBJECT {
 
-    schema = this.schema
+		schema = this.schema
 
-    for _, subschema = range schema.Properties {
+		for _, subschema = range schema.Properties {
 
-      if(subschema.GetSchemaType() == SCHEMATYPE_OBJECT) {
-        graph.addDependency(this, subschema.(*ObjectSchema))
-      }
-    }
-  }
+			if subschema.GetSchemaType() == SCHEMATYPE_OBJECT {
+				graph.addDependency(this, subschema.(*ObjectSchema))
+			}
+		}
+	}
 }
 
 /*
@@ -112,10 +110,10 @@ func (this *SchemaGraphNode) discoverNeighbors(graph *SchemaGraph) {
 */
 func elementExistsInSlice(element *ObjectSchema, slice []*ObjectSchema) bool {
 
-  for _, e := range slice {
-    if(e == element) {
-      return true
-    }
-  }
-  return false
+	for _, e := range slice {
+		if e == element {
+			return true
+		}
+	}
+	return false
 }

@@ -161,7 +161,7 @@ func generateCSharpFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 
 func generateCSharpStringSetter(schema *StringSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateCSharpNullCheck(buffer)
 	}
 
@@ -222,14 +222,14 @@ func generateCSharpNumericSetter(schema NumericSchemaType, buffer *BufferedForma
 
 func generateCSharpObjectSetter(schema *ObjectSchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateCSharpNullCheck(buffer)
 	}
 }
 
 func generateCSharpArraySetter(schema *ArraySchema, buffer *BufferedFormatString) {
 
-	if(!schema.Nullable) {
+	if !schema.Nullable {
 		generateCSharpNullCheck(buffer)
 	}
 
