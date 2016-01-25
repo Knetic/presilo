@@ -1,35 +1,53 @@
 package presilo
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
 
-func ParseSchemaFile(path string) (TypeSchema, error) {
+func ParseSchemaFile(path string) (TypeSchema, *SchemaParseContext, error) {
 
-	var context *SchemaParseContext
-	var contentsBytes []byte
+	var sourceFile *os.File
 	var name string
 	var err error
 
 	path, err = filepath.Abs(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	name = filepath.Base(path)
 
-	contentsBytes, err = ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
+	sourceFile, err = os.Open(path)
+	if(err != nil) {
+		return nil, nil, err
 	}
+	defer sourceFile.Close()
+
+	return ParseSchemaStream(sourceFile, name)
+}
+
+func ParseSchemaStream(reader io.Reader, defaultTitle string) (TypeSchema, *SchemaParseContext, error) {
+
+	var context *SchemaParseContext
 
 	context = NewSchemaParseContext()
-	return ParseSchema(contentsBytes, name, context)
+	schema, err := ParseSchemaStreamContinue(reader, defaultTitle, context)
+	return schema, context, err
+}
+
+func ParseSchemaStreamContinue(reader io.Reader, defaultTitle string, context *SchemaParseContext) (TypeSchema, error) {
+
+	var buffer bytes.Buffer
+
+	buffer.ReadFrom(reader)
+	return ParseSchema(buffer.Bytes(), defaultTitle, context)
 }
 
 func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParseContext) (TypeSchema, error) {

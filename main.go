@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 
-	schema, err = ParseSchemaFile(settings.InputPath)
+	schema, _, err = ParseSchemaFile(settings.InputPath)
 	if err != nil {
 		exitWith("Unable to parse schema file: %s\n", err)
 		return
