@@ -1,4 +1,4 @@
-package main
+package presilo
 
 import (
 	"bufio"
@@ -6,33 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	. "presilo"
 	"sync"
 )
 
-/*
-  Given the output path, returns the absolute value of it,
-  and ensures that the given path exists.
-*/
-func prepareOutputPath(targetPath string) (string, error) {
-
-	var err error
-
-	targetPath, err = filepath.Abs(targetPath)
-	if err != nil {
-		return "", err
-	}
-
-	err = os.MkdirAll(targetPath, os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-
-	return targetPath, nil
-}
-
-func writeGeneratedCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool) error {
+func WriteGeneratedCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool) error {
 
 	var wg sync.WaitGroup
 	var err error

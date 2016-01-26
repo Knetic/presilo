@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
-	. "presilo"
+	"path/filepath"
+	"presilo"
 )
 
 func main() {
 
-	var schema TypeSchema
+	var schema presilo.TypeSchema
 	var settings *RunSettings
 	var err error
 
@@ -29,17 +30,38 @@ func main() {
 		return
 	}
 
-	schema, _, err = ParseSchemaFile(settings.InputPath)
+	schema, _, err = presilo.ParseSchemaFile(settings.InputPath)
 	if err != nil {
 		exitWith("Unable to parse schema file: %s\n", err)
 		return
 	}
 
-	err = writeGeneratedCode(schema, settings.Module, settings.OutputPath, settings.Language, settings.TabStyle, settings.UnsafeModule, settings.splitFiles)
+	err = presilo.WriteGeneratedCode(schema, settings.Module, settings.OutputPath, settings.Language, settings.TabStyle, settings.UnsafeModule, settings.splitFiles)
 	if err != nil {
 		exitWith("Unable to generate code: %s\n", err)
 		return
 	}
+}
+
+/*
+  Given the output path, returns the absolute value of it,
+  and ensures that the given path exists.
+*/
+func prepareOutputPath(targetPath string) (string, error) {
+
+	var err error
+
+	targetPath, err = filepath.Abs(targetPath)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.MkdirAll(targetPath, os.ModePerm)
+	if err != nil {
+		return "", err
+	}
+
+	return targetPath, nil
 }
 
 func printLanguages() {
