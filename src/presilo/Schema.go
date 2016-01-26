@@ -6,6 +6,7 @@ type TypeSchema interface {
 	GetDescription() string
 	SetTitle(string)
 	GetID() string
+	SetID(string)
 	GetNullable() bool
 	SetNullable(bool)
 	HasConstraints() bool
@@ -40,6 +41,10 @@ func (this *Schema) SetTitle(title string) {
 
 func (this *Schema) GetID() string {
 	return this.ID
+}
+
+func (this *Schema) SetID(id string) {
+	this.ID = id
 }
 
 func (this *Schema) GetNullable() bool {

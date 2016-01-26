@@ -7,7 +7,7 @@ import (
 )
 
 type RunSettings struct {
-	InputPath     string
+	InputPaths    []string
 	OutputPath    string
 	Language      string
 	Module        string
@@ -46,14 +46,14 @@ func ParseRunSettings() (*RunSettings, error) {
 	flag.BoolVar(&ret.ListLanguages, "a", false, "Lists all supported languages")
 
 	flag.Parse()
-	ret.InputPath = flag.Arg(0)
+	ret.InputPaths = flag.Args()
 
 	if ret.ListLanguages {
 		return ret, nil
 	}
 
-	if len(ret.InputPath) == 0 {
-		return nil, errors.New("Input path not specified")
+	if len(ret.InputPaths) == 0 {
+		return nil, errors.New("No input files specified")
 	}
 
 	if !containsString(SUPPORTED_LANGUAGES, ret.Language) {

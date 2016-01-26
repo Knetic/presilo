@@ -9,21 +9,29 @@ import (
 	"sync"
 )
 
-func WriteGeneratedCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool) error {
+func WriteGeneratedCode(context *SchemaParseContext, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool) error {
 
+	var schemas []*ObjectSchema
 	var wg sync.WaitGroup
 	var err error
 
-	err = generateCode(schema, module, targetPath, language, tabstyle, unsafeModule, splitFiles, &wg)
+	// get all object schemas
+	for _, schema := range context.SchemaDefinitions {
+
+		if(schema.GetSchemaType() == SCHEMATYPE_OBJECT) {
+			schemas = append(schemas, schema.(*ObjectSchema))
+		}
+	}
+
+	err = generateCode(schemas, module, targetPath, language, tabstyle, unsafeModule, splitFiles, &wg)
 	wg.Wait()
 
 	return err
 }
 
-func generateCode(schema TypeSchema, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool, wg *sync.WaitGroup) error {
+func generateCode(schemas []*ObjectSchema, module string, targetPath string, language string, tabstyle string, unsafeModule bool, splitFiles bool, wg *sync.WaitGroup) error {
 
 	var schemaGraph *SchemaGraph
-	var schemas []*ObjectSchema
 	var objectSchema *ObjectSchema
 	var generator func(*ObjectSchema, string, string) string
 	var moduleValidator func(string) bool
@@ -33,12 +41,6 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 	var written string
 	var schemaPath string
 
-	if schema.GetSchemaType() != SCHEMATYPE_OBJECT {
-		errorMsg := fmt.Sprintf("Could not generate code for '%s', it was not an object.", schema.GetTitle())
-		return errors.New(errorMsg)
-	}
-
-	schemas = RecurseObjectSchemas(schema, schemas)
 	schemaGraph = NewSchemaGraph(schemas)
 
 	// figure out which code generator to use
@@ -90,7 +92,7 @@ func generateCode(schema TypeSchema, module string, targetPath string, language 
 		go writeSplitFiles(writtenChannel, fileNameChannel, errorChannel, wg)
 
 	} else {
-		schemaPath = fmt.Sprintf("%s%s%s.%s", targetPath, string(os.PathSeparator), schema.GetTitle(), language)
+		schemaPath = fmt.Sprintf("%s%s%s.%s", targetPath, string(os.PathSeparator), module, language)
 		go writeSingleFile(schemaPath, writtenChannel, errorChannel, wg)
 	}
 

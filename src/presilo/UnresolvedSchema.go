@@ -25,6 +25,9 @@ func (this *UnresolvedSchema) GetID() string {
 	return this.Reference
 }
 
+func (this *UnresolvedSchema) SetID(string) {
+}
+
 // Used to satisfy the TypeSchema contract, stub.
 func (this *UnresolvedSchema) GetTitle() string {
 	return ""

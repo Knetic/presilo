@@ -14,24 +14,15 @@ import (
 // Parses (and returns) the schema from the given [path].
 func ParseSchemaFile(path string) (TypeSchema, *SchemaParseContext, error) {
 
-	var sourceFile *os.File
-	var name string
-	var err error
+	var context *SchemaParseContext
 
-	path, err = filepath.Abs(path)
-	if err != nil {
+	context = NewSchemaParseContext()
+	schema, err := ParseSchemaFileContinue(path, context)
+	if(err != nil) {
 		return nil, nil, err
 	}
 
-	name = filepath.Base(path)
-
-	sourceFile, err = os.Open(path)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer sourceFile.Close()
-
-	return ParseSchemaStream(sourceFile, name)
+	return schema, context, LinkSchemas(context)
 }
 
 /*
@@ -50,6 +41,28 @@ func ParseSchemaStream(reader io.Reader, defaultTitle string) (TypeSchema, *Sche
 
 	err = LinkSchemas(context)
 	return schema, context, err
+}
+
+func ParseSchemaFileContinue(path string, context *SchemaParseContext) (TypeSchema, error) {
+
+	var sourceFile *os.File
+	var name string
+	var err error
+
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	name = filepath.Base(path)
+
+	sourceFile, err = os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer sourceFile.Close()
+
+	return ParseSchemaStreamContinue(sourceFile, name, context)
 }
 
 /*
@@ -142,6 +155,10 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 
 	if len(schema.GetTitle()) == 0 {
 		schema.SetTitle(defaultTitle)
+	}
+
+	if len(schema.GetID()) == 0 {
+		schema.SetID(schema.GetTitle())
 	}
 
 	context.SchemaDefinitions[schema.GetID()] = schema

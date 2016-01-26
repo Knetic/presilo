@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	var schema presilo.TypeSchema
+	var parseContext *presilo.SchemaParseContext
 	var settings *RunSettings
 	var err error
 
@@ -30,17 +30,36 @@ func main() {
 		return
 	}
 
-	schema, _, err = presilo.ParseSchemaFile(settings.InputPath)
-	if err != nil {
-		exitWith("Unable to parse schema file: %s\n", err)
+	parseContext, err = parseSchemas(settings.InputPaths)
+	if(err != nil) {
+		exitWith("Unable to parse schemas: %s\n", err)
 		return
 	}
 
-	err = presilo.WriteGeneratedCode(schema, settings.Module, settings.OutputPath, settings.Language, settings.TabStyle, settings.UnsafeModule, settings.splitFiles)
+	err = presilo.WriteGeneratedCode(parseContext, settings.Module, settings.OutputPath, settings.Language, settings.TabStyle, settings.UnsafeModule, settings.splitFiles)
 	if err != nil {
 		exitWith("Unable to generate code: %s\n", err)
 		return
 	}
+}
+
+func parseSchemas(paths []string) (*presilo.SchemaParseContext, error) {
+
+	var parseContext *presilo.SchemaParseContext
+	var err error
+
+	parseContext = presilo.NewSchemaParseContext()
+
+	for _, path := range paths {
+		
+		_, err = presilo.ParseSchemaFileContinue(path, parseContext)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = presilo.LinkSchemas(parseContext)
+	return parseContext, err
 }
 
 /*
