@@ -3,6 +3,7 @@ package presilo
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
 	"errors"
 	"fmt"
 	"io"
@@ -43,6 +44,9 @@ func ParseSchemaStream(reader io.Reader, defaultTitle string) (TypeSchema, *Sche
 	return schema, context, err
 }
 
+/*
+	Same as ParseSchemaStreamContinue, except that instead of a stream, this takes a filepath.
+*/
 func ParseSchemaFileContinue(path string, context *SchemaParseContext) (TypeSchema, error) {
 
 	var sourceFile *os.File
@@ -63,6 +67,26 @@ func ParseSchemaFileContinue(path string, context *SchemaParseContext) (TypeSche
 	defer sourceFile.Close()
 
 	return ParseSchemaStreamContinue(sourceFile, name, context)
+}
+
+/*
+	Same as ParseSchemaStreamContinue, except that instead of a stream, it takes an HTTP URL that will be fetched and parsed.
+*/
+func ParseSchemaHTTPContinue(httpPath string, context *SchemaParseContext) (TypeSchema, error) {
+
+	var response *http.Response
+	var baseName string
+	var err error
+
+	response, err = http.Get(httpPath)
+	if(err != nil) {
+		return nil, err
+	}
+
+	baseName = filepath.Base(httpPath)
+ 	baseName = strings.TrimSuffix(baseName, filepath.Ext(baseName))
+
+	return ParseSchemaStreamContinue(response.Body, baseName, context)
 }
 
 /*
@@ -104,10 +128,22 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 
 	if len(schemaRef) > 0 {
 
-		schema, present = context.SchemaDefinitions[schemaRef]
+		// http reference?
+		if(strings.HasPrefix(schemaRef, "http://")) {
 
-		if !present {
-			return NewUnresolvedSchema(schemaRef), nil
+			schema, err = ParseSchemaHTTPContinue(schemaRef, context)
+
+			if(err != nil) {
+				return nil, err
+			}
+		} else {
+
+			// in-file reference?
+			schema, present = context.SchemaDefinitions[schemaRef]
+
+			if !present {
+				schema = NewUnresolvedSchema(schemaRef)
+			}
 		}
 
 		return schema, nil
