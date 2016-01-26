@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// Parses (and returns) the schema from the given [path].
 func ParseSchemaFile(path string) (TypeSchema, *SchemaParseContext, error) {
 
 	var sourceFile *os.File
@@ -33,15 +34,33 @@ func ParseSchemaFile(path string) (TypeSchema, *SchemaParseContext, error) {
 	return ParseSchemaStream(sourceFile, name)
 }
 
+/*
+	Parses (and returns) the schema from the given [reader].
+	Once this method ends, all returned schemas ought to be properly populated and resolved.
+*/
 func ParseSchemaStream(reader io.Reader, defaultTitle string) (TypeSchema, *SchemaParseContext, error) {
 
 	var context *SchemaParseContext
 
 	context = NewSchemaParseContext()
 	schema, err := ParseSchemaStreamContinue(reader, defaultTitle, context)
+	if(err != nil) {
+		return nil, nil, err
+	}
+
+	err = LinkSchemas(context)
 	return schema, context, err
 }
 
+/*
+	Parses the given [reader] into the given [context], returning the resulatant schema as well as any error encountered.
+	This is primarily useful for when you want to parse multiple schemas that are formatted normally, but are not presented in
+	one reader.
+	This might happen when parsing multiple files that reference each other, drawing from multiple input sources, or when
+	schemas are given in some other form, like an array.
+
+	After using this method to parse all required schemas, you must call LinkSchemas() to resolve any outstanding unresolved schema references.
+*/
 func ParseSchemaStreamContinue(reader io.Reader, defaultTitle string, context *SchemaParseContext) (TypeSchema, error) {
 
 	var buffer bytes.Buffer
@@ -75,8 +94,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 		schema, present = context.SchemaDefinitions[schemaRef]
 
 		if !present {
-			errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved.", schemaRef)
-			return nil, errors.New(errorMsg)
+			return NewUnresolvedSchema(schemaRef), nil
 		}
 
 		return schema, nil
@@ -245,6 +263,60 @@ func parseDefinitions(contents map[string]*json.RawMessage, context *SchemaParse
 		definitionKey = fmt.Sprintf("#/definitions/%s", definitionKey)
 		context.SchemaDefinitions[definitionKey] = schema
 	}
+}
+
+/*
+	"Links" any remaining unresolved schema references together.
+	Returns an error if there are any schema references which cannot be resolved.
+*/
+func LinkSchemas(context *SchemaParseContext) error {
+
+	var schema TypeSchema
+	var err error
+
+	for _, schema = range context.SchemaDefinitions {
+
+		err = linkSchema(schema, context)
+		if(err != nil) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// If the given [schema] is an ObjectSchema, this runs through all its properties and replaces any unresolved references.
+// If there are references which cannot be resolved, and error is returned.
+func linkSchema(schema TypeSchema, context *SchemaParseContext) error {
+
+	var objectSchema *ObjectSchema
+	var subschema, replacement TypeSchema
+	var propertyName, refID string
+	var found bool
+
+	if(schema.GetSchemaType() != SCHEMATYPE_OBJECT) {
+		return nil
+	}
+
+	objectSchema = schema.(*ObjectSchema)
+
+	for propertyName, subschema = range objectSchema.Properties {
+
+		if(subschema.GetSchemaType() != SCHEMATYPE_UNRESOLVED) {
+			continue
+		}
+
+		refID = subschema.GetID()
+		replacement, found = context.SchemaDefinitions[refID]
+		if(!found) {
+			errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved.", refID)
+			return errors.New(errorMsg)
+		}
+
+		objectSchema.Properties[propertyName] = replacement
+	}
+
+	return nil
 }
 
 func getJsonString(source map[string]*json.RawMessage, key string) (string, error) {
