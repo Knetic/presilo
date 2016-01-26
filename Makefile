@@ -5,7 +5,8 @@ export GOPATH=$(CURDIR)/
 export GOBIN=$(CURDIR)/.temp/
 
 init: clean
-	go get ./...
+	@# Yes, this is about the ugliest hack ever.
+	@ln -s -f $(shell pwd) ./src/presilo
 
 build: init
 	go build -o ./.output/presilo ./src/main
