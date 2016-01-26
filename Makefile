@@ -6,7 +6,8 @@ export GOBIN=$(CURDIR)/.temp/
 
 init: clean
 	@# Yes, this is about the ugliest hack ever.
-	@ln -s -f $(shell pwd) ./src/presilo
+	@rm -f ./src/presilo
+	@ln -s $(shell pwd) ./src/presilo
 
 build: init
 	go build -o ./.output/presilo ./src/main
@@ -26,19 +27,19 @@ dist: build test
 
 	export GOOS=linux; \
 	export GOARCH=amd64; \
-	go build -o ./.output/presilo64 .
+	go build -o ./.output/presilo64 ./src/main
 
 	export GOOS=linux; \
 	export GOARCH=386; \
-	go build -o ./.output/presilo32 .
+	go build -o ./.output/presilo32 ./src/main
 
 	export GOOS=darwin; \
 	export GOARCH=amd64; \
-	go build -o ./.output/presilo_osx .
+	go build -o ./.output/presilo_osx ./src/main
 
 	export GOOS=windows; \
 	export GOARCH=amd64; \
-	go build -o ./.output/presilo.exe .
+	go build -o ./.output/presilo.exe ./src/main
 
 
 
