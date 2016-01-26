@@ -8,7 +8,7 @@ init: clean
 	go get ./...
 
 build: init
-	go build -o ./.output/presilo .
+	go build -o ./.output/presilo ./src/main
 
 test:
 	go test
