@@ -443,7 +443,7 @@ func generateGoTypeForSchema(schema interface{}) string {
 	case *ObjectSchema:
 		return "*" + ToCamelCase(schema.(TypeSchema).GetTitle())
 	case *ArraySchema:
-		return "[]" + ToCamelCase(schema.(*ArraySchema).Items.GetTitle())
+		return "[]" + generateGoTypeForSchema(schema.(*ArraySchema).Items)
 	}
 
 	return "interface{}"
