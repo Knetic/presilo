@@ -347,16 +347,17 @@ func LinkSchemas(context *SchemaParseContext) error {
 }
 
 // If the given [schema] is an ObjectSchema, this runs through all its properties and replaces any unresolved references.
-// If there are references which cannot be resolved, and error is returned.
+// If there are references which cannot be resolved, an error is returned.
 func linkSchema(schema TypeSchema, context *SchemaParseContext) (TypeSchema, error) {
 
 	var objectSchema *ObjectSchema
-	var subschema, replacement TypeSchema
+	var subschema TypeSchema
 	var propertyName string
+	var schemaType SchemaType
 	var err error
 
 	if(schema.GetSchemaType() == SCHEMATYPE_UNRESOLVED) {
-		return findSchemaResolution(subschema, context)
+		return findSchemaResolution(schema, context)
 	}
 
 	if(schema.GetSchemaType() != SCHEMATYPE_OBJECT) {
@@ -367,16 +368,17 @@ func linkSchema(schema TypeSchema, context *SchemaParseContext) (TypeSchema, err
 
 	for propertyName, subschema = range objectSchema.Properties {
 
-		if(subschema.GetSchemaType() != SCHEMATYPE_UNRESOLVED) {
+		schemaType = subschema.GetSchemaType()
+		if(schemaType == SCHEMATYPE_OBJECT || schemaType == SCHEMATYPE_UNRESOLVED) {
+
+			subschema, err = linkSchema(subschema, context)
+			if(err != nil) {
+				return nil, err
+			}
+
+			objectSchema.Properties[propertyName] = subschema
 			continue
 		}
-
-		replacement, err = findSchemaResolution(subschema, context)
-		if(err != nil) {
-			return nil, err
-		}
-
-		objectSchema.Properties[propertyName] = replacement
 	}
 
 	return objectSchema, nil
