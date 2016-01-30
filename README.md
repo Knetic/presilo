@@ -1,6 +1,8 @@
 presilo
 ====
 
+[![Godoc](https://godoc.org/github.com/Knetic/presilo?status.png)](https://godoc.org/github.com/Knetic/presilo)
+
 Generates (and updates) code for data models from a [JSON schema](http://json-schema.org/). Works for Go, C#, Java, Python, Lua, SQL, and Ruby.
 
 Presilo is Esperanto for "printing press", because presilo makes it trivial to "reprint" the same content in different languages.
