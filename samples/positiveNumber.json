@@ -1,6 +1,0 @@
-{
-
-  "type": "integer",
-  "title": "positiveNumber",
-  "minimum": 0
-}
