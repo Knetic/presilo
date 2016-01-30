@@ -330,14 +330,17 @@ func parseDefinitions(contents map[string]*json.RawMessage, context *SchemaParse
 func LinkSchemas(context *SchemaParseContext) error {
 
 	var schema TypeSchema
+	var schemaKey string
 	var err error
 
-	for _, schema = range context.SchemaDefinitions {
+	for schemaKey, schema = range context.SchemaDefinitions {
 
-		err = linkSchema(schema, context)
+		schema, err = linkSchema(schema, context)
 		if(err != nil) {
 			return err
 		}
+
+		context.SchemaDefinitions[schemaKey] = schema
 	}
 
 	return nil
@@ -345,15 +348,19 @@ func LinkSchemas(context *SchemaParseContext) error {
 
 // If the given [schema] is an ObjectSchema, this runs through all its properties and replaces any unresolved references.
 // If there are references which cannot be resolved, and error is returned.
-func linkSchema(schema TypeSchema, context *SchemaParseContext) error {
+func linkSchema(schema TypeSchema, context *SchemaParseContext) (TypeSchema, error) {
 
 	var objectSchema *ObjectSchema
 	var subschema, replacement TypeSchema
-	var propertyName, refID string
-	var found bool
+	var propertyName string
+	var err error
+
+	if(schema.GetSchemaType() == SCHEMATYPE_UNRESOLVED) {
+		return findSchemaResolution(subschema, context)
+	}
 
 	if(schema.GetSchemaType() != SCHEMATYPE_OBJECT) {
-		return nil
+		return schema, nil
 	}
 
 	objectSchema = schema.(*ObjectSchema)
@@ -364,17 +371,33 @@ func linkSchema(schema TypeSchema, context *SchemaParseContext) error {
 			continue
 		}
 
-		refID = subschema.GetID()
-		replacement, found = context.SchemaDefinitions[refID]
-		if(!found) {
-			errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved.", refID)
-			return errors.New(errorMsg)
+		replacement, err = findSchemaResolution(subschema, context)
+		if(err != nil) {
+			return nil, err
 		}
 
 		objectSchema.Properties[propertyName] = replacement
 	}
 
-	return nil
+	return objectSchema, nil
+}
+
+func findSchemaResolution(schema TypeSchema, context *SchemaParseContext) (TypeSchema, error) {
+
+	var ret TypeSchema
+	var found bool
+	var refID string
+
+	refID = schema.GetID()
+	ret, found = context.SchemaDefinitions[refID]
+
+	if(!found || ret.GetSchemaType() == SCHEMATYPE_UNRESOLVED) {
+
+		errorMsg := fmt.Sprintf("Schema ref '%s' could not be resolved.", refID)
+		return nil, errors.New(errorMsg)
+	}
+
+	return ret, nil
 }
 
 func getJsonString(source map[string]*json.RawMessage, key string) (string, error) {
