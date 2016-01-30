@@ -34,7 +34,6 @@ func NewObjectSchema(contents []byte, context *SchemaParseContext) (*ObjectSchem
 	var sub TypeSchema
 	var subschemaBytes []byte
 	var err error
-	var constrained bool
 
 	ret = new(ObjectSchema)
 	ret.typeCode = SCHEMATYPE_OBJECT
@@ -71,20 +70,7 @@ func NewObjectSchema(contents []byte, context *SchemaParseContext) (*ObjectSchem
 	// along with any other properties which have constraints
 	for propertyName, subschema := range ret.Properties {
 
-		constrained = false
-
-		switch subschema.GetSchemaType() {
-		case SCHEMATYPE_INTEGER:
-			constrained = subschema.(*IntegerSchema).HasConstraints()
-		case SCHEMATYPE_NUMBER:
-			constrained = subschema.(*NumberSchema).HasConstraints()
-		case SCHEMATYPE_STRING:
-			constrained = subschema.(*StringSchema).HasConstraints()
-		case SCHEMATYPE_ARRAY:
-			constrained = subschema.(*ArraySchema).HasConstraints()
-		}
-
-		if constrained {
+		if subschema.HasConstraints() {
 			ret.ConstrainedProperties = append(ret.ConstrainedProperties, propertyName)
 		} else {
 			ret.UnconstrainedProperties = append(ret.UnconstrainedProperties, propertyName)
@@ -94,6 +80,19 @@ func NewObjectSchema(contents []byte, context *SchemaParseContext) (*ObjectSchem
 	ret.ConstrainedProperties.Sort()
 	ret.UnconstrainedProperties.Sort()
 	return ret, nil
+}
+
+func (this *ObjectSchema) AddProperty(name string, schema TypeSchema) {
+
+	this.Properties[name] = schema
+
+	if(schema.HasConstraints()) {
+		this.ConstrainedProperties = append(this.ConstrainedProperties, name)
+		this.ConstrainedProperties.Sort()
+	} else {
+		this.UnconstrainedProperties = append(this.UnconstrainedProperties, name)
+		this.UnconstrainedProperties.Sort()
+	}
 }
 
 /*
