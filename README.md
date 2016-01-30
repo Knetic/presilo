@@ -1,6 +1,7 @@
 presilo
 ====
 
+[![Build Status](https://travis-ci.org/Knetic/presilo.svg?branch=master)](https://travis-ci.org/Knetic/presilo)
 [![Godoc](https://godoc.org/github.com/Knetic/presilo?status.png)](https://godoc.org/github.com/Knetic/presilo)
 
 Generates (and updates) code for data models from a [JSON schema](http://json-schema.org/). Works for Go, C#, Java, Python, Lua, SQL, and Ruby.
