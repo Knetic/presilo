@@ -83,6 +83,11 @@ func ParseSchemaHTTPContinue(httpPath string, context *SchemaParseContext) (Type
 		return nil, err
 	}
 
+	if(response.StatusCode != http.StatusOK) {
+		errorMsg := fmt.Sprintf("Unable to reach remote schema at '%s': HTTP%s", httpPath, response.Status)
+		return nil, errors.New(errorMsg)
+	}
+
 	baseName = filepath.Base(httpPath)
  	baseName = strings.TrimSuffix(baseName, filepath.Ext(baseName))
 
