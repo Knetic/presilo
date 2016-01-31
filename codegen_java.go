@@ -58,7 +58,7 @@ func generateJavaTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatStr
 
 		subschema = schema.Properties[propertyName]
 
-		buffer.Printf("\nprotected %s %s;", generateJavaTypeForSchema(subschema), ToJavaCase(propertyName))
+		buffer.Printf("\nprotected %s %s;", GenerateJavaTypeForSchema(subschema), ToJavaCase(propertyName))
 	}
 }
 
@@ -81,7 +81,7 @@ func generateJavaConstructor(schema *ObjectSchema, buffer *BufferedFormatString)
 			constrained = true
 		}
 
-		toWrite = fmt.Sprintf("%s %s", generateJavaTypeForSchema(subschema), propertyName)
+		toWrite = fmt.Sprintf("%s %s", GenerateJavaTypeForSchema(subschema), propertyName)
 		declarations = append(declarations, toWrite)
 
 		toWrite = fmt.Sprintf("\nset%s(%s);", ToCamelCase(propertyName), propertyName)
@@ -117,7 +117,7 @@ func generateJavaFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 
 		properName = ToJavaCase(propertyName)
 		camelName = ToStrictCamelCase(propertyName)
-		typeName = generateJavaTypeForSchema(subschema)
+		typeName = GenerateJavaTypeForSchema(subschema)
 
 		// getter
 		buffer.Printf("\npublic %s get%s()\n{", typeName, camelName)
@@ -290,7 +290,7 @@ func generateJavaEnumCheck(schema TypeSchema, enumValues []interface{}, prefix s
 	}
 
 	// write array of valid values
-	typeName = generateJavaTypeForSchema(schema)
+	typeName = GenerateJavaTypeForSchema(schema)
 	buffer.Printf("\n%s[] validValues = new %s[]{%s%v%s", typeName, typeName, prefix, enumValues[0], postfix)
 
 	for _, enumValue := range enumValues[1:length] {
@@ -321,7 +321,7 @@ func generateJavaEnumCheck(schema TypeSchema, enumValues []interface{}, prefix s
 	buffer.Print("\n}\n")
 }
 
-func generateJavaTypeForSchema(subschema TypeSchema) string {
+func GenerateJavaTypeForSchema(subschema TypeSchema) string {
 
 	switch subschema.GetSchemaType() {
 	case SCHEMATYPE_NUMBER:

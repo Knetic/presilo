@@ -109,14 +109,14 @@ func generateGoFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
 		propertyName = ToStrictCamelCase(propertyName)
 
 		// getter
-		buffer.Printf("\nfunc (this *%s) Get%s() (%s) {", schema.GetTitle(), propertyName, generateGoTypeForSchema(subschema))
+		buffer.Printf("\nfunc (this *%s) Get%s() (%s) {", schema.GetTitle(), propertyName, GenerateGoTypeForSchema(subschema))
 		buffer.AddIndentation(1)
 		buffer.Printf("\nreturn this.%s", propertyName)
 		buffer.AddIndentation(-1)
 		buffer.Print("\n}\n")
 
 		// setter
-		buffer.Printf("func (this *%s) Set%s(value %s) (error) {", schema.GetTitle(), propertyName, generateGoTypeForSchema(subschema))
+		buffer.Printf("func (this *%s) Set%s(value %s) (error) {", schema.GetTitle(), propertyName, GenerateGoTypeForSchema(subschema))
 		buffer.AddIndentation(1)
 
 		switch subschema.GetSchemaType() {
@@ -157,7 +157,7 @@ func generateGoConstructor(schema *ObjectSchema, buffer *BufferedFormatString) {
 		propertyName = getAppropriateGoCase(schema, propertyName)
 		ret.WriteString(propertyName)
 		ret.WriteString(" ")
-		ret.WriteString(generateGoTypeForSchema(subschema))
+		ret.WriteString(GenerateGoTypeForSchema(subschema))
 
 		parameters = append(parameters, ret.String())
 		ret.Reset()
@@ -397,7 +397,7 @@ func generateGoEnumForSchema(schema interface{}, buffer *BufferedFormatString, e
 	}
 
 	// write array of valid values
-	buffer.Printf("\nvalidValues := []%s{%s%v%s", generateGoTypeForSchema(schema), prefix, enumValues[0], postfix)
+	buffer.Printf("\nvalidValues := []%s{%s%v%s", GenerateGoTypeForSchema(schema), prefix, enumValues[0], postfix)
 
 	for _, enumValue := range enumValues[1:length] {
 		buffer.Printf(",%s%v%s", prefix, enumValue, postfix)
@@ -429,7 +429,7 @@ func generateGoEnumForSchema(schema interface{}, buffer *BufferedFormatString, e
 	Returns the Go equivalent of type for the given schema.
 	If no type is found, this returns "interface{}"
 */
-func generateGoTypeForSchema(schema interface{}) string {
+func GenerateGoTypeForSchema(schema interface{}) string {
 
 	switch schema.(type) {
 	case *BooleanSchema:
@@ -443,7 +443,7 @@ func generateGoTypeForSchema(schema interface{}) string {
 	case *ObjectSchema:
 		return "*" + ToCamelCase(schema.(TypeSchema).GetTitle())
 	case *ArraySchema:
-		return "[]" + generateGoTypeForSchema(schema.(*ArraySchema).Items)
+		return "[]" + GenerateGoTypeForSchema(schema.(*ArraySchema).Items)
 	}
 
 	return "interface{}"
@@ -461,7 +461,7 @@ func generateVariableDeclaration(subschema TypeSchema, buffer *BufferedFormatStr
 
 	// TODO: this means unexported fields will have json deserialization struct tags,
 	// which won't work.
-	buffer.Printf("\n%s %s", casing(propertyName), generateGoTypeForSchema(subschema))
+	buffer.Printf("\n%s %s", casing(propertyName), GenerateGoTypeForSchema(subschema))
 	buffer.Printf(" `json:\"%s\" xml:\"%s\" bson:\"%s\" codec:\"%s\"`", casedName, casedName, casedName, casedName)
 }
 

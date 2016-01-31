@@ -77,7 +77,7 @@ func generateCSharpTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatS
 		subschema = schema.Properties[propertyName]
 
 		buffer.Print("\n[DataMember]")
-		buffer.Printf("\nprotected %s %s;", generateCSharpTypeForSchema(subschema), ToJavaCase(propertyName))
+		buffer.Printf("\nprotected %s %s;", GenerateCSharpTypeForSchema(subschema), ToJavaCase(propertyName))
 	}
 }
 
@@ -95,7 +95,7 @@ func generateCSharpConstructor(schema *ObjectSchema, buffer *BufferedFormatStrin
 		subschema = schema.Properties[propertyName]
 		propertyName = ToJavaCase(propertyName)
 
-		toWrite = fmt.Sprintf("%s %s", generateCSharpTypeForSchema(subschema), propertyName)
+		toWrite = fmt.Sprintf("%s %s", GenerateCSharpTypeForSchema(subschema), propertyName)
 		declarations = append(declarations, toWrite)
 
 		toWrite = fmt.Sprintf("\nset%s(%s);", ToCamelCase(propertyName), propertyName)
@@ -125,7 +125,7 @@ func generateCSharpFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 
 		properName = ToJavaCase(propertyName)
 		camelName = ToStrictCamelCase(propertyName)
-		typeName = generateCSharpTypeForSchema(subschema)
+		typeName = GenerateCSharpTypeForSchema(subschema)
 
 		// getter
 		buffer.Printf("\npublic %s get%s()\n{", typeName, camelName)
@@ -286,7 +286,7 @@ func generateCSharpEnumCheck(schema TypeSchema, buffer *BufferedFormatString, en
 	}
 
 	// write array of valid values
-	typeName = generateCSharpTypeForSchema(schema)
+	typeName = GenerateCSharpTypeForSchema(schema)
 	buffer.Printf("%s[] validValues = new %s[]{%s%v%s", typeName, typeName, prefix, enumValues[0], postfix)
 
 	for _, enumValue := range enumValues[1:length] {
@@ -317,7 +317,7 @@ func generateCSharpEnumCheck(schema TypeSchema, buffer *BufferedFormatString, en
 	buffer.Print("\n}\n")
 }
 
-func generateCSharpTypeForSchema(subschema TypeSchema) string {
+func GenerateCSharpTypeForSchema(subschema TypeSchema) string {
 
 	switch subschema.GetSchemaType() {
 	case SCHEMATYPE_NUMBER:
