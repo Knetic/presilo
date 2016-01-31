@@ -148,6 +148,7 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 
 			if !present {
 				schema = NewUnresolvedSchema(schemaRef)
+				context.SchemaDefinitions[schema.GetID()] = schema
 			}
 		}
 
