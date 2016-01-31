@@ -22,16 +22,22 @@ type ArraySchema struct {
 	RawItems *json.RawMessage `json:"items"`
 }
 
+func NewArraySchema() *ArraySchema {
+
+	ret := new(ArraySchema)
+	ret.typeCode = SCHEMATYPE_ARRAY
+	return ret
+}
+
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewArraySchema(contents []byte, context *SchemaParseContext) (*ArraySchema, error) {
+func ParseArraySchema(contents []byte, context *SchemaParseContext) (*ArraySchema, error) {
 
 	var ret *ArraySchema
 	var err error
 
-	ret = new(ArraySchema)
-	ret.typeCode = SCHEMATYPE_ARRAY
+	ret = NewArraySchema()
 
 	err = json.Unmarshal(contents, &ret)
 	if err != nil {

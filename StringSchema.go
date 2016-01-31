@@ -17,16 +17,22 @@ type StringSchema struct {
 	Enum          *[]string `json:"enum"`
 }
 
+func NewStringSchema() *StringSchema {
+
+	ret := new(StringSchema)
+	ret.typeCode = SCHEMATYPE_STRING
+	return ret
+}
+
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewStringSchema(contents []byte, context *SchemaParseContext) (*StringSchema, error) {
+func ParseStringSchema(contents []byte, context *SchemaParseContext) (*StringSchema, error) {
 
 	var ret *StringSchema
 	var err error
 
-	ret = new(StringSchema)
-	ret.typeCode = SCHEMATYPE_STRING
+	ret = NewStringSchema()
 
 	err = json.Unmarshal(contents, &ret)
 	if err != nil {

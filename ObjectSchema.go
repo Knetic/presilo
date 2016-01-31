@@ -24,26 +24,33 @@ type ObjectSchema struct {
 	UnconstrainedProperties SortableStringArray
 }
 
+func NewObjectSchema() *ObjectSchema {
+
+	var ret *ObjectSchema
+
+	ret = new(ObjectSchema)
+	ret.typeCode = SCHEMATYPE_OBJECT
+	ret.Properties = make(map[string]TypeSchema)
+
+	return ret
+}
 /*
   Creates a new object schema from a byte slice that can be interpreted as json.
   Object schemas may contain multiple schemas.
 */
-func NewObjectSchema(contents []byte, context *SchemaParseContext) (*ObjectSchema, error) {
+func ParseObjectSchema(contents []byte, context *SchemaParseContext) (*ObjectSchema, error) {
 
 	var ret *ObjectSchema
 	var sub TypeSchema
 	var subschemaBytes []byte
 	var err error
 
-	ret = new(ObjectSchema)
-	ret.typeCode = SCHEMATYPE_OBJECT
+	ret = NewObjectSchema()
 
 	err = json.Unmarshal(contents, &ret)
 	if err != nil {
 		return ret, err
 	}
-
-	ret.Properties = make(map[string]TypeSchema, len(ret.RawProperties))
 
 	err = ret.checkRequiredProperties()
 	if err != nil {

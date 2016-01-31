@@ -17,16 +17,22 @@ type NumberSchema struct {
 	Enum             *[]float64 `json:"enum"`
 }
 
+func NewNumberSchema() *NumberSchema {
+
+	ret := new(NumberSchema)
+	ret.typeCode = SCHEMATYPE_NUMBER
+	return ret
+}
+
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewNumberSchema(contents []byte, context *SchemaParseContext) (*NumberSchema, error) {
+func ParseNumberSchema(contents []byte, context *SchemaParseContext) (*NumberSchema, error) {
 
 	var ret *NumberSchema
 	var err error
 
-	ret = new(NumberSchema)
-	ret.typeCode = SCHEMATYPE_NUMBER
+	ret = NewNumberSchema()
 
 	err = json.Unmarshal(contents, &ret)
 	if err != nil {

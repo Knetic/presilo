@@ -17,17 +17,23 @@ type IntegerSchema struct {
 	Enum             *[]int `json:"enum"`
 }
 
+func NewIntegerSchema() *IntegerSchema {
+
+	ret := new(IntegerSchema)
+	ret.typeCode = SCHEMATYPE_INTEGER
+	return ret
+}
+
 /*
   Creates a new integer schema from a byte slice that can be interpreted as json.
 */
-func NewIntegerSchema(contents []byte, context *SchemaParseContext) (*IntegerSchema, error) {
+func ParseIntegerSchema(contents []byte, context *SchemaParseContext) (*IntegerSchema, error) {
 
 	var ret *IntegerSchema
 	var err error
 
-	ret = new(IntegerSchema)
+	ret = NewIntegerSchema()
 
-	ret.typeCode = SCHEMATYPE_INTEGER
 	err = json.Unmarshal(contents, &ret)
 	if err != nil {
 		return ret, err

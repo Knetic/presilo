@@ -166,22 +166,22 @@ func ParseSchema(contentsBytes []byte, defaultTitle string, context *SchemaParse
 	switch schemaType {
 
 	case "boolean":
-		schema, err = NewBooleanSchema(contentsBytes, context)
+		schema, err = ParseBooleanSchema(contentsBytes, context)
 
 	case "integer":
-		schema, err = NewIntegerSchema(contentsBytes, context)
+		schema, err = ParseIntegerSchema(contentsBytes, context)
 
 	case "number":
-		schema, err = NewNumberSchema(contentsBytes, context)
+		schema, err = ParseNumberSchema(contentsBytes, context)
 
 	case "string":
-		schema, err = NewStringSchema(contentsBytes, context)
+		schema, err = ParseStringSchema(contentsBytes, context)
 
 	case "array":
-		schema, err = NewArraySchema(contentsBytes, context)
+		schema, err = ParseArraySchema(contentsBytes, context)
 
 	case "object":
-		schema, err = NewObjectSchema(contentsBytes, context)
+		schema, err = ParseObjectSchema(contentsBytes, context)
 
 	default:
 		errorMsg := fmt.Sprintf("Unrecognized schema type: '%s'", schemaType)
