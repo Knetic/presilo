@@ -352,6 +352,7 @@ func LinkSchemas(context *SchemaParseContext) error {
 func linkSchema(schema TypeSchema, context *SchemaParseContext) (TypeSchema, error) {
 
 	var objectSchema *ObjectSchema
+	var arraySchema *ArraySchema
 	var subschema TypeSchema
 	var propertyName string
 	var schemaType SchemaType
@@ -359,6 +360,13 @@ func linkSchema(schema TypeSchema, context *SchemaParseContext) (TypeSchema, err
 
 	if(schema.GetSchemaType() == SCHEMATYPE_UNRESOLVED) {
 		return findSchemaResolution(schema, context)
+	}
+
+	if(schema.GetSchemaType() == SCHEMATYPE_ARRAY) {
+
+		arraySchema = schema.(*ArraySchema)
+		arraySchema.Items, err = linkSchema(arraySchema.Items, context)
+		return arraySchema, err
 	}
 
 	if(schema.GetSchemaType() != SCHEMATYPE_OBJECT) {
