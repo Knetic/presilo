@@ -227,11 +227,11 @@ func generatePythonStringSetter(schema *StringSchema, buffer *BufferedFormatStri
 	}
 
 	if schema.MinLength != nil {
-		generatePythonRangeCheck(*schema.MinLength, "value.length", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
+		generatePythonRangeCheck(*schema.MinLength, "len(value)", "was shorter than allowable minimum", "%d", false, "<", "", buffer)
 	}
 
 	if schema.MaxLength != nil {
-		generatePythonRangeCheck(*schema.MaxLength, "value.length", "was longer than allowable maximum", "%d", false, ">", "", buffer)
+		generatePythonRangeCheck(*schema.MaxLength, "len(value)", "was longer than allowable maximum", "%d", false, ">", "", buffer)
 	}
 
 	if schema.HasEnum() {
