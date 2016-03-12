@@ -20,6 +20,8 @@ func GeneratePython(schema *ObjectSchema, module string, tabstyle string) string
 	ret.Printfln("")
 	generatePythonDeserializer(schema, ret)
 	ret.Printfln("")
+	generatePythonSerializer(schema, ret)
+	ret.Printfln("")
 	generatePythonFunctions(schema, ret)
 	ret.Printfln("")
 
@@ -64,7 +66,11 @@ func generatePythonConstructor(schema *ObjectSchema, buffer *BufferedFormatStrin
 	var propertyName string
 	var toWrite string
 
-	buffer.Print("\ndef __init__(self, ")
+	if(len(schema.RequiredProperties) <= 0) {
+		return
+	}
+	
+	buffer.Print("\ndef __init__(self")
 
 	// required properties
 	for _, propertyName = range schema.RequiredProperties {
@@ -76,6 +82,7 @@ func generatePythonConstructor(schema *ObjectSchema, buffer *BufferedFormatStrin
 		setters = append(setters, toWrite)
 	}
 
+	buffer.Print(", ")
 	buffer.Print(strings.Join(declarations, ", "))
 	buffer.Print("):")
 
@@ -142,6 +149,15 @@ func generatePythonDeserializer(schema *ObjectSchema, buffer *BufferedFormatStri
 	buffer.Printf("\nreturn ret")
 	buffer.AddIndentation(-1)
 	buffer.Printf("\n")
+}
+
+func generatePythonSerializer(schema *ObjectSchema, buffer *BufferedFormatString) {
+
+
+	buffer.Printf("\ndef to_json(self):")
+	buffer.AddIndentation(1)
+	buffer.Printf("\nreturn json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)")
+	buffer.AddIndentation(-1)
 }
 
 func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString) {
