@@ -69,7 +69,7 @@ func generatePythonConstructor(schema *ObjectSchema, buffer *BufferedFormatStrin
 	if(len(schema.RequiredProperties) <= 0) {
 		return
 	}
-	
+
 	buffer.Print("\ndef __init__(self")
 
 	// required properties
@@ -189,7 +189,7 @@ func generatePythonFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 		buffer.AddIndentation(-1)
 
 		// setter
-		buffer.Printf("\ndef set_%s(self, %s):", snakeName, snakeName)
+		buffer.Printf("\ndef set_%s(self, value):", snakeName)
 		buffer.AddIndentation(1)
 
 		if len(description) != 0 {
