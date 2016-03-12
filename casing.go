@@ -68,6 +68,13 @@ func ToSnakeCase(target string) string {
 	return ret.String()
 }
 
+/*
+	Same as "ToSnakeCase", except that any non-alphanumeric / underscore character is stripped from the returned value.
+*/
+func ToStrictSnakeCase(target string) string {
+	return ToSnakeCase(removeInvalidCharacters(target))
+}
+
 func iterateRunes(target string, transformer func(rune) rune) string {
 
 	var ret bytes.Buffer
