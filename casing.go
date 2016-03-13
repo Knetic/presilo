@@ -47,22 +47,32 @@ func ToSnakeCase(target string) string {
 
 	var ret bytes.Buffer
 	var channel chan rune
+	var convertedCharacter string
 	var character rune
+	var previous bool
 
 	channel = make(chan rune)
 	go getCharacterChannel(target, channel)
 
 	character =<- channel
-	ret.WriteRune(unicode.ToLower(character))
+	convertedCharacter = removeInvalidCharacters(string(unicode.ToLower(character)))
+	ret.Write([]byte(convertedCharacter))
+	previous = false
 
 	for character = range channel {
 
 		if unicode.IsUpper(character) {
 
-			ret.WriteRune('_')
+			if(!previous) {
+				ret.WriteRune('_')
+
+				previous = true
+			}
+			
 			ret.WriteRune(unicode.ToLower(character))
 		} else {
 			ret.WriteRune(character)
+			previous = false
 		}
 	}
 

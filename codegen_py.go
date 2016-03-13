@@ -126,18 +126,16 @@ func generatePythonDeserializer(schema *ObjectSchema, buffer *BufferedFormatStri
 	for _, propertyName = range schema.GetOrderedPropertyNames() {
 
 		property = schema.Properties[propertyName]
-		propertyName = ToJavaCase(property.GetTitle())
 		casedPropertyName = fmt.Sprintf("map[\"%s\"]", propertyName)
 
 		// if it's already set, skip it.
-		if arrayContainsString(ctorArguments, casedPropertyName) {
+		if arrayContainsString(schema.RequiredProperties, propertyName) {
 			continue
 		}
 
 		// if it's constrained, use the setter
 		if property.HasConstraints() {
 
-			casedPropertyName = ToJavaCase(propertyName)
 			buffer.Printf("\nret.set_%s(%s)", ToSnakeCase(propertyName), casedPropertyName)
 			continue
 		}
