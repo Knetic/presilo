@@ -76,7 +76,7 @@ func generateCSharpTypeDeclaration(schema *ObjectSchema, buffer *BufferedFormatS
 
 		subschema = schema.Properties[propertyName]
 
-		buffer.Print("\n[DataMember]")
+		buffer.Printf("\n[DataMember(Name = \"%s\")]", propertyName)
 		buffer.Printf("\nprotected %s %s;", GenerateCSharpTypeForSchema(subschema), ToJavaCase(propertyName))
 	}
 }
@@ -98,7 +98,7 @@ func generateCSharpConstructor(schema *ObjectSchema, buffer *BufferedFormatStrin
 		toWrite = fmt.Sprintf("%s %s", GenerateCSharpTypeForSchema(subschema), propertyName)
 		declarations = append(declarations, toWrite)
 
-		toWrite = fmt.Sprintf("\nset%s(%s);", ToCamelCase(propertyName), propertyName)
+		toWrite = fmt.Sprintf("\nset%s(%s);", ToStrictCamelCase(propertyName), propertyName)
 		setters = append(setters, toWrite)
 	}
 
