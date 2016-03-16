@@ -153,7 +153,7 @@ func generateCSharpFunctions(schema *ObjectSchema, buffer *BufferedFormatString)
 			generateCSharpArraySetter(subschema.(*ArraySchema), buffer)
 		}
 
-		buffer.Printf("\n%s = value;", properName)
+		buffer.Printf("\nthis.%s = value;", properName)
 		buffer.AddIndentation(-1)
 		buffer.Print("\n}\n")
 	}
