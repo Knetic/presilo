@@ -22,14 +22,17 @@ There are a few projects which do similar things, but I don't find their pattern
 
 There are some projects which take a piece of code, or a sql table definition, and try to generate other pieces of code or schemas. That's great if you fit exactly into those use cases. But I wanted to define a contract about the data which is _implemented_ by code or a DB schema. And, specifically, I didn't want a language- or DB-specific solution, I wanted to use this everywhere.
 
-###Where's the binary?
+Where's the binary?
+====
 
 This project is solely the library which handles parsing and codegen. You can reference this library in your own code, but most users will probably just want to head over to the [executable project](http://github.com/Knetic/presiloExecutable) and find a release there.
 
-###Branching
+Branching
+====
 
 I use green masters, and heavily develop with private feature branches. Full releases are pinned and unchangeable, representing the best available version with the best documentation and test coverage. Master branch, however, should always have all tests pass and implementations considered "working", even if it's just a first pass. Master should never panic.
 
-###Activity
+Activity
+====
 
 If this repository hasn't been updated in a while, it's probably because I don't have any outstanding issues to work on - it's not because I've abandoned the project. If you have questions, issues, or patches; I'm completely open to pull requests, issues opened on github, or emails from out of the blue.
